@@ -6,16 +6,16 @@ body, html {
     background-color: #0c0c0c;
     color: #00ff00;
     font-family: 'Courier New', monospace;
-    font-size: 20px; /* Default font size increased by 4 points */
+    font-size: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start; /* Adjusted to align items at the start */
-    overflow-x: auto; /* Allow horizontal scrolling */
+    justify-content: flex-start;
+    overflow-x: auto;
 }
 
 .container {
-    max-width: 1600px; /* Increased width of container */
+    max-width: 1600px;
     width: 100%;
     text-align: center;
 }
@@ -23,11 +23,15 @@ body, html {
 h1 {
     color: #00ff00;
     text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
-    font-size: 2em; /* Increased from default */
+    font-size: 2em;
 }
 
 .tabs {
     margin-bottom: 20px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 .tab {
@@ -36,13 +40,13 @@ h1 {
     color: #00ff00;
     cursor: pointer;
     font-family: inherit;
-    font-size: 1.2em; /* Increased from default */
+    font-size: 1.2em;
     margin: 0 10px;
     padding: 5px 10px;
     text-transform: uppercase;
     position: relative;
     overflow: hidden;
-    transition: background-color 0.5s ease-out, border-radius 0.5s ease-out; /* Add transition for border-radius */
+    transition: background-color 0.5s ease-out, border-radius 0.5s ease-out;
 }
 
 .tab::before {
@@ -64,7 +68,7 @@ h1 {
 
 .tab.active {
     background: rgba(0, 255, 0, 0.2);
-    border-radius: 10px; /* Add border-radius for active tab */
+    border-radius: 10px;
 }
 
 .content {
@@ -79,8 +83,8 @@ h1 {
 .entry {
     margin-bottom: 10px;
     cursor: pointer;
-    padding-left: 100px; /* Added padding to the left */
-    padding-right: 100px; /* Added padding to the right */
+    padding-left: 100px;
+    padding-right: 100px;
 }
 
 .entry-header {
@@ -88,6 +92,7 @@ h1 {
     justify-content: space-between;
     align-items: flex-start;
     width: 100%;
+    flex-wrap: nowrap;
 }
 
 .title {
@@ -101,7 +106,7 @@ h1 {
     white-space: nowrap;
     text-align: right;
     color: #008800;
-    margin-left: auto; /* Ensure date-location is right-aligned */
+    margin-left: auto;
 }
 
 .dropdown {
@@ -124,128 +129,278 @@ h1 {
     padding-top: 10px;
 }
 
-.dropdown-content video, img {
+.dropdown-content video,
+img {
     display: block;
     padding-top: 15px;
     margin: 0 auto;
 }
-    
-    .blinking-cursor {
+
+.blinking-cursor {
     font-weight: lighter;
     color: #00ff00;
     animation: blink-animation 1s steps(2, start) infinite;
-    }
-    
-    @keyframes blink-animation {
+}
+
+@keyframes blink-animation {
     to {
-    visibility: hidden;
+        visibility: hidden;
     }
-    }
-    
-    .reset-btn {
+}
+
+.reset-btn {
     background-color: transparent;
     border: none;
-    color: #ffff00; /* Bright yellow for text */
+    color: #ffff00;
     cursor: pointer;
     position: absolute;
     top: 5px;
     right: 5px;
     font-size: 0.9em;
     font-family: ‘Courier New’, monospace;
-    }
-    
-    .reset-btn .cyan-text {
-    color: #00ffff; /* Cyan color for “()” */
-    }
-    
-    a {
+}
+
+.reset-btn .cyan-text {
+    color: #00ffff;
+}
+
+a {
     color: #00ff00;
     text-decoration: none;
-    font-size: 1em; /* Increased from default */
-    }
-    
-    a:hover {
+    font-size: 1em;
+}
+
+a:hover {
     text-decoration: underline;
     text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
-    }
-    
-    .blink {
+}
+
+.blink {
     position: fixed;
     width: 2px;
     height: 2px;
     background-color: #00ff00;
     border-radius: 50%;
     opacity: 0;
-    }
-    
-    .profile-links {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        text-align: right;
-        transition: right 0.5s ease; /* Add transition for smooth animation */
-    }
-    
-    .profile-links a {
-        display: block;
-        margin-top: 5px;
-        font-size: 1em; /* Increased from default */
-    }
-    
-    .profile-links.collapsed {
-        right: -180px; /* Adjust this value based on the width of your profile links */
-    }
-    
-    .profile-links .expand-arrow {
-        display: none;
-        position: absolute;
-        left: -30px; /* Adjust this value based on the arrow size */
-        top: 50%;
-        transform: translateY(-50%);
-        cursor: pointer;
-        color: #00ff00;
-        font-size: 1.5em; /* Increase font size for visibility */
-    }
-    
-    .profile-links.collapsed .expand-arrow {
-        display: block;
-    }
-    
-    .fa-link, .fa-github {
-    margin-right: 5px; /* Add some space between the icon and the text */
-    }
-    
-    .music-description {
-    text-align: center;
-    padding: 0 40px; /* Padding of 40px on both sides */
-    }
-    
-    .soundcloud-block {
-    margin-bottom: 20px; /* Space between each SoundCloud block */
-    padding-right: 100px;
-    padding-left:100px;
-    }
-    
-    .soundcloud-info {
-    text-align: center;
-    font-family: ‘Courier New’, monospace; /* Match the font of the rest of the site /
+}
+
+.profile-links {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    text-align: right;
+    transition: right 0.5s ease;
+}
+
+.profile-links a {
+    display: block;
+    margin-top: 5px;
+    font-size: 1em;
+}
+
+.profile-links.collapsed {
+    right: -120px; /* Adjust this value based on the width of your profile links */
+}
+
+.profile-links .expand-arrow {
+    display: none;
+    position: absolute;
+    left: -30px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
     color: #00ff00;
-    font-size: 12px; / Smaller font size */
-    }
-    
-    .soundcloud-link {
+    font-size: 1.5em;
+    font-family: 'Courier New', monospace;
+    background: #1a1a1a; /* Match the dropdown background */
+    border: 1px solid #00ff00; /* Green border to match the text color */
+    border-radius: 5px; /* Rounded corners for a modern look */
+    padding: 2.5px;
+    transition: background 0.3s ease, border 0.3s ease; /* Smooth transitions */
+    line-height: 1; /* Ensure line-height doesn't affect vertical centering */
+}
+
+.profile-links .expand-arrow:hover {
+    background: #00ff00; /* Green background on hover */
+    color: #1a1a1a; /* Dark text color on hover */
+    border-color: #1a1a1a; /* Dark border on hover */
+}
+
+.profile-links.collapsed .expand-arrow {
+    display: block;
+}
+
+.fa-link,
+.fa-github {
+    margin-right: 5px;
+}
+
+.music-description {
+    text-align: center;
+    padding: 0 40px;
+}
+
+.soundcloud-block {
+    margin-bottom: 20px;
+    padding-right: 100px;
+    padding-left: 100px;
+}
+
+.soundcloud-info {
+    text-align: center;
+    font-family: ‘Courier New’, monospace;
+    color: #00ff00;
+    font-size: 12px;
+}
+
+.soundcloud-link {
     color: #00ff00;
     text-decoration: none;
-    }
-    
-    .soundcloud-link:hover {
+}
+
+.soundcloud-link:hover {
     text-decoration: underline;
-    font-weight:lighter;
+    font-weight: lighter;
+}
+
+.company-logo {
+    height: 30px;
+    margin-right: 10px;
+    vertical-align: middle;
+    background-color: transparent;
+}
+
+
+@media (max-width: 1350px) {
+
+    /* body,
+    html {
+        font-size: 1.01em;
+    } */
+
+    .tabs {
+        display: flex;
+        flex-direction: row;
+        justify-content: center; /* Center the tabs horizontally */
+        flex-wrap: wrap; /* Allow tabs to wrap to the next line if needed */
     }
 
-    .company-logo {
-        height: 30px; /* Adjust height as needed */
-        margin-right: 10px; /* Space between the logo and the title */
-        vertical-align: middle; /* Align with text */
-        background-color: transparent; /* Ensure background is transparent */
+    .tab {
+        margin: 5px; /* Add some margin to space out the tabs */
+        width: auto; /* Let the tabs take their natural width */
+        text-align: center;
     }
+
+    .entry {
+        padding-left: 40px; /* Adjust padding as needed */
+        padding-right: 40px; /* Adjust padding as needed */
+    }
+
+    .profile-links {
+        bottom: 10px;
+        right: 10px;
+    }
+}
+
+/* Styles for screens smaller than 1200px */
+@media (max-width: 1200px) {
+    .entry {
+        padding-left: 60px;
+        padding-right: 60px;
+    }
+
+    .entry-header {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .title, .date-location {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Styles for screens smaller than 1000px */
+@media (max-width: 1000px) {
+    .entry {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .entry-header {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .title, .date-location {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+
+/* Styles for screens smaller than 730px */
+@media (max-width: 730px) {
+      body,
+    html {
+        font-size: 1.01em;
+    }
+    
+    .entry {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .entry-header {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .title, .date-location {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Styles for screens smaller than 550px */
+@media (max-width: 550px) {
+    .tabs {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Center the tabs vertically */
+        margin-bottom: 20px; /* Add margin between tabs */
+    }
+
+    .tab {
+        margin: 10px 0; /* Add margin between tabs */
+        width: 35%; /* Make tabs take full width */
+        text-align: center;
+    }
+
+    .entry {
+        padding-left: 10px; /* Adjust padding as needed */
+        padding-right: 10px; /* Adjust padding as needed */
+    }
+
+    .entry-header {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .title, .date-location {
+        width: 100%;
+        text-align: center;
+    }
+
+    .profile-links {
+        bottom: 10px;
+        right: 10px;
+    }
+
+    .dropdown-content video,
+    .dropdown-content img {
+        max-width: 90%; /* Make videos and images fit within the screen */
+        height: auto; /* Maintain aspect ratio */
+        margin: 10px 0; /* Add margin to separate them from other content */
+    }
+}
