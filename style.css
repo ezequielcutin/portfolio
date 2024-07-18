@@ -179,16 +179,36 @@ h1 {
     }
     
     .profile-links {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    text-align: right;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        text-align: right;
+        transition: right 0.5s ease; /* Add transition for smooth animation */
     }
     
     .profile-links a {
-    display: block;
-    margin-top: 5px;
-    font-size: 1em; /* Increased from default */
+        display: block;
+        margin-top: 5px;
+        font-size: 1em; /* Increased from default */
+    }
+    
+    .profile-links.collapsed {
+        right: -180px; /* Adjust this value based on the width of your profile links */
+    }
+    
+    .profile-links .expand-arrow {
+        display: none;
+        position: absolute;
+        left: -30px; /* Adjust this value based on the arrow size */
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #00ff00;
+        font-size: 1.5em; /* Increase font size for visibility */
+    }
+    
+    .profile-links.collapsed .expand-arrow {
+        display: block;
     }
     
     .fa-link, .fa-github {

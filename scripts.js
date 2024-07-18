@@ -133,3 +133,43 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+
+function checkDropdownOverlap() {
+    const dropdowns = document.querySelectorAll('.dropdown.show');
+    const profileLinks = document.querySelector('.profile-links');
+    let isOverlapping = false;
+
+    dropdowns.forEach(dropdown => {
+        const dropdownRect = dropdown.getBoundingClientRect();
+        const profileLinksRect = profileLinks.getBoundingClientRect();
+
+        if (
+            dropdownRect.bottom > profileLinksRect.top &&
+            dropdownRect.top < profileLinksRect.bottom &&
+            dropdownRect.right > profileLinksRect.left &&
+            dropdownRect.left < profileLinksRect.right
+        ) {
+            isOverlapping = true;
+        }
+    });
+
+    if (isOverlapping) {
+        profileLinks.classList.add('collapsed');
+    } else {
+        profileLinks.classList.remove('collapsed');
+    }
+}
+
+document.querySelectorAll('.entry').forEach(entry => {
+    entry.addEventListener('click', () => {
+        setTimeout(checkDropdownOverlap, 600); // Adjust delay to allow for dropdown animation completion
+    });
+});
+
+document.querySelector('.profile-links .expand-arrow').addEventListener('click', () => {
+    document.querySelector('.profile-links').classList.remove('collapsed');
+});
+
+// Initial check in case a dropdown is already open on page load
+document.addEventListener('DOMContentLoaded', checkDropdownOverlap);
