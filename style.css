@@ -1,0 +1,231 @@
+body, html {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #0c0c0c;
+    color: #00ff00;
+    font-family: 'Courier New', monospace;
+    font-size: 20px; /* Default font size increased by 4 points */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start; /* Adjusted to align items at the start */
+    overflow-x: auto; /* Allow horizontal scrolling */
+}
+
+.container {
+    max-width: 1600px; /* Increased width of container */
+    width: 100%;
+    text-align: center;
+}
+
+h1 {
+    color: #00ff00;
+    text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+    font-size: 2em; /* Increased from default */
+}
+
+.tabs {
+    margin-bottom: 20px;
+}
+
+.tab {
+    background: none;
+    border: none;
+    color: #00ff00;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1.2em; /* Increased from default */
+    margin: 0 10px;
+    padding: 5px 10px;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+    transition: background-color 0.5s ease-out, border-radius 0.5s ease-out; /* Add transition for border-radius */
+}
+
+.tab::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300%;
+    height: 300%;
+    background: rgba(0, 255, 0, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.5s ease-out;
+}
+
+.tab:hover::before {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.tab.active {
+    background: rgba(0, 255, 0, 0.2);
+    border-radius: 10px; /* Add border-radius for active tab */
+}
+
+.content {
+    display: none;
+    text-align: left;
+}
+
+.content.active {
+    display: block;
+}
+
+.entry {
+    margin-bottom: 10px;
+    cursor: pointer;
+    padding-left: 100px; /* Added padding to the left */
+    padding-right: 100px; /* Added padding to the right */
+}
+
+.entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.title {
+    text-align: left;
+    padding-right: 10px;
+    flex-grow: 1;
+    font-weight: bold;
+}
+
+.date-location {
+    white-space: nowrap;
+    text-align: right;
+    color: #008800;
+    margin-left: auto; /* Ensure date-location is right-aligned */
+}
+
+.dropdown {
+    overflow: hidden;
+    padding-left: 20px;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    border-left: 1px solid #00ff00;
+    position: relative;
+    height: 0;
+    opacity: 0;
+}
+
+.dropdown.show {
+    opacity: 1;
+}
+
+.dropdown-content {
+    font-weight: lighter;
+    padding-top: 10px;
+}
+
+.dropdown-content video, img {
+    display: block;
+    padding-top: 15px;
+    margin: 0 auto;
+}
+    
+    .blinking-cursor {
+    font-weight: lighter;
+    color: #00ff00;
+    animation: blink-animation 1s steps(2, start) infinite;
+    }
+    
+    @keyframes blink-animation {
+    to {
+    visibility: hidden;
+    }
+    }
+    
+    .reset-btn {
+    background-color: transparent;
+    border: none;
+    color: #ffff00; /* Bright yellow for text */
+    cursor: pointer;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 0.9em;
+    font-family: ‘Courier New’, monospace;
+    }
+    
+    .reset-btn .cyan-text {
+    color: #00ffff; /* Cyan color for “()” */
+    }
+    
+    a {
+    color: #00ff00;
+    text-decoration: none;
+    font-size: 1em; /* Increased from default */
+    }
+    
+    a:hover {
+    text-decoration: underline;
+    text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+    }
+    
+    .blink {
+    position: fixed;
+    width: 2px;
+    height: 2px;
+    background-color: #00ff00;
+    border-radius: 50%;
+    opacity: 0;
+    }
+    
+    .profile-links {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    text-align: right;
+    }
+    
+    .profile-links a {
+    display: block;
+    margin-top: 5px;
+    font-size: 1em; /* Increased from default */
+    }
+    
+    .fa-link, .fa-github {
+    margin-right: 5px; /* Add some space between the icon and the text */
+    }
+    
+    .music-description {
+    text-align: center;
+    padding: 0 40px; /* Padding of 40px on both sides */
+    }
+    
+    .soundcloud-block {
+    margin-bottom: 20px; /* Space between each SoundCloud block */
+    padding-right: 100px;
+    padding-left:100px;
+    }
+    
+    .soundcloud-info {
+    text-align: center;
+    font-family: ‘Courier New’, monospace; /* Match the font of the rest of the site /
+    color: #00ff00;
+    font-size: 12px; / Smaller font size */
+    }
+    
+    .soundcloud-link {
+    color: #00ff00;
+    text-decoration: none;
+    }
+    
+    .soundcloud-link:hover {
+    text-decoration: underline;
+    font-weight:lighter;
+    }
+
+    .company-logo {
+        height: 30px; /* Adjust height as needed */
+        margin-right: 10px; /* Space between the logo and the title */
+        vertical-align: middle; /* Align with text */
+        background-color: transparent; /* Ensure background is transparent */
+    }
