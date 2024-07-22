@@ -175,6 +175,11 @@ a:hover {
     text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
 }
 
+video {
+    position: relative;
+    z-index: 1;
+}
+
 .blink {
     position: fixed;
     width: 2px;
@@ -182,6 +187,7 @@ a:hover {
     background-color: #00ff00;
     border-radius: 50%;
     opacity: 0;
+    z-index: 0;
 }
 
 .profile-links {
@@ -403,4 +409,55 @@ a:hover {
         height: auto; /* Maintain aspect ratio */
         margin: 10px 0; /* Add margin to separate them from other content */
     }
+}
+
+/* Add these styles to your CSS */
+
+.carousel-container {
+    position: relative;
+    width: 100%;
+    max-width: 400px; /* Adjust as needed */
+    margin: auto;
+    overflow: hidden;
+}
+
+.carousel-slide {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+}
+
+.carousel-slide img {
+    width: 400px;
+    height: auto;
+}
+
+.prev, .next {
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    width: 25px; /* Make the arrows thinner */
+    height: 25px; /* Adjust height to match width */
+    margin-top: -22px;
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+    transition: 0.6s ease;
+    border-radius: 50%;
+    user-select: none;
+    background-color: rgba(0, 0, 0, 0.5); /* Slightly transparent background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.next {
+    right: 10px;
+}
+
+.prev {
+    left: 10px;
+}
+
+.prev:hover, .next:hover {
+    background-color: rgba(0, 255, 0, 0.7); /* Change background color on hover */
 }
