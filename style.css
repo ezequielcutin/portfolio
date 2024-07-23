@@ -5,7 +5,8 @@ body, html {
     padding: 0;
     background-color: #0c0c0c;
     color: #00ff00;
-    font-family: 'Courier New', monospace;
+    /* font-family: 'Ubuntu Mono', monospace; */
+    font-family: 'IBM Plex Mono', monospace;
     font-size: 20px;
     display: flex;
     flex-direction: column;
