@@ -21,6 +21,10 @@ body, html {
     text-align: center;
 }
 
+.container p{
+    font-size:0.85em;
+}
+
 h1 {
     color: #00ff00;
     text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
@@ -242,11 +246,6 @@ video {
     margin-right: 5px;
 }
 
-.music-description {
-    text-align: center;
-    padding: 0 40px;
-}
-
 .soundcloud-block {
     margin-bottom: 20px;
     padding-right: 100px;
@@ -461,4 +460,44 @@ video {
 
 .prev:hover, .next:hover {
     background-color: rgba(0, 255, 0, 0.7); /* Change background color on hover */
+}
+
+
+.music-description {
+    text-align: center;
+    padding: 0 40px;
+    opacity: 1;
+    transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
+}
+
+.music-description.fade-out {
+    opacity: 0;
+    transform: translateY(-10px); /* Move up slightly */
+}
+
+.music-description.fade-in {
+    opacity: 1;
+    transform: translateY(0); /* Move back to original position */
+}
+
+#blurb {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 0 20px;
+    font-size: 1em;
+    color: #00ff00; /* or any color that fits your theme */
+    opacity: 1;
+    transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
+    padding-left: 65px;
+    padding-right: 65px;
+}
+
+#blurb.fade-out {
+    opacity: 0;
+    transform: translateY(-10px); /* Move up slightly */
+}
+
+#blurb.fade-in {
+    opacity: 1;
+    transform: translateY(0); /* Move back to original position */
 }
