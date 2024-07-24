@@ -1,4 +1,4 @@
-let currentTab = 'work'; // Default tab
+let currentTab = null; // No default tab
 
 function showTab(tabName) {
     const blurb = document.getElementById('blurb');
@@ -62,11 +62,24 @@ function showTab(tabName) {
         });
 
         currentTab = tabName; // Update the current tab
+
+        // Apply fade-in effect to entries
+        const entries = document.querySelectorAll(`#${tabName} .entry`);
+        entries.forEach((entry, index) => {
+            entry.classList.remove('fade-in');
+            void entry.offsetWidth; // Trigger reflow to restart the animation
+            setTimeout(() => {
+                entry.classList.add('fade-in');
+            }, index * 100); // Stagger the fade-in for each entry
+        });
     }, 250); // Ensure the delay matches the transition duration
 }
 
-
-
+document.addEventListener('DOMContentLoaded', () => {
+    // Ensure no tab is highlighted initially
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.content').forEach(content => content.classList.remove('active'));
+});
 
 
 function toggleDropdown(element) {

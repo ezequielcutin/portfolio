@@ -90,7 +90,15 @@ h1 {
     cursor: pointer;
     padding-left: 100px;
     padding-right: 100px;
+    opacity: 0; /* Start with entries hidden */
+    transition: opacity 0.5s ease-in-out; /* Smooth fade-in effect */
 }
+
+.entry.fade-in {
+    opacity: 1; /* Fully visible */
+}
+
+
 
 .entry-header {
     display: flex;
