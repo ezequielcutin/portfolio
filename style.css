@@ -187,7 +187,6 @@ video {
     opacity: 0;
     z-index: 0;
 }
-
 .profile-links {
     position: fixed;
     bottom: 20px;
@@ -202,6 +201,11 @@ video {
     font-size: 1em;
     color: #00ff00;
     text-decoration: none;
+    transition: font-weight 0.15s ease; /* Smooth transition for font-weight */
+}
+
+.profile-links a:hover {
+    font-weight: bold; /* Add bold font-weight on hover */
 }
 
 .profile-links.collapsed {
@@ -242,26 +246,20 @@ video {
 }
 
 .profile-links a:hover::before {
-    display: inline-block;
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
+    display: none;
 }
 
-
-
 .profile-links a[href*="linkedin.com"]:hover::before {
-    content: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48IS0tIFVwbG9hZGVkIHRvOiBTVkcgUmVwbywgd3d3LnN2Z3JlcG8uY29tLCBHZW5lcmF0b3I6IFNWRyBSZXBvIE1peGVyIFRvb2xzIC0tPgo8c3ZnIGZpbGw9IiMwMDAwMDAiIHdpZHRoPSI4MDBweCIgaGVpZ2h0PSI4MDBweCIgdmlld0JveD0iMCAwIDI0IDI0IiBpZD0ibGlua2VkaW4iIGRhdGEtbmFtZT0iRmxhdCBDb2xvciIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBjbGFzcz0iaWNvbiBmbGF0LWNvbG9yIj48cmVjdCBpZD0icHJpbWFyeSIgeD0iMiIgeT0iMiIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiByeD0iMiIgc3R5bGU9ImZpbGw6IHJnYigwLCAwLCAwKTsiPjwvcmVjdD48cGF0aCBpZD0ic2Vjb25kYXJ5IiBkPSJNMTcsMTR2M2ExLDEsMCwwLDEtMiwwVjE0YTEsMSwwLDAsMC0yLDB2M2ExLDEsMCwwLDEtMiwwVjEyYTEsMSwwLDAsMSwxLjcxLS43QTMsMywwLDAsMSwxNCwxMSwzLDMsMCwwLDEsMTcsMTRaTTgsMTFhMSwxLDAsMCwwLTEsMXY1YTEsMSwwLDAsMCwyLDBWMTJBMSwxLDAsMCwwLDgsMTFaTTgsNkExLjUsMS41LDAsMSwwLDkuNSw3LjUsMS41LDEuNSwwLDAsMCw4LDZaIiBzdHlsZT0iZmlsbDogcmdiKDQ0LCAxNjksIDE4OCk7Ij48L3BhdGg+PC9zdmc+');
+    content: none;
 }
 
 .profile-links a[href*="github.com"]:hover::before {
-    content: "\f09b"; /* GitHub icon */
+    content: none;
 }
 
 .profile-links a[href*="mailto:"]:hover::before {
-    content: " \f0e0 "; /* Email icon */
+    content: none;
 }
-
-
 
 .fa-link,
 .fa-github {
