@@ -161,21 +161,6 @@ img {
     }
 }
 
-.reset-btn {
-    background-color: transparent;
-    border: none;
-    color: #ffff00;
-    cursor: pointer;
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    font-size: 0.9em;
-    font-family: ‘Courier New’, monospace;
-}
-
-.reset-btn .cyan-text {
-    color: #00ffff;
-}
 
 a {
     color: #00ff00;
@@ -215,6 +200,8 @@ video {
     display: block;
     margin-top: 5px;
     font-size: 1em;
+    color: #00ff00;
+    text-decoration: none;
 }
 
 .profile-links.collapsed {
@@ -249,6 +236,33 @@ video {
     display: block;
 }
 
+.profile-links a::before {
+    display: none;
+    margin-right: 5px;
+}
+
+.profile-links a:hover::before {
+    display: inline-block;
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+}
+
+
+
+.profile-links a[href*="linkedin.com"]:hover::before {
+    content: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48IS0tIFVwbG9hZGVkIHRvOiBTVkcgUmVwbywgd3d3LnN2Z3JlcG8uY29tLCBHZW5lcmF0b3I6IFNWRyBSZXBvIE1peGVyIFRvb2xzIC0tPgo8c3ZnIGZpbGw9IiMwMDAwMDAiIHdpZHRoPSI4MDBweCIgaGVpZ2h0PSI4MDBweCIgdmlld0JveD0iMCAwIDI0IDI0IiBpZD0ibGlua2VkaW4iIGRhdGEtbmFtZT0iRmxhdCBDb2xvciIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBjbGFzcz0iaWNvbiBmbGF0LWNvbG9yIj48cmVjdCBpZD0icHJpbWFyeSIgeD0iMiIgeT0iMiIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiByeD0iMiIgc3R5bGU9ImZpbGw6IHJnYigwLCAwLCAwKTsiPjwvcmVjdD48cGF0aCBpZD0ic2Vjb25kYXJ5IiBkPSJNMTcsMTR2M2ExLDEsMCwwLDEtMiwwVjE0YTEsMSwwLDAsMC0yLDB2M2ExLDEsMCwwLDEtMiwwVjEyYTEsMSwwLDAsMSwxLjcxLS43QTMsMywwLDAsMSwxNCwxMSwzLDMsMCwwLDEsMTcsMTRaTTgsMTFhMSwxLDAsMCwwLTEsMXY1YTEsMSwwLDAsMCwyLDBWMTJBMSwxLDAsMCwwLDgsMTFaTTgsNkExLjUsMS41LDAsMSwwLDkuNSw3LjUsMS41LDEuNSwwLDAsMCw4LDZaIiBzdHlsZT0iZmlsbDogcmdiKDQ0LCAxNjksIDE4OCk7Ij48L3BhdGg+PC9zdmc+');
+}
+
+.profile-links a[href*="github.com"]:hover::before {
+    content: "\f09b"; /* GitHub icon */
+}
+
+.profile-links a[href*="mailto:"]:hover::before {
+    content: " \f0e0 "; /* Email icon */
+}
+
+
+
 .fa-link,
 .fa-github {
     margin-right: 5px;
@@ -262,7 +276,7 @@ video {
 
 .soundcloud-info {
     text-align: center;
-    font-family: ‘Courier New’, monospace;
+    font-family: 'Courier New', monospace;
     color: #00ff00;
     font-size: 12px;
 }
@@ -283,7 +297,6 @@ video {
     vertical-align: middle;
     background-color: transparent;
 }
-
 
 @media (max-width: 1350px) {
 
@@ -419,58 +432,6 @@ video {
     }
 }
 
-/* Add these styles to your CSS */
-
-.carousel-container {
-    position: relative;
-    width: 100%;
-    max-width: 400px; /* Adjust as needed */
-    margin: auto;
-    overflow: hidden;
-}
-
-.carousel-slide {
-    display: flex;
-    transition: transform 0.5s ease-in-out;
-}
-
-.carousel-slide img {
-    width: 400px;
-    height: auto;
-}
-
-.prev, .next {
-    cursor: pointer;
-    position: absolute;
-    top: 50%;
-    width: 25px; /* Make the arrows thinner */
-    height: 25px; /* Adjust height to match width */
-    margin-top: -22px;
-    color: white;
-    font-weight: bold;
-    font-size: 18px;
-    transition: 0.6s ease;
-    border-radius: 50%;
-    user-select: none;
-    background-color: rgba(0, 0, 0, 0.5); /* Slightly transparent background */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.next {
-    right: 10px;
-}
-
-.prev {
-    left: 10px;
-}
-
-.prev:hover, .next:hover {
-    background-color: rgba(0, 255, 0, 0.7); /* Change background color on hover */
-}
-
-
 .music-description {
     text-align: center;
     padding: 0 40px;
@@ -508,4 +469,77 @@ video {
 #blurb.fade-in {
     opacity: 1;
     transform: translateY(0); /* Move back to original position */
+}
+
+.project-description ul {
+    font-size: 0.7em; /* Adjust the size as needed */
+    margin-left: 20px; /* Optional: Adjust the margin for better alignment */
+}
+
+.project-description li {
+    margin-bottom: 5px; /* Optional: Add some space between list items */
+}
+
+
+.carousel-container {
+    position: relative;
+    width: 100%;
+    max-width: 500px; /* Adjust as needed */
+    margin: auto;
+    overflow: hidden;
+}
+
+.carousel-slide {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+}
+
+.carousel-slide img {
+    width: 500px; /* Adjust as needed */
+    height: auto;
+    display: none; /* Hide all images initially */
+    z-index: 2;
+}
+
+.carousel-slide img:first-child {
+    display: block; /* Show the first image initially */
+}
+
+.slider-controls {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+    pointer-events: none; /* Allow clicks to pass through */
+    z-index: 10; /* Ensure the controls are on top of other elements */
+}
+
+.prev, .next {
+    cursor: pointer;
+    background-color: rgba(37, 36, 36, 0.5); /* Slightly transparent background for visibility */
+    color: white;
+    border: none;
+    padding: 5px;
+    font-size: 18px;
+    transition: background-color 0.3s;
+    pointer-events: auto; /* Enable clicks on buttons */
+    z-index: 10; /* Ensure the buttons are on top of other elements */
+}
+
+.prev {
+    position: absolute;
+    left: 0; /* Align the button to the left edge of the container */
+    transform: translateX(-25%); /* Move the button slightly outside the image */
+}
+
+.next {
+    position: absolute;
+    right: 0; /* Align the button to the right edge of the container */
+    transform: translateX(25%); /* Move the button slightly outside the image */
+}
+
+.prev:hover, .next:hover {
+    background-color: rgba(0, 255, 0, 0.7); /* Change background color on hover */
 }

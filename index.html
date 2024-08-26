@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ezequiel Cutin v33.3</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/CSSRulePlugin.min.js"></script>
@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap">
     <link rel="icon" href="favicon.png" type="image/png">
 </head>
+
+
 
 <body>
     <div class="container">
@@ -136,12 +138,13 @@
                             <div class="carousel-slide">
                                 <img src="uglybuckets.png" alt="Ugly Buckets">
                                 <img src="3dmodel.png" alt="3D Model 1">
-                                <img src="3dmodel1.png" alt="3D Model 2" width=500px>
+                                <img src="3dmodel1.png" alt="3D Model 2" width="500px">
                             </div>
-                            <a class="prev" id="prevBtn" onclick="event.stopPropagation();">&#10094;</a>
-                            <a class="next" id="nextBtn" onclick="event.stopPropagation();">&#10095;</a>
+                            <div class="slider-controls">
+                                <button class="prev">&#10094;</button>
+                                <button class="next">&#10095;</button>
+                            </div>
                         </div>
-                        
                         <span class="blinking-cursor">></span>
                     </div>
                 </div>
@@ -176,6 +179,51 @@
 
         <div id="projects" class="content">
             <br>
+            <div class="entry" onclick="toggleDropdown(this)">
+                <div class="entry-header">
+                    <div class="title">Fractal Mountain Generator</div>
+                    <div class="date-location">Aug 2024 - Aug 2024</div>
+                </div>
+                <div class="dropdown">
+                    <div class="dropdown-content project-description">
+                        <span class="blinking-cursor"><</span>
+                        <p>
+                            Explore the intersection of art and science with my Fractal Mountain Generator, an introductory project in computer graphics that leverages advanced linear algebra techniques. Using WebGL, this project brings to life stunning, fractal-based mountain landscapes, showcasing how vector operations and geometric transformations can be used to create complex, recursive patterns.
+                        </p>
+                        <p>
+                            At its core, this project applies key linear algebra concepts:
+                        </p>
+                        <ul>
+                            <li>Vector Operations: Fundamental vector arithmetic, including addition, subtraction, and scaling, underpins the creation of the fractal structures.</li>
+                            <li>Geometric Transformations: The project employs transformations such as rotation and scaling to craft the intricate peaks and valleys of the fractal.</li>
+                            <li>Recursive Geometry: Recursive techniques iteratively build the fractal mountain, demonstrating the power of mathematical recursion in visual design.</li>
+                        </ul>
+                        <p>
+                            This project serves as a foundational exploration of computer graphics, blending mathematical elegance with digital artistry.
+                        </p>
+                        <p><strong>Skills:</strong> Frontend Development · Linear Algebra · Mathematical Art · Computer Graphics</p>
+                        <p><strong>Technologies Used:</strong> JavaScript · HTML/CSS · WebGL</p>
+                        <p><strong>Links:</strong></p>
+                        <p>
+                            <a href="https://github.com/ezequielcutin/fractal-mountain" target="_blank" onclick="event.stopPropagation();"><i class="fab fa-github"></i>GitHub Repo</a>
+                            <br>
+                            <a href="https://ezequielcutin.github.io/fractal-mountain/" target="_blank" onclick="event.stopPropagation();"><i class="fas fa-link"></i>Live Demo</a>
+                        </p>
+                        <p><strong><i class="fas fa-image"></i> Images:</strong></p>
+                        <div class="carousel-container">
+                            <div class="carousel-slide">
+                                <img src="fractal-mountain.png" alt="Fractal Mountain Image 1" width="500">
+                                <img src="fractal-mountain-inputs.png" alt="Fractal Mountain Image 2" width="500">
+                            </div>
+                            <div class="slider-controls">
+                                <button class="prev">&#10094;</button>
+                                <button class="next">&#10095;</button>
+                            </div>
+                        </div>
+                        <span class="blinking-cursor">></span>
+                    </div>
+                </div>
+            </div>
             <div class="entry" onclick="toggleDropdown(this)">
                 <div class="entry-header">
                     <div class="title">Customer Support Ticket Management Microservice</div>
@@ -372,7 +420,7 @@
                     <div class="dropdown-content">
                         <span class="blinking-cursor"><</span>
                         <p>
-                            Developed a generative AI model using diffusion methods to produce lifelike floral images. Improved model efficacy by experimenting with various weight initializations and activation functions, and optimized the model’s architectural depth to enhance adaptability and image quality.
+                            Developed a generative AI model using diffusion methods to produce lifelike floral images. Improved model efficacy by experimenting with various weight initializations and activation functions, and optimized the model's architectural depth to enhance adaptability and image quality.
                         </p>
                         <p><strong>Skills:</strong> Generative AI · Diffusion Methods · Model Optimization · Python · Machine Learning</p>
                         <p><strong>Technologies Used:</strong> PyTorch · NumPy · Matplotlib · Jupyter Notebook</p>
@@ -439,6 +487,7 @@
         <a href="https://github.com/ezequielcutin" target="_blank">> github</a>
         <a href="mailto:ezequielcutin@gmail.com">> email</a>
     </div>
+     
     <script>
         function logWindowWidth() {
             const width = window.innerWidth;

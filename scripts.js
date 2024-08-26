@@ -352,41 +352,52 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-
-document.addEventListener('DOMContentLoaded', function () {
-    const carouselSlide = document.querySelector('.carousel-slide');
-    const carouselImages = document.querySelectorAll('.carousel-slide img');
-    
-    const prevBtn = document.querySelector('#prevBtn');
-    const nextBtn = document.querySelector('#nextBtn');
-    
-    let counter = 0;
-    const size = carouselImages[0].clientWidth;
-    
-    // Set the initial position
-    carouselSlide.style.transform = 'translateX(' + (-size * counter) + 'px)';
-    
-    // Button listeners
-    nextBtn.addEventListener('click', (event) => {
-        event.stopPropagation();
-        if (counter >= carouselImages.length - 1) return;
-        carouselSlide.style.transition = "transform 0.4s ease-in-out";
-        counter++;
-        carouselSlide.style.transform = 'translateX(' + (-size * counter) + 'px)';
-    });
-    
-    prevBtn.addEventListener('click', (event) => {
-        event.stopPropagation();
-        if (counter <= 0) return;
-        carouselSlide.style.transition = "transform 0.4s ease-in-out";
-        counter--;
-        carouselSlide.style.transform = 'translateX(' + (-size * counter) + 'px)';
-    });
-});
-
 document.addEventListener('DOMContentLoaded', function() {
     const video = document.getElementById('insta485Video');
     if (video) {
         video.playbackRate = 0.5; // Set playback speed to 0.5x
     }
+});
+
+
+function initCarousel(carouselContainer) {
+    let slideIndex = 1;
+
+    function plusSlides(n) {
+        showSlides(slideIndex += n);
+    }
+
+    function showSlides(n) {
+        const slides = carouselContainer.querySelectorAll(".carousel-slide img");
+        if (n > slides.length) { 
+            slideIndex = 1;
+        }
+        if (n < 1) { 
+            slideIndex = slides.length;
+        }
+        for (let i = 0; i < slides.length; i++) {
+            slides[i].classList.remove('fade-in', 'fade-out');
+            slides[i].style.display = "none";
+        }
+        slides[slideIndex - 1].style.display = "block";
+        slides[slideIndex - 1].classList.add('fade-in');
+    }
+
+    showSlides(slideIndex);
+
+    // Add event listeners to slider controls to stop propagation
+    carouselContainer.querySelector('.prev').addEventListener('click', function(event) {
+        event.stopPropagation();
+        plusSlides(-1);
+    });
+
+    carouselContainer.querySelector('.next').addEventListener('click', function(event) {
+        event.stopPropagation();
+        plusSlides(1);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialize all carousels
+    document.querySelectorAll('.carousel-container').forEach(initCarousel);
 });
