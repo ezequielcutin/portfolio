@@ -15,11 +15,12 @@ html {
     justify-content: flex-start;
     overflow-x: auto;
     position: relative;
-z-index: 0;
+    z-index: 0;
 }
 
 .container {
-    max-width: 1600px;
+    min-height: auto; /* Ensure it's not set to 100vh or a large fixed value */
+    height: auto;
     width: 100%;
     text-align: center;
 }
@@ -613,11 +614,12 @@ video {
 
 #more-about-me {
     transition: opacity 0.5s ease-out;
-    /* Add transition for fade effect */
     transform: scale(0.8);
-    /* Scale down to 80% */
     transform-origin: top center;
-    /* Scale from the top center */
+    height: auto;
+    min-height: auto;
+    max-height: none;
+    overflow: visible;
 }
 
 #about-me-blurb {
@@ -631,6 +633,7 @@ video {
 
 .gallery-wrapper {
     position: relative;
+    padding-bottom: 100px;
     z-index: 1;
 }
 
@@ -649,9 +652,12 @@ video {
     width: 100%;
     max-width: 1200px;
     /* Adjust this value as needed */
+    max-height: 110vh; /* Adjust this value as needed */
     transform: scale(0.7);
     transform-origin: top center;
     position: relative;
+    height: auto;
+    margin-bottom: 100px;
 }
 
 .left-column {
@@ -694,10 +700,30 @@ video {
 }
 
 @media (max-width: 768px) {
+    .profile-links {
+        position: static;
+        bottom: auto;
+        right: auto;
+        text-align: center;
+        padding-top: 20px;
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .profile-links a {
+        display: inline-block;
+        margin: 5px 10px;
+    }
+
+    .profile-links .expand-arrow {
+        display: none;
+    }
+
     .image-gallery {
         grid-template-columns: 1fr;
         transform: scale(0.9);
-        /* Less scaling on mobile for better visibility */
+        max-height: 30vh; /* Adjust this value as needed */
     }
 
     .center-image {
@@ -709,4 +735,9 @@ video {
         grid-template-columns: repeat(3, 1fr);
         grid-template-rows: auto;
     }
+}
+
+
+.container * {
+    position: relative; /* Temporary, to catch any absolute positioning */
 }
