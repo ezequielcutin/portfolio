@@ -1,4 +1,5 @@
-body, html {
+body,
+html {
     height: 100%;
     width: 100%;
     margin: 0;
@@ -13,6 +14,8 @@ body, html {
     align-items: center;
     justify-content: flex-start;
     overflow-x: auto;
+    position: relative;
+z-index: 0;
 }
 
 .container {
@@ -21,8 +24,8 @@ body, html {
     text-align: center;
 }
 
-.container p{
-    font-size:0.85em;
+.container p {
+    font-size: 0.85em;
 }
 
 h1 {
@@ -90,12 +93,15 @@ h1 {
     cursor: pointer;
     padding-left: 100px;
     padding-right: 100px;
-    opacity: 0; /* Start with entries hidden */
-    transition: opacity 0.5s ease-in-out; /* Smooth fade-in effect */
+    opacity: 0;
+    /* Start with entries hidden */
+    transition: opacity 0.5s ease-in-out;
+    /* Smooth fade-in effect */
 }
 
 .entry.fade-in {
-    opacity: 1; /* Fully visible */
+    opacity: 1;
+    /* Fully visible */
 }
 
 
@@ -185,8 +191,9 @@ video {
     background-color: #00ff00;
     border-radius: 50%;
     opacity: 0;
-    z-index: 0;
+    z-index: -1;
 }
+
 .profile-links {
     position: fixed;
     bottom: 20px;
@@ -201,15 +208,18 @@ video {
     font-size: 1em;
     color: #00ff00;
     text-decoration: none;
-    transition: font-weight 0.15s ease; /* Smooth transition for font-weight */
+    transition: font-weight 0.15s ease;
+    /* Smooth transition for font-weight */
 }
 
 .profile-links a:hover {
-    font-weight: bold; /* Add bold font-weight on hover */
+    font-weight: bold;
+    /* Add bold font-weight on hover */
 }
 
 .profile-links.collapsed {
-    right: -120px; /* Adjust this value based on the width of your profile links */
+    right: -120px;
+    /* Adjust this value based on the width of your profile links */
 }
 
 .profile-links .expand-arrow {
@@ -222,18 +232,26 @@ video {
     color: #00ff00;
     font-size: 1.5em;
     font-family: 'Courier New', monospace;
-    background: #1a1a1a; /* Match the dropdown background */
-    border: 1px solid #00ff00; /* Green border to match the text color */
-    border-radius: 5px; /* Rounded corners for a modern look */
+    background: #1a1a1a;
+    /* Match the dropdown background */
+    border: 1px solid #00ff00;
+    /* Green border to match the text color */
+    border-radius: 5px;
+    /* Rounded corners for a modern look */
     padding: 2.5px;
-    transition: background 0.3s ease, border 0.3s ease; /* Smooth transitions */
-    line-height: 1; /* Ensure line-height doesn't affect vertical centering */
+    transition: background 0.3s ease, border 0.3s ease;
+    /* Smooth transitions */
+    line-height: 1;
+    /* Ensure line-height doesn't affect vertical centering */
 }
 
 .profile-links .expand-arrow:hover {
-    background: #00ff00; /* Green background on hover */
-    color: #1a1a1a; /* Dark text color on hover */
-    border-color: #1a1a1a; /* Dark border on hover */
+    background: #00ff00;
+    /* Green background on hover */
+    color: #1a1a1a;
+    /* Dark text color on hover */
+    border-color: #1a1a1a;
+    /* Dark border on hover */
 }
 
 .profile-links.collapsed .expand-arrow {
@@ -306,19 +324,25 @@ video {
     .tabs {
         display: flex;
         flex-direction: row;
-        justify-content: center; /* Center the tabs horizontally */
-        flex-wrap: wrap; /* Allow tabs to wrap to the next line if needed */
+        justify-content: center;
+        /* Center the tabs horizontally */
+        flex-wrap: wrap;
+        /* Allow tabs to wrap to the next line if needed */
     }
 
     .tab {
-        margin: 5px; /* Add some margin to space out the tabs */
-        width: auto; /* Let the tabs take their natural width */
+        margin: 5px;
+        /* Add some margin to space out the tabs */
+        width: auto;
+        /* Let the tabs take their natural width */
         text-align: center;
     }
 
     .entry {
-        padding-left: 40px; /* Adjust padding as needed */
-        padding-right: 40px; /* Adjust padding as needed */
+        padding-left: 40px;
+        /* Adjust padding as needed */
+        padding-right: 40px;
+        /* Adjust padding as needed */
     }
 
     .profile-links {
@@ -339,7 +363,8 @@ video {
         justify-content: center;
     }
 
-    .title, .date-location {
+    .title,
+    .date-location {
         width: 100%;
         text-align: center;
     }
@@ -357,7 +382,8 @@ video {
         justify-content: center;
     }
 
-    .title, .date-location {
+    .title,
+    .date-location {
         width: 100%;
         text-align: center;
     }
@@ -366,11 +392,12 @@ video {
 
 /* Styles for screens smaller than 730px */
 @media (max-width: 730px) {
-      body,
+
+    body,
     html {
         font-size: 1.01em;
     }
-    
+
     .entry {
         padding-left: 20px;
         padding-right: 20px;
@@ -381,7 +408,8 @@ video {
         justify-content: center;
     }
 
-    .title, .date-location {
+    .title,
+    .date-location {
         width: 100%;
         text-align: center;
     }
@@ -392,19 +420,25 @@ video {
     .tabs {
         display: flex;
         flex-direction: column;
-        align-items: center; /* Center the tabs vertically */
-        margin-bottom: 20px; /* Add margin between tabs */
+        align-items: center;
+        /* Center the tabs vertically */
+        margin-bottom: 20px;
+        /* Add margin between tabs */
     }
 
     .tab {
-        margin: 10px 0; /* Add margin between tabs */
-        width: 35%; /* Make tabs take full width */
+        margin: 10px 0;
+        /* Add margin between tabs */
+        width: 35%;
+        /* Make tabs take full width */
         text-align: center;
     }
 
     .entry {
-        padding-left: 10px; /* Adjust padding as needed */
-        padding-right: 10px; /* Adjust padding as needed */
+        padding-left: 10px;
+        /* Adjust padding as needed */
+        padding-right: 10px;
+        /* Adjust padding as needed */
     }
 
     .entry-header {
@@ -412,7 +446,8 @@ video {
         justify-content: center;
     }
 
-    .title, .date-location {
+    .title,
+    .date-location {
         width: 100%;
         text-align: center;
     }
@@ -424,9 +459,12 @@ video {
 
     .dropdown-content video,
     .dropdown-content img {
-        max-width: 90%; /* Make videos and images fit within the screen */
-        height: auto; /* Maintain aspect ratio */
-        margin: 10px 0; /* Add margin to separate them from other content */
+        max-width: 90%;
+        /* Make videos and images fit within the screen */
+        height: auto;
+        /* Maintain aspect ratio */
+        margin: 10px 0;
+        /* Add margin to separate them from other content */
     }
 }
 
@@ -439,12 +477,14 @@ video {
 
 .music-description.fade-out {
     opacity: 0;
-    transform: translateY(-10px); /* Move up slightly */
+    transform: translateY(-10px);
+    /* Move up slightly */
 }
 
 .music-description.fade-in {
     opacity: 1;
-    transform: translateY(0); /* Move back to original position */
+    transform: translateY(0);
+    /* Move back to original position */
 }
 
 #blurb {
@@ -452,7 +492,8 @@ video {
     margin-bottom: 20px;
     padding: 0 20px;
     font-size: 1em;
-    color: #00ff00; /* or any color that fits your theme */
+    color: #00ff00;
+    /* or any color that fits your theme */
     opacity: 1;
     transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
     padding-left: 65px;
@@ -461,28 +502,34 @@ video {
 
 #blurb.fade-out {
     opacity: 0;
-    transform: translateY(-10px); /* Move up slightly */
+    transform: translateY(-10px);
+    /* Move up slightly */
 }
 
 #blurb.fade-in {
     opacity: 1;
-    transform: translateY(0); /* Move back to original position */
+    transform: translateY(0);
+    /* Move back to original position */
 }
 
 .project-description ul {
-    font-size: 0.7em; /* Adjust the size as needed */
-    margin-left: 20px; /* Optional: Adjust the margin for better alignment */
+    font-size: 0.7em;
+    /* Adjust the size as needed */
+    margin-left: 20px;
+    /* Optional: Adjust the margin for better alignment */
 }
 
 .project-description li {
-    margin-bottom: 5px; /* Optional: Add some space between list items */
+    margin-bottom: 5px;
+    /* Optional: Add some space between list items */
 }
 
 
 .carousel-container {
     position: relative;
     width: 100%;
-    max-width: 500px; /* Adjust as needed */
+    max-width: 500px;
+    /* Adjust as needed */
     margin: auto;
     overflow: hidden;
 }
@@ -493,14 +540,17 @@ video {
 }
 
 .carousel-slide img {
-    width: 500px; /* Adjust as needed */
+    width: 500px;
+    /* Adjust as needed */
     height: auto;
-    display: none; /* Hide all images initially */
+    display: none;
+    /* Hide all images initially */
     z-index: 2;
 }
 
 .carousel-slide img:first-child {
-    display: block; /* Show the first image initially */
+    display: block;
+    /* Show the first image initially */
 }
 
 .slider-controls {
@@ -510,34 +560,153 @@ video {
     display: flex;
     justify-content: space-between;
     transform: translateY(-50%);
-    pointer-events: none; /* Allow clicks to pass through */
-    z-index: 10; /* Ensure the controls are on top of other elements */
+    pointer-events: none;
+    /* Allow clicks to pass through */
+    z-index: 10;
+    /* Ensure the controls are on top of other elements */
 }
 
-.prev, .next {
+.prev,
+.next {
     cursor: pointer;
-    background-color: rgba(37, 36, 36, 0.5); /* Slightly transparent background for visibility */
+    background-color: rgba(37, 36, 36, 0.5);
+    /* Slightly transparent background for visibility */
     color: white;
     border: none;
     padding: 5px;
     font-size: 18px;
     transition: background-color 0.3s;
-    pointer-events: auto; /* Enable clicks on buttons */
-    z-index: 10; /* Ensure the buttons are on top of other elements */
+    pointer-events: auto;
+    /* Enable clicks on buttons */
+    z-index: 10;
+    /* Ensure the buttons are on top of other elements */
 }
 
 .prev {
     position: absolute;
-    left: 0; /* Align the button to the left edge of the container */
-    transform: translateX(-25%); /* Move the button slightly outside the image */
+    left: 0;
+    /* Align the button to the left edge of the container */
+    transform: translateX(-25%);
+    /* Move the button slightly outside the image */
 }
 
 .next {
     position: absolute;
-    right: 0; /* Align the button to the right edge of the container */
-    transform: translateX(25%); /* Move the button slightly outside the image */
+    right: 0;
+    /* Align the button to the right edge of the container */
+    transform: translateX(25%);
+    /* Move the button slightly outside the image */
 }
 
-.prev:hover, .next:hover {
-    background-color: rgba(0, 255, 0, 0.7); /* Change background color on hover */
+.prev:hover,
+.next:hover {
+    background-color: rgba(0, 255, 0, 0.7);
+    /* Change background color on hover */
+}
+
+#about-me-blurb {
+    text-align: center;
+    margin-bottom: 20px;
+    transition: opacity 0.5s ease-out;
+    /* Add transition for fade effect */
+}
+
+#more-about-me {
+    transition: opacity 0.5s ease-out;
+    /* Add transition for fade effect */
+    transform: scale(0.8);
+    /* Scale down to 80% */
+    transform-origin: top center;
+    /* Scale from the top center */
+}
+
+#about-me-blurb {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.01em;
+    /* Reduce font size to 80% */
+    line-height: 1.5;
+    /* Adjust line height for better readability */
+}
+
+.gallery-wrapper {
+    position: relative;
+    z-index: 1;
+}
+
+.gallery-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    position: relative;
+}
+
+.image-gallery {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
+    /* Adjust this value as needed */
+    transform: scale(0.7);
+    transform-origin: top center;
+    position: relative;
+}
+
+.left-column {
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+    gap: 20px;
+    height: 100%;
+    position: relative;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.gallery-image {
+    opacity: 0;
+    animation: fadeIn 1s ease-in-out forwards;
+    animation-play-state: paused;
+}
+
+.gallery-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.gallery-image:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.center-image {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    height: 100%;
+}
+
+@media (max-width: 768px) {
+    .image-gallery {
+        grid-template-columns: 1fr;
+        transform: scale(0.9);
+        /* Less scaling on mobile for better visibility */
+    }
+
+    .center-image {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .left-column {
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: auto;
+    }
 }

@@ -1,84 +1,82 @@
-let currentTab = null; // No default tab
+let currentTab = null;
 
 function showTab(tabName) {
     const blurb = document.getElementById('blurb');
-    const musicDescription = document.querySelector('.music-description');
+    const moreAboutMe = document.getElementById('more-about-me');
     const blurbContent = {
         work: '<br><p>Hey there! I\'m Ezequiel, a passionate software engineer with a knack for creating innovative solutions. From full-stack web applications to generative AI models, I love diving into projects that challenge me to think outside the box. Why hire me? Because I bring a blend of technical expertise and creative problem-solving to the table, ensuring that every project I work on is both efficient and exciting!</p>',
         projects: '<br><p>Hey there! I\'m Ezequiel, a passionate software engineer with a knack for creating innovative solutions. From full-stack web applications to generative AI models, I love diving into projects that challenge me to think outside the box. Why hire me? Because I bring a blend of technical expertise and creative problem-solving to the table, ensuring that every project I work on is both efficient and exciting!</p>',
         music: '<p class="music-description">From a young age, I was immersed in a rich tapestry of sounds, with my parents often playing The Beatles\' album "1." This early exposure sparked a deep-seated love for music, driving me to learn the guitar and eventually delve into the world of electronic music production. To me, music is more than just melodies and rhythms; it is a profound language that transcends boundaries and speaks to the soul. Through EDM, I find a unique avenue to express my innermost emotions and thoughts, creating connections that I hope resonate deeply with listeners. I am making it my mission to combine the technology of computer science with music to further advance the field and push the boundaries of what is possible.</p>'
     };
 
-    const shouldFadeOut = currentTab !== 'music' && tabName === 'music';
-    const shouldFadeIn = currentTab === 'music' && tabName !== 'music';
-
-    if (shouldFadeOut || shouldFadeIn) {
-        if (shouldFadeOut) {
-            blurb.classList.add('fade-out');
-            setTimeout(() => {
-                blurb.innerHTML = blurbContent[tabName];
-                blurb.classList.remove('fade-out');
-                blurb.classList.add('fade-in');
-                setTimeout(() => {
-                    blurb.classList.remove('fade-in');
-                }, 250); // match the transition duration in CSS
-            }, 250); // match the transition duration in CSS
-        } else if (shouldFadeIn) {
-            musicDescription.classList.add('fade-out');
-            setTimeout(() => {
-                blurb.innerHTML = blurbContent[tabName];
-                musicDescription.classList.remove('fade-out');
-                musicDescription.classList.add('fade-in');
-                setTimeout(() => {
-                    musicDescription.classList.remove('fade-in');
-                }, 250); // match the transition duration in CSS
-            }, 250); // match the transition duration in CSS
-        }
-    } else {
-        blurb.innerHTML = blurbContent[tabName];
+    // Fade out the "More About Me" section
+    if (moreAboutMe) {
+        moreAboutMe.style.opacity = '0';
+        setTimeout(() => {
+            moreAboutMe.style.display = 'none';
+        }, 500); // Wait for fade-out to complete before hiding
     }
 
+    // Update blurb content
+    blurb.classList.add('fade-out');
+    setTimeout(() => {
+        blurb.innerHTML = blurbContent[tabName];
+        blurb.classList.remove('fade-out');
+        blurb.classList.add('fade-in');
+        setTimeout(() => {
+            blurb.classList.remove('fade-in');
+        }, 250);
+    }, 250);
+
+    // Update active tab
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    currentTab = tabName;
+
+    // Show the selected content and apply fade-in effect to entries
     setTimeout(() => {
         document.querySelectorAll('.content').forEach(content => {
             content.classList.remove('active');
         });
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.classList.remove('active');
-            gsap.to(tab, {
-                duration: 0.5,
-                backgroundColor: "transparent",
-                ease: "power2.out",
-                borderRadius: "0px" // Reset border-radius for other tabs
-            });
-        });
-        document.getElementById(tabName).classList.add('active');
-        const activeTab = document.querySelector(`.tab[onclick="showTab('${tabName}')"]`);
-        activeTab.classList.add('active');
-        gsap.to(activeTab, {
-            duration: 0.5,
-            backgroundColor: "rgba(0, 255, 0, 0.2)",
-            ease: "power2.out",
-            borderRadius: "10px" // Add border-radius for active tab
-        });
-
-        currentTab = tabName; // Update the current tab
-
-        // Apply fade-in effect to entries
-        const entries = document.querySelectorAll(`#${tabName} .entry`);
+        const selectedContent = document.getElementById(tabName);
+        selectedContent.classList.add('active');
+        const entries = selectedContent.querySelectorAll('.entry');
         entries.forEach((entry, index) => {
             entry.classList.remove('fade-in');
-            void entry.offsetWidth; // Trigger reflow to restart the animation
+            void entry.offsetWidth; // Trigger reflow
             setTimeout(() => {
                 entry.classList.add('fade-in');
-            }, index * 100); // Stagger the fade-in for each entry
+            }, index * 100);
         });
-    }, 250); // Ensure the delay matches the transition duration
+    }, 250);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     // Ensure no tab is highlighted initially
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
     document.querySelectorAll('.content').forEach(content => content.classList.remove('active'));
+
+    // Show the "More About Me" section on initial load
+    const moreAboutMe = document.getElementById('more-about-me');
+    if (moreAboutMe) {
+        moreAboutMe.style.display = 'block';
+        moreAboutMe.style.opacity = '1';
+    
+         // Trigger fade-in animation for gallery images
+         const galleryImages = moreAboutMe.querySelectorAll('.gallery-image');
+         galleryImages.forEach((img, index) => {
+             setTimeout(() => {
+                 img.style.animationPlayState = 'running';
+             }, index * 200); // Stagger the animations
+         });
+     }
+
+    
+    // Ensure no tab is initially active
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
 });
 
 
