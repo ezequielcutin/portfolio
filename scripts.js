@@ -401,3 +401,4 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize all carousels
     document.querySelectorAll('.carousel-container').forEach(initCarousel);
 });
+
