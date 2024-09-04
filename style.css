@@ -696,4 +696,8 @@ video {
     .next{
         transform: translateY(-250%);
     }
+
+    .center-image {
+        display: none;
+    }
 }
