@@ -67,10 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
          // Trigger fade-in animation for gallery images
          const galleryImages = moreAboutMe.querySelectorAll('.gallery-image');
-         galleryImages.forEach((img, index) => {
-             setTimeout(() => {
-                 img.style.animationPlayState = 'running';
-             }, index * 200); // Stagger the animations
+         galleryImages.forEach((img) => {
+             img.style.animationPlayState = 'running';
          });
      }
 
@@ -88,7 +86,7 @@ function toggleDropdown(element) {
         gsap.to(dropdown, { height: 0, opacity: 0, duration: 0.5, onComplete: () => {
             dropdown.classList.remove('show');
             dropdown.style.display = 'none';
-            checkDropdownOverlap(); // Check overlap after closing
+            // checkDropdownOverlap(); // Check overlap after closing
         }});
     } else {
         dropdown.style.display = 'block';
@@ -98,7 +96,7 @@ function toggleDropdown(element) {
         gsap.to(dropdown, { height: height, opacity: 1, duration: 0.5, onComplete: () => {
             dropdown.classList.add('show');
             dropdown.style.height = 'auto';
-            checkDropdownOverlap(); // Check overlap after opening
+            // checkDropdownOverlap(); // Check overlap after opening
         }});
     }
     synchronizeBlinking();
@@ -190,98 +188,10 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
-
-    // Initial check for overlap
-    checkOverlap();
-    window.addEventListener('resize', checkOverlap);
-    window.addEventListener('scroll', checkOverlap);
-
-    const observer = new MutationObserver(checkOverlap);
-    const config = { attributes: true, childList: true, subtree: true };
-
-    document.querySelectorAll('.entry, .date-location, .dropdown').forEach(element => {
-        observer.observe(element, config);
-    });
 });
-
-
-function checkDropdownOverlap() {
-    const dropdowns = document.querySelectorAll('.dropdown.show');
-    const profileLinks = document.querySelector('.profile-links');
-    let isOverlapping = false;
-
-    dropdowns.forEach(dropdown => {
-        const dropdownRect = dropdown.getBoundingClientRect();
-        const profileLinksRect = profileLinks.getBoundingClientRect();
-
-        if (
-            dropdownRect.bottom > profileLinksRect.top &&
-            dropdownRect.top < profileLinksRect.bottom &&
-            dropdownRect.right > profileLinksRect.left &&
-            dropdownRect.left < profileLinksRect.right
-        ) {
-            isOverlapping = true;
-        }
-    });
-
-    if (isOverlapping) {
-        profileLinks.classList.add('collapsed');
-    }
-}
-
-function checkOverlap() {
-    const profileLinks = document.querySelector('.profile-links');
-    const entries = document.querySelectorAll('.entry');
-    const dateLocations = document.querySelectorAll('.date-location');
-    const dropdowns = document.querySelectorAll('.dropdown.show');
-
-    const profileLinksRect = profileLinks.getBoundingClientRect();
-    let isOverlapping = false;
-
-    entries.forEach(entry => {
-        const entryRect = entry.getBoundingClientRect();
-        if (
-            entryRect.bottom > profileLinksRect.top &&
-            entryRect.top < profileLinksRect.bottom &&
-            entryRect.right > profileLinksRect.left &&
-            entryRect.left < profileLinksRect.right
-        ) {
-            isOverlapping = true;
-        }
-    });
-
-    dateLocations.forEach(dateLocation => {
-        const dateLocationRect = dateLocation.getBoundingClientRect();
-        if (
-            dateLocationRect.bottom > profileLinksRect.top &&
-            dateLocationRect.top < profileLinksRect.bottom &&
-            dateLocationRect.right > profileLinksRect.left &&
-            dateLocationRect.left < profileLinksRect.right
-        ) {
-            isOverlapping = true;
-        }
-    });
-
-    dropdowns.forEach(dropdown => {
-        const dropdownRect = dropdown.getBoundingClientRect();
-        if (
-            dropdownRect.bottom > profileLinksRect.top &&
-            dropdownRect.top < profileLinksRect.bottom &&
-            dropdownRect.right > profileLinksRect.left &&
-            dropdownRect.left < profileLinksRect.right
-        ) {
-            isOverlapping = true;
-        }
-    });
-
-    if (isOverlapping) {
-        profileLinks.classList.add('collapsed');
-    }
-}
 
 document.addEventListener('DOMContentLoaded', function() {
     const tabs = document.querySelectorAll('.tab');
-    const profileLinks = document.querySelector('.profile-links');
     const entries = document.querySelectorAll('.entry');
     const dateLocations = document.querySelectorAll('.date-location');
 
@@ -324,28 +234,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 borderRadius: "10px" // Add border-radius for active tab
             });
         });
-    });
-
-    document.querySelectorAll('.entry').forEach(entry => {
-        entry.addEventListener('click', () => {
-            setTimeout(checkDropdownOverlap, 600); // Adjust delay to allow for dropdown animation completion
-        });
-    });
-
-    document.querySelector('.profile-links .expand-arrow').addEventListener('click', () => {
-        profileLinks.classList.toggle('collapsed');
-    });
-
-    // Initial check for overlap
-    checkOverlap();
-    window.addEventListener('resize', checkOverlap);
-    window.addEventListener('scroll', checkOverlap);
-
-    const observer = new MutationObserver(checkOverlap);
-    const config = { attributes: true, childList: true, subtree: true };
-
-    document.querySelectorAll('.entry, .date-location, .dropdown').forEach(element => {
-        observer.observe(element, config);
     });
 });
 
@@ -399,4 +287,3 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize all carousels
     document.querySelectorAll('.carousel-container').forEach(initCarousel);
 });
-

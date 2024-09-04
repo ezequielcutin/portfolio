@@ -195,90 +195,6 @@ video {
     z-index: -1;
 }
 
-.profile-links {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    text-align: right;
-    transition: right 0.5s ease;
-}
-
-.profile-links a {
-    display: block;
-    margin-top: 5px;
-    font-size: 1em;
-    color: #00ff00;
-    text-decoration: none;
-    transition: font-weight 0.15s ease;
-    /* Smooth transition for font-weight */
-}
-
-.profile-links a:hover {
-    font-weight: bold;
-    /* Add bold font-weight on hover */
-}
-
-.profile-links.collapsed {
-    right: -120px;
-    /* Adjust this value based on the width of your profile links */
-}
-
-.profile-links .expand-arrow {
-    display: none;
-    position: absolute;
-    left: -30px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    color: #00ff00;
-    font-size: 1.5em;
-    font-family: 'Courier New', monospace;
-    background: #1a1a1a;
-    /* Match the dropdown background */
-    border: 1px solid #00ff00;
-    /* Green border to match the text color */
-    border-radius: 5px;
-    /* Rounded corners for a modern look */
-    padding: 2.5px;
-    transition: background 0.3s ease, border 0.3s ease;
-    /* Smooth transitions */
-    line-height: 1;
-    /* Ensure line-height doesn't affect vertical centering */
-}
-
-.profile-links .expand-arrow:hover {
-    background: #00ff00;
-    /* Green background on hover */
-    color: #1a1a1a;
-    /* Dark text color on hover */
-    border-color: #1a1a1a;
-    /* Dark border on hover */
-}
-
-.profile-links.collapsed .expand-arrow {
-    display: block;
-}
-
-.profile-links a::before {
-    display: none;
-    margin-right: 5px;
-}
-
-.profile-links a:hover::before {
-    display: none;
-}
-
-.profile-links a[href*="linkedin.com"]:hover::before {
-    content: none;
-}
-
-.profile-links a[href*="github.com"]:hover::before {
-    content: none;
-}
-
-.profile-links a[href*="mailto:"]:hover::before {
-    content: none;
-}
 
 .fa-link,
 .fa-github {
@@ -416,59 +332,6 @@ video {
     }
 }
 
-/* Styles for screens smaller than 550px */
-@media (max-width: 550px) {
-    .tabs {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        /* Center the tabs vertically */
-        margin-bottom: 20px;
-        /* Add margin between tabs */
-    }
-
-    .tab {
-        margin: 10px 0;
-        /* Add margin between tabs */
-        width: 35%;
-        /* Make tabs take full width */
-        text-align: center;
-    }
-
-    .entry {
-        padding-left: 10px;
-        /* Adjust padding as needed */
-        padding-right: 10px;
-        /* Adjust padding as needed */
-    }
-
-    .entry-header {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .title,
-    .date-location {
-        width: 100%;
-        text-align: center;
-    }
-
-    .profile-links {
-        bottom: 10px;
-        right: 10px;
-    }
-
-    .dropdown-content video,
-    .dropdown-content img {
-        max-width: 90%;
-        /* Make videos and images fit within the screen */
-        height: auto;
-        /* Maintain aspect ratio */
-        margin: 10px 0;
-        /* Add margin to separate them from other content */
-    }
-}
-
 .music-description {
     text-align: center;
     padding: 0 40px;
@@ -588,6 +451,7 @@ video {
     left: 0;
     /* Align the button to the left edge of the container */
     transform: translateX(-25%);
+    transform: translateY(-500%);
     /* Move the button slightly outside the image */
 }
 
@@ -596,6 +460,7 @@ video {
     right: 0;
     /* Align the button to the right edge of the container */
     transform: translateX(25%);
+    transform: translateY(-500%);
     /* Move the button slightly outside the image */
 }
 
@@ -605,10 +470,16 @@ video {
     /* Change background color on hover */
 }
 
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 #about-me-blurb {
     text-align: center;
     margin-bottom: 20px;
     transition: opacity 0.5s ease-out;
+    animation: fadeIn 1s ease-in-out forwards;
     /* Add transition for fade effect */
 }
 
@@ -668,10 +539,6 @@ video {
     position: relative;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
 
 .gallery-image {
     opacity: 0;
@@ -741,4 +608,92 @@ video {
 
 .container * {
     position: relative; /* Temporary, to catch any absolute positioning */
+}
+
+
+
+/* Styles for screens smaller than 550px */
+@media (max-width: 550px) {
+    .tabs {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        /* Center the tabs vertically */
+        margin-bottom: 20px;
+        /* Add margin between tabs */
+    }
+
+    .tab {
+        margin: 10px 0;
+        /* Add margin between tabs */
+        width: 35%;
+        /* Make tabs take full width */
+        text-align: center;
+    }
+
+    .entry {
+        padding-left: 10px;
+        /* Adjust padding as needed */
+        padding-right: 10px;
+        /* Adjust padding as needed */
+    }
+
+    .entry-header {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .title,
+    .date-location {
+        width: 100%;
+        text-align: center;
+    }
+
+    .profile-links {
+        bottom: 10px;
+        right: 10px;
+    }
+
+    .dropdown-content video,
+    .dropdown-content img {
+        max-width: 90%;
+        /* Make videos and images fit within the screen */
+        height: auto;
+        /* Maintain aspect ratio */
+        margin: 10px 0;
+        /* Add margin to separate them from other content */
+    }
+
+    .carousel-container {
+        max-width: 90%;
+    }
+
+    .carousel-slide img {
+        width: 500px;
+        /* Adjust as needed */
+        height: auto;
+        display: none;
+        /* Hide all images initially */
+        z-index: 2;
+    }
+    .carousel-slide img {
+        width: 500px;
+        /* Adjust as needed */
+        height: auto;
+        display: none;
+        /* Hide all images initially */
+        z-index: 2;
+        margin: 0 auto; /* Center the image */
+    }
+
+    .prev,.next {
+        font-size:14px;
+    }
+
+    .prev {
+        transform: translateY(-250%);
+    }
+    .next{
+        transform: translateY(-250%);
+    }
 }
