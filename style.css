@@ -729,6 +729,7 @@ video {
     .center-image {
         grid-column: 1;
         grid-row: auto;
+        height: 100%;
     }
 
     .left-column {
