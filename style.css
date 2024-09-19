@@ -429,6 +429,60 @@ footer i {
     pointer-events: none;
 }
 
+.music-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+.soundcloud-block {
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.soundcloud-block:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.7);
+}
+
+.soundcloud-block::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #00ff00, #00ffff, #ff00ff);
+    z-index: -1;
+    filter: blur(10px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.soundcloud-block:hover::before {
+    opacity: 1;
+}
+
+.soundcloud-block iframe {
+    display: block;
+    border: none;
+    border-radius: 10px;
+}
+
+@media (max-width: 768px) {
+    .soundcloud-block {
+        max-width: 100%;
+    }
+}
+
 @media (max-width: 990px){
     #terminal{
         display: none !important;
