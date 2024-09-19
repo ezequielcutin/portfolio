@@ -1,6 +1,154 @@
 let currentTab = null;
+let terminalManuallyClosed = false;
+
+// function initCyberpunkGallery() {
+//     const images = document.querySelectorAll('.cyberpunk-image');
+//     let currentIndex = 0;
+
+//     function showNextImage() {
+//         images[currentIndex].classList.remove('active');
+//         currentIndex = (currentIndex + 1) % images.length;
+//         images[currentIndex].classList.add('active');
+//     }
+
+//     setInterval(showNextImage, 10000);
+// }
+
+function initCyberpunkGallery() {
+    const container = document.querySelector('.cyberpunk-gallery-container');
+    const images = document.querySelectorAll('.cyberpunk-image');
+    let currentIndex = 0;
+
+    // Create matrix rain canvas
+    const matrixRain = document.createElement('canvas');
+    matrixRain.className = 'matrix-rain';
+    container.appendChild(matrixRain);
+    const ctx = matrixRain.getContext('2d');
+
+    // Set up matrix rain
+    let fontSize = 14;
+    let columns = 0;
+    let drops = [];
+
+    function initializeRain() {
+        matrixRain.width = container.clientWidth;
+        matrixRain.height = container.clientHeight;
+        columns = matrixRain.width / fontSize;
+        drops = [];
+        for (let i = 0; i < columns; i++) {
+            drops[i] = 1;
+        }
+    }
+
+    function drawMatrixRain() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Increased opacity for faster fade
+        ctx.fillRect(0, 0, matrixRain.width, matrixRain.height);
+        ctx.fillStyle = '#0f0';
+        ctx.font = fontSize + 'px monospace';
+
+        for (let i = 0; i < drops.length; i++) {
+            const text = String.fromCharCode(Math.random() * 128);
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > matrixRain.height && Math.random() > 0.95) { // Increased probability of resetting
+                drops[i] = 0;
+            }
+            drops[i] += 2; // Increased speed
+        }
+    }
+
+    async function transitionImages() {
+        images[currentIndex].classList.remove('active');
+        currentIndex = (currentIndex + 1) % images.length;
+
+        // Start matrix rain animation
+        matrixRain.style.opacity = '1';
+        let frames = 0;
+        const maxFrames = 60; // Adjust this value to control the duration of the animation
+        
+        return new Promise((resolve) => {
+            const rainAnimation = setInterval(() => {
+                drawMatrixRain();
+                frames++;
+                if (frames >= maxFrames) {
+                    clearInterval(rainAnimation);
+                    matrixRain.style.opacity = '0';
+                    images[currentIndex].classList.add('active');
+                    resolve();
+                }
+            }, 16); // Run at approximately 60 FPS
+        });
+    }
+
+    // Resize canvas when window is resized
+    function resizeCanvas() {
+        initializeRain();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    initializeRain(); // Initialize on load
+
+    // Start the image transition loop
+    async function transitionLoop() {
+        while (true) {
+            await transitionImages();
+            await new Promise(resolve => setTimeout(resolve, 8000)); // Wait 8 seconds between transitions
+        }
+    }
+
+    transitionLoop();
+}
+
+function activateTerminal() {
+    const terminal = document.getElementById('terminal');
+    if (terminal) {
+        terminal.style.display = 'flex';
+        terminal.style.opacity = '0';
+        terminal.style.transform = 'scale(0.7)';
+        
+        setTimeout(() => {
+            terminal.style.opacity = '0.7';
+            terminal.style.transform = 'scale(0.7)';
+        }, 50);
+    }
+}
+
+function toggleTerminal() {
+    const terminal = document.getElementById('terminal');
+    if (terminal.style.display === 'none' || terminal.style.display === '') {
+        terminal.style.display = 'flex';
+        setTimeout(() => {
+            terminal.style.opacity = '0.7';
+            terminal.style.transform = 'scale(0.7)';
+        }, 0);
+        terminalManuallyClosed = false;
+    } else {
+        terminal.style.opacity = '0';
+        terminal.style.transform = 'scale(0.5)';
+        setTimeout(() => {
+            terminal.style.display = 'none';
+        }, 300);
+        terminalManuallyClosed = true;
+    }
+}
+
+function logToTerminal(message) {
+    const terminal = document.getElementById('terminal');
+    const terminalContent = document.getElementById('terminal-content');
+    
+    if (!terminalManuallyClosed && (terminal.style.display === 'none' || terminal.style.display === '')) {
+        toggleTerminal();
+    }
+
+    const timestamp = new Date().toLocaleTimeString();
+    terminalContent.innerHTML += `[${timestamp}] ${message}<br>`;
+    terminalContent.scrollTop = terminalContent.scrollHeight;
+}
+
+
+
 
 function showTab(tabName) {
+    activateTerminal();
     const blurb = document.getElementById('blurb');
     const moreAboutMe = document.getElementById('more-about-me');
     const blurbContent = {
@@ -9,15 +157,13 @@ function showTab(tabName) {
         music: '<p class="music-description">From a young age, I was immersed in a rich tapestry of sounds, with my parents often playing The Beatles\' album "1." This early exposure sparked a deep-seated love for music, driving me to learn the guitar and eventually delve into the world of electronic music production. To me, music is more than just melodies and rhythms; it is a profound language that transcends boundaries and speaks to the soul. Through EDM, I find a unique avenue to express my innermost emotions and thoughts, creating connections that I hope resonate deeply with listeners. I am making it my mission to combine the technology of computer science with music to further advance the field and push the boundaries of what is possible.</p>'
     };
 
-    // Fade out the "More About Me" section
     if (moreAboutMe) {
         moreAboutMe.style.opacity = '0';
         setTimeout(() => {
             moreAboutMe.style.display = 'none';
-        }, 500); // Wait for fade-out to complete before hiding
+        }, 500);
     }
 
-    // Update blurb content
     blurb.classList.add('fade-out');
     setTimeout(() => {
         blurb.innerHTML = blurbContent[tabName];
@@ -28,7 +174,6 @@ function showTab(tabName) {
         }, 250);
     }, 250);
 
-    // Update active tab
     document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.remove('active');
     });
@@ -36,7 +181,6 @@ function showTab(tabName) {
 
     currentTab = tabName;
 
-    // Show the selected content and apply fade-in effect to entries
     setTimeout(() => {
         document.querySelectorAll('.content').forEach(content => {
             content.classList.remove('active');
@@ -51,42 +195,19 @@ function showTab(tabName) {
                 entry.classList.add('fade-in');
             }, index * 100);
         });
+
     }, 250);
+
+    logToTerminal(`Switched to ${tabName} tab`);
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Ensure no tab is highlighted initially
-    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-    document.querySelectorAll('.content').forEach(content => content.classList.remove('active'));
-
-    // Show the "More About Me" section on initial load
-    const moreAboutMe = document.getElementById('more-about-me');
-    if (moreAboutMe) {
-        moreAboutMe.style.display = 'block';
-        moreAboutMe.style.opacity = '1';
-    
-         // Trigger fade-in animation for gallery images
-         const galleryImages = moreAboutMe.querySelectorAll('.gallery-image');
-         galleryImages.forEach((img) => {
-             img.style.animationPlayState = 'running';
-         });
-     }
-
-    
-    // Ensure no tab is initially active
-    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-});
-
 
 function toggleDropdown(element) {
     const dropdown = element.querySelector('.dropdown');
-    const isOpen = dropdown.classList.contains('show');
+    const isOpen = dropdown.style.display === 'block';
     
     if (isOpen) {
         gsap.to(dropdown, { height: 0, opacity: 0, duration: 0.5, onComplete: () => {
-            dropdown.classList.remove('show');
             dropdown.style.display = 'none';
-            // checkDropdownOverlap(); // Check overlap after closing
         }});
     } else {
         dropdown.style.display = 'block';
@@ -94,22 +215,11 @@ function toggleDropdown(element) {
         const height = dropdown.clientHeight + 'px';
         dropdown.style.height = 0;
         gsap.to(dropdown, { height: height, opacity: 1, duration: 0.5, onComplete: () => {
-            dropdown.classList.add('show');
             dropdown.style.height = 'auto';
-            // checkDropdownOverlap(); // Check overlap after opening
         }});
     }
     synchronizeBlinking();
-}
-
-function preventDropdown(event) {
-    event.stopPropagation();
-}
-
-function resetDropdown(event, button) {
-    event.stopPropagation(); // Stop the click event from propagating to the parent elements
-    console.log("Reset button clicked.");
-    synchronizeBlinking();
+    logToTerminal(`Toggled dropdown: ${element.querySelector('.title').textContent}`);
 }
 
 function synchronizeBlinking() {
@@ -143,108 +253,18 @@ function createBlinkingLights() {
     }
 }
 
-createBlinkingLights();
-
-document.addEventListener('DOMContentLoaded', function() {
-    const tabs = document.querySelectorAll('.tab');
-
-    tabs.forEach(tab => {
-        tab.addEventListener('mouseenter', function(e) {
-            gsap.to(tab, {
-                duration: 0.5,
-                backgroundColor: "rgba(0, 255, 0, 0.2)",
-                ease: "power2.out",
-                borderRadius: "10px" // Add border-radius for hover effect
-            });
-        });
-
-        tab.addEventListener('mouseleave', function(e) {
-            if (!tab.classList.contains('active')) {
-                gsap.to(tab, {
-                    duration: 0.5,
-                    backgroundColor: "transparent",
-                    ease: "power2.out",
-                    borderRadius: "0px" // Remove border-radius when not active or hovered
-                });
-            }
-        });
-
-        tab.addEventListener('click', function(e) {
-            tabs.forEach(t => {
-                t.classList.remove('active');
-                gsap.to(t, {
-                    duration: 0.5,
-                    backgroundColor: "transparent",
-                    ease: "power2.out",
-                    borderRadius: "0px" // Reset border-radius for other tabs
-                });
-            });
-            tab.classList.add('active');
-            gsap.to(tab, {
-                duration: 0.5,
-                backgroundColor: "rgba(0, 255, 0, 0.2)",
-                ease: "power2.out",
-                borderRadius: "10px" // Add border-radius for active tab
-            });
-        });
-    });
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    const tabs = document.querySelectorAll('.tab');
-    const entries = document.querySelectorAll('.entry');
-    const dateLocations = document.querySelectorAll('.date-location');
-
-    tabs.forEach(tab => {
-        tab.addEventListener('mouseenter', function(e) {
-            gsap.to(tab, {
-                duration: 0.5,
-                backgroundColor: "rgba(0, 255, 0, 0.2)",
-                ease: "power2.out",
-                borderRadius: "10px" // Add border-radius for hover effect
-            });
-        });
-
-        tab.addEventListener('mouseleave', function(e) {
-            if (!tab.classList.contains('active')) {
-                gsap.to(tab, {
-                    duration: 0.5,
-                    backgroundColor: "transparent",
-                    ease: "power2.out",
-                    borderRadius: "0px" // Remove border-radius when not active or hovered
-                });
-            }
-        });
-
-        tab.addEventListener('click', function(e) {
-            tabs.forEach(t => {
-                t.classList.remove('active');
-                gsap.to(t, {
-                    duration: 0.5,
-                    backgroundColor: "transparent",
-                    ease: "power2.out",
-                    borderRadius: "0px" // Reset border-radius for other tabs
-                });
-            });
-            tab.classList.add('active');
-            gsap.to(tab, {
-                duration: 0.5,
-                backgroundColor: "rgba(0, 255, 0, 0.2)",
-                ease: "power2.out",
-                borderRadius: "10px" // Add border-radius for active tab
-            });
-        });
-    });
-});
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    const video = document.getElementById('insta485Video');
-    if (video) {
-        video.playbackRate = 0.5; // Set playback speed to 0.5x
+function logToTerminal(message) {
+    const terminal = document.getElementById('terminal');
+    const terminalContent = document.getElementById('terminal-content');
+    
+    if (terminal.style.display === 'none' || terminal.style.display === '') {
+        terminal.style.display = 'flex';
     }
-});
 
+    const timestamp = new Date().toLocaleTimeString();
+    terminalContent.innerHTML += `[${timestamp}] ${message}<br>`;
+    terminalContent.scrollTop = terminalContent.scrollHeight;
+}
 
 function initCarousel(carouselContainer) {
     let slideIndex = 1;
@@ -271,7 +291,6 @@ function initCarousel(carouselContainer) {
 
     showSlides(slideIndex);
 
-    // Add event listeners to slider controls to stop propagation
     carouselContainer.querySelector('.prev').addEventListener('click', function(event) {
         event.stopPropagation();
         plusSlides(-1);
@@ -283,7 +302,79 @@ function initCarousel(carouselContainer) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    // Initialize all carousels
+document.addEventListener('DOMContentLoaded', function() {
+    createBlinkingLights();
+    initCyberpunkGallery();
+
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('mouseenter', function(e) {
+            gsap.to(tab, {
+                duration: 0.5,
+                backgroundColor: "rgba(0, 255, 0, 0.2)",
+                ease: "power2.out",
+                borderRadius: "10px"
+            });
+        });
+
+        tab.addEventListener('mouseleave', function(e) {
+            if (!tab.classList.contains('active')) {
+                gsap.to(tab, {
+                    duration: 0.5,
+                    backgroundColor: "transparent",
+                    ease: "power2.out",
+                    borderRadius: "0px"
+                });
+            }
+        });
+
+        tab.addEventListener('click', function(e) {
+            document.querySelectorAll('.tab').forEach(t => {
+                t.classList.remove('active');
+                gsap.to(t, {
+                    duration: 0.5,
+                    backgroundColor: "transparent",
+                    ease: "power2.out",
+                    borderRadius: "0px"
+                });
+            });
+            tab.classList.add('active');
+            gsap.to(tab, {
+                duration: 0.5,
+                backgroundColor: "rgba(0, 255, 0, 0.2)",
+                ease: "power2.out",
+                borderRadius: "10px"
+            });
+        });
+    });
+
+    document.getElementById('close-terminal').addEventListener('click', function(e) {
+        e.stopPropagation();
+        toggleTerminal();
+        terminalManuallyClosed = true;
+    });
+
+    document.getElementById('terminal').addEventListener('mouseenter', function() {
+        this.style.opacity = '1';
+        this.style.transform = 'scale(0.8)';
+    });
+    
+    document.getElementById('terminal').addEventListener('mouseleave', function() {
+        this.style.opacity = '0.7';
+        this.style.transform = 'scale(0.7)';
+    });
+
+    // Hide the terminal on initial load
+    const terminal = document.getElementById('terminal');
+    if (terminal) {
+        terminal.style.display = 'none';
+        terminal.style.opacity = '0';
+        terminal.style.transform = 'scale(0.7)';
+    }
+
+    logToTerminal('Portfolio initialized');
     document.querySelectorAll('.carousel-container').forEach(initCarousel);
 });
+
+// Initialize carousels
+
+// Add any other necessary functions and event listeners

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,564 +17,532 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/CSSRulePlugin.min.js"></script>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap">
     <link rel="icon" href="favicon.png" type="image/png">
 </head>
-
-
-
 <body>
     <div class="container">
-        <h1>Ezequiel Cutin v33.3</h1>
-        <p>software engineer. data analyst. sales engineer.</p>
-        <div id="blurb" class="blurb">
-        </div>
-        <div class="tabs">
-            <button class="tab active" onclick="showTab('work')">WORK EXPERIENCE</button>
+        <header>
+            <h1 class="glitch" data-text="Ezequiel Cutin v33.3">Ezequiel Cutin v33.3</h1>
+            <p class="subtitle">software engineer. data analyst. sales engineer.</p>
+        </header>
+        <div id="blurb" class="blurb"></div>
+        <nav class="tabs">
+            <button class="tab" onclick="showTab('work')">WORK EXPERIENCE</button>
             <button class="tab" onclick="showTab('projects')">PROJECTS</button>
             <button class="tab" onclick="showTab('music')">MUSIC PRODUCTION</button>
-        </div>
+        </nav>
 
-        <div id="more-about-me" class="content active">
-            <p id="about-me-blurb">
-                Hey there! I'm Ezequiel, a recent Computer Science graduate from the University of Michigan, bringing a fresh blend of Latino flair and cutting-edge tech skills to the table.
+        <main>
+            <section id="more-about-me" class="content active">
+                <p id="about-me-blurb">
+                    Hey there! I'm Ezequiel, a recent Computer Science graduate from the University of Michigan, bringing a fresh blend of Latino flair and cutting-edge tech skills to the table.
+                    
+                    As a first-generation American with proud Argentinian roots, I bring unique perspectives to everything I do. My background has instilled in me a vibrant approach to problem-solving, adding a distinctive 'sabor' to my work in tech.
                 
-                As a first-generation American with proud Argentinian roots, I bring unique perspectives to everything I do. My background has instilled in me a vibrant approach to problem-solving, adding a distinctive 'sabor' to my work in tech.
-            
-                When I'm not coding, you'll find me living and breathing fútbol - playing, cheering for Barcelona or Argentina, or debating tactics. This passion translates into my professional life, fostering teamwork and strategic thinking.
-            
-                Beyond code and fútbol, I'm an avid hiker, traveler, and electronic music producer. These pursuits fuel my personal growth and inspire innovative solutions in my projects.
-            
-                Let's create something extraordinary together - where Argentinian passion meets Michigan-made innovation!
-            </p>
-            <div class="gallery-wrapper">
-                <div class="gallery-container">
-                    <div class="image-gallery">
-                        <div class="left-column">
-                            <img src="headshot_budapest.png" alt="Ezequiel in Budapest" class="gallery-image">
-                            <img src="canaries_mountain.png" alt="Ezequiel in Canary Islands" class="gallery-image">
-                            <img src="camel_qatar.png" alt="Ezequiel with a camel in Qatar" class="gallery-image">
-                        </div>
-                        <img src="umich grad.jpg" alt="Ezequiel at University of Michigan graduation" class="gallery-image center-image">
+                    When I'm not coding, you'll find me living and breathing fútbol - playing, cheering for Barcelona or Argentina, or debating tactics. This passion translates into my professional life, fostering teamwork and strategic thinking.
+                
+                    Beyond code and fútbol, I'm an avid hiker, traveler, and electronic music producer. These pursuits fuel my personal growth and inspire innovative solutions in my projects.
+                
+                    Let's create something extraordinary together - where Argentinian passion meets Michigan-made innovation!
+                </p>
+                <div class="gallery-wrapper">
+                    <div class="cyberpunk-gallery-container">
+                        <img src="headshot_budapest.png" alt="Ezequiel in Budapest" class="cyberpunk-image active">
+                        <img src="canaries_mountain.png" alt="Ezequiel in Canary Islands" class="cyberpunk-image">
+                        <img src="camel_qatar.png" alt="Ezequiel with a camel in Qatar" class="cyberpunk-image">
+                        <img src="umich grad.jpg" alt="Ezequiel at University of Michigan graduation" class="cyberpunk-image">
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
 
-
-        <div id="work" class="content active">
-            <br>
-            <div class="entry" onclick="toggleDropdown(this)">
-                <div class="entry-header">
-                    <div class="title">Algorithm Developer at Glenbrook Trading</div>
-                    <div class="date-location">Jun 2024-Present | Remote</div>
-                </div>
-                <div class="dropdown">
-                    <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
-                        def reset_blink<span class="cyan-text">()</span>
-                    </button> -->
-                    <div class="dropdown-content">
-                        <span class="blinking-cursor"><</span> 
-                        <p>
-                            - Spearhead the development of high-frequency trading algorithms on the QuantConnect platform.<br>
-                            - Conduct comprehensive technical analysis and backtesting using EMA, ATR, and proprietary indicators to optimize trading strategies.<br>
-                            - Enhance algorithm efficiency through risk management practices and continuous performance monitoring.<br>
-                            - Implement and fine-tune precise real-time trading strategies to achieve optimal performance in various market conditions.<br>
-                            - Examine extensive data sets to refine strategies and generate detailed performance reports for continuous improvement.<br>
-                            - Leverage advanced C# programming to create robust quantitative analysis tools and sophisticated trading algorithms.
-                        </p>
-                        <p><strong>Skills:</strong></p>
-                        <p>
-                            Trading Strategies · Quantitative Analytics · Market Research · C# · High-Frequency Trading · Model Training · Statistical Data Analysis · Real-Time Data Processing · Risk Management · Technical Analysis
-                        </p>
-                        <span class="blinking-cursor">></span> 
+            <section id="work" class="content">
+                <!-- Work experience entries -->
+                <br>
+                <div class="entry" onclick="toggleDropdown(this)">
+                    <div class="entry-header">
+                        <div class="title">Algorithm Developer at Glenbrook Trading</div>
+                        <div class="date-location">Jun 2024-Present | Remote</div>
                     </div>
-                </div>
-            </div>
-            <div class="entry" onclick="toggleDropdown(this)">
-                <div class="entry-header">
-                    <div class="title">Teaching Assistant at University of Michigan</div>
-                    <div class="date-location">Aug 2023-May 2024 | Ann Arbor, MI</div>
-                </div>
-                <div class="dropdown">
-                    <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
-                        def reset_blink<span class="cyan-text">()</span>
-                    </button> -->
-                    <div class="dropdown-content">
-                        <span class="blinking-cursor"><</span>
-                        <p>
-                            - Facilitated student understanding of entrepreneurial B2B sales and innovation in both undergraduate and graduate-level courses.<br>
-                            - Acted as an investor for student projects, evaluating business proposals and providing constructive feedback.<br>
-                            - Provided guidance on sales strategies, intellectual property, and investment acquisition, enhancing students' practical knowledge.<br>
-                            - Developed essential soft skills through teaching, presentation, and conflict resolution activities, contributing to a collaborative learning environment.<br>
-                        </p>
-                        <p><strong>Skills:</strong></p>
-                        <p>
-                            People Management · Entrepreneurship · Evaluating Projects · Mentoring · Sales Strategies · IP (Intellectual Property) · Investment Acquisition · Conflict Resolution · B2B Sales · Innovation
-                        </p>
-                        <span class="blinking-cursor">></span>
-                    </div>
-                </div>
-            </div>
-            <div class="entry" onclick="toggleDropdown(this)">
-                <div class="entry-header">
-                    <div class="title">Technical Product Management Intern at MSH</div>
-                    <div class="date-location">Jun 2023-Aug 2023 | Ft. Lauderdale, FL</div>
-                </div>
-                <div class="dropdown">
-                    <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
-                        def reset_blink<span class="cyan-text">()</span>
-                    </button> -->
-                    <div class="dropdown-content">
-                        <span class="blinking-cursor"><</span>
-                        <p>
-                            - Worked on a SaaS product incorporating generative AI to enhance the hiring process, personalizing interview questions and streamlining candidate evaluation for hiring managers. <br>
-                            - Supported project management by participating in product management, scrum, and UX meetings, as well as conducting beta user interviews to gather valuable feedback.<br>
-                            - Conducted automation testing using testim.io to ensure 24/7 website functionality, including the development and deployment of CAPTCHA verification processes on developer servers before going live.<br>
-                            - Performed competitive analysis reports, evaluating market trends, competitor strategies, and potential areas for product differentiation.<br>
-                            - Utilized SendGrid to set up and edit templates for targeted user communication, ensuring effective engagement in specific use cases.<br>
-                        </p>
-                        <p><strong>Skills:</strong></p>
-                        <p>
-                            Product Management · Scrum · Test Automation · Competitive Analysis · Market Research · SaaS · GenAI · Jira · Agile Methodologies · Testim.io · Front-End Development · Web Content Accessibility Guidelines (WCAG) · Git · React.js
-                        </p>
-                        <span class="blinking-cursor">></span>
-                    </div>
-                </div>
-            </div>
-            <div class="entry" onclick="toggleDropdown(this)">
-                <div class="entry-header">
-                    <div class="title">Chief Technology Officer at European Innovation Academy</div>
-                    <div class="date-location">Jun 2022-Aug 2022 | Porto, Portugal</div>
-                </div>
-                <div class="dropdown">
-                    <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
-                        def reset_blink<span class="cyan-text">()</span>
-                    </button> -->
-                    <div class="dropdown-content">
-                        <span class="blinking-cursor"><</span>
-                        <p>
-                        - Participated in a 3-week entrepreneurial program in Porto, Portugal, hosted by the European Innovation Academy (EIA), gaining hands-on startup experience through mentorship and global networking.<br>
-                        - Led the development of an initiative to integrate fashion elements into safety helmet design, balancing aesthetic appeal with functionality<br>
-                        - As CTO, led backend development, website creation, and 3D model production, enhancing e-commerce systems and operational efficiency. <br>
-                        - Managed the production of 3D helmet models and maintained the product database, promoting accurate visualization and information for customer interaction
-                        </p>
-                        <p><strong>Skills:</strong></p>
-                        <p>
-                            Entrepreneurship · Market Research · Scrum · 3D Modeling · Startup Development · Pitching to Investors
-                        </p>
-                        <p><strong><i class="fas fa-image"></i> Images:</strong></p>
-                        <div class="carousel-container">
-                            <div class="carousel-slide">
-                                <img src="uglybuckets.png" alt="Ugly Buckets">
-                                <img src="3dmodel.png" alt="3D Model 1">
-                                <img src="3dmodel1.png" alt="3D Model 2" width="500px">
-                            </div>
-                            <div class="slider-controls">
-                                <button class="prev">&#10094;</button>
-                                <button class="next">&#10095;</button>
-                            </div>
+                    <div class="dropdown">
+                        <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
+                            def reset_blink<span class="cyan-text">()</span>
+                        </button> -->
+                        <div class="dropdown-content">
+                            <span class="blinking-cursor"><</span> 
+                            <p>
+                                - Spearhead the development of high-frequency trading algorithms on the QuantConnect platform.<br>
+                                - Conduct comprehensive technical analysis and backtesting using EMA, ATR, and proprietary indicators to optimize trading strategies.<br>
+                                - Enhance algorithm efficiency through risk management practices and continuous performance monitoring.<br>
+                                - Implement and fine-tune precise real-time trading strategies to achieve optimal performance in various market conditions.<br>
+                                - Examine extensive data sets to refine strategies and generate detailed performance reports for continuous improvement.<br>
+                                - Leverage advanced C# programming to create robust quantitative analysis tools and sophisticated trading algorithms.
+                            </p>
+                            <p><strong>Skills:</strong></p>
+                            <p>
+                                Trading Strategies · Quantitative Analytics · Market Research · C# · High-Frequency Trading · Model Training · Statistical Data Analysis · Real-Time Data Processing · Risk Management · Technical Analysis
+                            </p>
+                            <span class="blinking-cursor">></span> 
                         </div>
-                        <span class="blinking-cursor">></span>
                     </div>
                 </div>
-            </div>
-            <div class="entry" onclick="toggleDropdown(this)">
-                <div class="entry-header">
-                    <div class="title">Data Analyst at City of Detroit</div>
-                    <div class="date-location">May 2022-July 2022 | Detroit, MI</div>
-                </div>
-                <div class="dropdown">
-                    <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
-                        def reset_blink<span class="cyan-text">()</span>
-                    </button> -->
-                    <div class="dropdown-content">
-                        <span class="blinking-cursor"><</span>
-                        <p>
-                            - Conducted in-depth analysis and validation of housing imagery to ensure compliance with Detroit's Census criteria for identifying habitable residences.<br>
-                            - Utilized advanced geospatial data analysis techniques to assess housing conditions and accuracy of imagery data.<br>
-                            - Coordinated with cross-functional teams to integrate housing data into the city's comprehensive database, ensuring alignment with Census data for precise fund allocation.<br>
-                            - Applied machine learning algorithms to predict housing habitability, enhancing the city's data-driven decision-making process.<br>
-                            - Developed detailed reports and visualizations to communicate findings and recommendations to city officials, facilitating informed policy-making.<br>
-                        </p>
-                        <p><strong>Skills:</strong></p>
-                        <p>
-                            Data Analysis · Geospatial Data Analysis · Machine Learning · Data Validation · Report Generation · Cross-Functional Collaboration · Policy Recommendations · Advanced Excel · Python · SQL
-                        </p>
-                        <span class="blinking-cursor">></span>
+                <div class="entry" onclick="toggleDropdown(this)">
+                    <div class="entry-header">
+                        <div class="title">Teaching Assistant at University of Michigan</div>
+                        <div class="date-location">Aug 2023-May 2024 | Ann Arbor, MI</div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="projects" class="content">
-            <br>
-            <div class="entry" onclick="toggleDropdown(this)">
-                <div class="entry-header">
-                    <div class="title">Spotify Track Downloader with Enhanced Metadata</div>
-                    <div class="date-location">Aug 2024-Sep 2024</div>
-                </div>
-                <div class="dropdown">
-                    <div class="dropdown-content project-description">
-                        <span class="blinking-cursor"><</span>
-                        <p>
-                            Developed a full-stack web application that allows users to download Spotify tracks as MP3 files with enhanced metadata. This project showcases advanced API integration, audio processing, and metadata management skills, combining the Spotify Web API for track information and the YouTube Data API for full-length tracks.
-                        </p>
-                        <p>Key Features:</p>
-                        <ul>
-                            <li>Secure OAuth 2.0 authentication for Spotify API access</li>
-                            <li>Integration of Spotify Web API for metadata and 30-second track previews</li>
-                            <li>YouTube Data API integration for full-length track retrieval</li>
-                            <li>Efficient MP3 downloading with error handling and file integrity verification</li>
-                            <li>Metadata enhancement using Mutagen library to embed track information and album art</li>
-                            <li>Comprehensive error logging and recovery mechanisms</li>
-                        </ul>
-                        <p><strong>Skills:</strong> Full-Stack Development · API Integration · OAuth 2.0 · Audio Processing · Metadata Management</p>
-                        <p><strong>Technologies Used:</strong> Python · Flask · HTML · CSS · JavaScript · Bootstrap · jQuery · Spotify Web API · YouTube Data API · Spotipy · yt-dlp · Mutagen</p>
-                        <p><strong>Links:</strong></p>
-                        <p>
-                            <a href="https://github.com/ezequielcutin/spotify-to-mp3" target="_blank" onclick="event.stopPropagation();"><i class="fab fa-github"></i>GitHub Repo</a>
-                        </p>
-                        <p><strong>Video:</strong></p>
-                        <video id="spotifyToMp3Video" width="500" controls onclick="preventDropdown(event)">
-                            <source src="spotify-to-mp3-demo-video.mp4" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                        <p><strong>Future Plans:</strong></p>
-                        <ul>
-                            <li>Implement Apple Music to MP3 conversion</li>
-                            <li>Add functionality to convert any YouTube link to MP3</li>
-                            <li>Enable Spotify playlist conversion to a .zip file containing all MP3s</li>
-                            <li>Explore integration with Genius API for lyrics retrieval</li>
-                        </ul>
-                        <p><strong>Disclaimer:</strong> This project is for educational purposes only, showcasing skills in coding and API integration. It is not intended for public use or profit. Downloading copyrighted content without permission violates Spotify's terms of service and copyright laws. Due to these legal considerations, the code has not been deployed live and remains solely in the repository for demonstration of technical skills.</p>
-                        <span class="blinking-cursor">></span>
-                    </div>
-                </div>
-            </div>
-            <div class="entry" onclick="toggleDropdown(this)">
-                <div class="entry-header">
-                    <div class="title">Fractal Mountain Generator</div>
-                    <div class="date-location">Aug 2024-Aug 2024</div>
-                </div>
-                <div class="dropdown">
-                    <div class="dropdown-content project-description">
-                        <span class="blinking-cursor"><</span>
-                        <p>
-                            Explore the intersection of art and science with my Fractal Mountain Generator, an introductory project in computer graphics that leverages advanced linear algebra techniques. Using WebGL, this project brings to life stunning, fractal-based mountain landscapes, showcasing how vector operations and geometric transformations can be used to create complex, recursive patterns.
-                        </p>
-                        <p>
-                            At its core, this project applies key linear algebra concepts:
-                        </p>
-                        <ul>
-                            <li>Vector Operations: Fundamental vector arithmetic, including addition, subtraction, and scaling, underpins the creation of the fractal structures.</li>
-                            <li>Geometric Transformations: The project employs transformations such as rotation and scaling to craft the intricate peaks and valleys of the fractal.</li>
-                            <li>Recursive Geometry: Recursive techniques iteratively build the fractal mountain, demonstrating the power of mathematical recursion in visual design.</li>
-                        </ul>
-                        <p>
-                            This project serves as a foundational exploration of computer graphics, blending mathematical elegance with digital artistry.
-                        </p>
-                        <p><strong>Skills:</strong> Frontend Development · Linear Algebra · Mathematical Art · Computer Graphics</p>
-                        <p><strong>Technologies Used:</strong> JavaScript · HTML/CSS · WebGL</p>
-                        <p><strong>Links:</strong></p>
-                        <p>
-                            <a href="https://github.com/ezequielcutin/fractal-mountain" target="_blank" onclick="event.stopPropagation();"><i class="fab fa-github"></i>GitHub Repo</a>
-                            <br>
-                            <a href="https://ezequielcutin.github.io/fractal-mountain/" target="_blank" onclick="event.stopPropagation();"><i class="fas fa-link"></i>Live Demo</a>
-                        </p>
-                        <p><strong><i class="fas fa-image"></i> Images:</strong></p>
-                        <div class="carousel-container">
-                            <div class="carousel-slide">
-                                <img src="fractal-mountain.png" alt="Fractal Mountain Image 1" width="500">
-                                <img src="fractal-mountain-inputs.png" alt="Fractal Mountain Image 2" width="500">
-                            </div>
-                            <div class="slider-controls">
-                                <button class="prev">&#10094;</button>
-                                <button class="next">&#10095;</button>
-                            </div>
+                    <div class="dropdown">
+                        <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
+                            def reset_blink<span class="cyan-text">()</span>
+                        </button> -->
+                        <div class="dropdown-content">
+                            <span class="blinking-cursor"><</span>
+                            <p>
+                                - Facilitated student understanding of entrepreneurial B2B sales and innovation in both undergraduate and graduate-level courses.<br>
+                                - Acted as an investor for student projects, evaluating business proposals and providing constructive feedback.<br>
+                                - Provided guidance on sales strategies, intellectual property, and investment acquisition, enhancing students' practical knowledge.<br>
+                                - Developed essential soft skills through teaching, presentation, and conflict resolution activities, contributing to a collaborative learning environment.<br>
+                            </p>
+                            <p><strong>Skills:</strong></p>
+                            <p>
+                                People Management · Entrepreneurship · Evaluating Projects · Mentoring · Sales Strategies · IP (Intellectual Property) · Investment Acquisition · Conflict Resolution · B2B Sales · Innovation
+                            </p>
+                            <span class="blinking-cursor">></span>
                         </div>
-                        <span class="blinking-cursor">></span>
                     </div>
                 </div>
-            </div>
-            <div class="entry" onclick="toggleDropdown(this)">
-                <div class="entry-header">
-                    <div class="title">Customer Support Ticket Management Microservice</div>
-                    <div class="date-location">Jun 2024-Jul 2024</div>
+                <div class="entry" onclick="toggleDropdown(this)">
+                    <div class="entry-header">
+                        <div class="title">Technical Product Management Intern at MSH</div>
+                        <div class="date-location">Jun 2023-Aug 2023 | Ft. Lauderdale, FL</div>
+                    </div>
+                    <div class="dropdown">
+                        <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
+                            def reset_blink<span class="cyan-text">()</span>
+                        </button> -->
+                        <div class="dropdown-content">
+                            <span class="blinking-cursor"><</span>
+                            <p>
+                                - Worked on a SaaS product incorporating generative AI to enhance the hiring process, personalizing interview questions and streamlining candidate evaluation for hiring managers. <br>
+                                - Supported project management by participating in product management, scrum, and UX meetings, as well as conducting beta user interviews to gather valuable feedback.<br>
+                                - Conducted automation testing using testim.io to ensure 24/7 website functionality, including the development and deployment of CAPTCHA verification processes on developer servers before going live.<br>
+                                - Performed competitive analysis reports, evaluating market trends, competitor strategies, and potential areas for product differentiation.<br>
+                                - Utilized SendGrid to set up and edit templates for targeted user communication, ensuring effective engagement in specific use cases.<br>
+                            </p>
+                            <p><strong>Skills:</strong></p>
+                            <p>
+                                Product Management · Scrum · Test Automation · Competitive Analysis · Market Research · SaaS · GenAI · Jira · Agile Methodologies · Testim.io · Front-End Development · Web Content Accessibility Guidelines (WCAG) · Git · React.js
+                            </p>
+                            <span class="blinking-cursor">></span>
+                        </div>
+                    </div>
                 </div>
-                <div class="dropdown">
-                    <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
-                        def reset_blink<span class="cyan-text">()</span>
-                    </button> -->
-                    <div class="dropdown-content">
-                        <span class="blinking-cursor"><</span>
-                        <p>
-                        - Spearheaded the development of a highly efficient and scalable customer support microservice using Node.js, Express.js, and MongoDB. Designed and implemented secure authentication and role-based access control to ensure data security and compliance. Developed comprehensive CRUD operations and integrated real-time notifications to enhance user experience and operational efficiency. Successfully deployed the microservice on Heroku, complemented by detailed Swagger API documentation for seamless integration and collaboration.
-                        </p>
-                        <p><strong>Skills:</strong> Secure Authentication · Role-Based Access Control · Real-Time Notifications · API Creation</p>
-                        <p><strong>Technologies Used:</strong> Node.js · Express.js · MongoDB · Mongoose · JWT · Nodemailer · WebSockets · Jest · Swagger</p>
-                        <p><strong><i class="fas fa-link"></i> Links:</strong></p>
-                        <p>
-                            <a href="https://rayca-eval-live-deae50ac2c84.herokuapp.com/api-docs" target="_blank" onclick="event.stopPropagation();">
-                                <i class="fas fa-link"></i>API Endpoint
-                            </a><br>
-                            <a href="https://github.com/ezequielcutin/rayca-eval" target="_blank" onclick="event.stopPropagation();">
-                                <i class="fab fa-github"></i>GitHub Repo
-                            </a>
+                <div class="entry" onclick="toggleDropdown(this)">
+                    <div class="entry-header">
+                        <div class="title">Chief Technology Officer at European Innovation Academy</div>
+                        <div class="date-location">Jun 2022-Aug 2022 | Porto, Portugal</div>
+                    </div>
+                    <div class="dropdown">
+                        <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
+                            def reset_blink<span class="cyan-text">()</span>
+                        </button> -->
+                        <div class="dropdown-content">
+                            <span class="blinking-cursor"><</span>
+                            <p>
+                            - Participated in a 3-week entrepreneurial program in Porto, Portugal, hosted by the European Innovation Academy (EIA), gaining hands-on startup experience through mentorship and global networking.<br>
+                            - Led the development of an initiative to integrate fashion elements into safety helmet design, balancing aesthetic appeal with functionality<br>
+                            - As CTO, led backend development, website creation, and 3D model production, enhancing e-commerce systems and operational efficiency. <br>
+                            - Managed the production of 3D helmet models and maintained the product database, promoting accurate visualization and information for customer interaction
+                            </p>
+                            <p><strong>Skills:</strong></p>
+                            <p>
+                                Entrepreneurship · Market Research · Scrum · 3D Modeling · Startup Development · Pitching to Investors
+                            </p>
                             <p><strong><i class="fas fa-image"></i> Images:</strong></p>
-                            <img src="api-endpoint.png" alt="Project Image 1" width="500">
-                        </p>
-                        <span class="blinking-cursor">></span>
-
-                    </div>
-                </div>
-            </div>
-            <div class="entry" onclick="toggleDropdown(this)">
-                <div class="entry-header">
-                    <div class="title">Wikipedia Search Engine, University of Michigan</div>
-                    <div class="date-location">Apr 2024-May 2024</div>
-                </div>
-                <div class="dropdown">
-                    <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
-                        def reset_blink<span class="cyan-text">()</span>
-                    </button> -->
-                    <div class="dropdown-content">
-                        <span class="blinking-cursor"><</span>
-                        <p>
-                            This project focuses on developing a robust search engine using advanced algorithms and tools to optimize document retrieval. The search engine integrates Hadoop MapReduce, TF-IDF scoring, and Google's PageRank algorithm to enhance search accuracy and efficiency. The system is deployed on AWS to ensure scalability and performance.
-                        </p>
-                        <p><strong>Skills:</strong> Document Retrieval · Algorithm Implementation · Full-Stack Development · Cloud Deployment</p>
-                        <p><strong>Technologies Used:</strong> ReactJS · Hadoop MapReduce · AWS · TF-IDF · PageRank</p>
-                        <p><strong>Links:</strong></p>
-                        <p>
-                            <a href="https://github.com/ezequielcutin/wikipedia-search-engine" target="_blank" onclick="preventClose(event)"><i class="fab fa-github"></i>GitHub Repo (Private)</a>
-                        </p>
-                        <p><strong>Disclaimer:</strong> This repository is private due to the University of Michigan honor code policies. It was developed as part of the EECS 485 course (Web Systems) at the University of Michigan. Please contact me directly if you need more information about this project.</p>
-                        <img src="ask485.png" alt="Image of the ask485 browser" height="500">
-                        <span class="blinking-cursor">></span>
-                    </div>
-                </div>
-            </div>
-            <div class="entry" onclick="toggleDropdown(this)">
-                <div class="entry-header">
-                    <div class="title">Custom MapReduce, University of Michigan</div>
-                    <div class="date-location">Mar 2024-Apr 2024</div>
-                </div>
-                <div class="dropdown">
-                    <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
-                        def reset_blink<span class="cyan-text">()</span>
-                    </button> -->
-                    <div class="dropdown-content">
-                        <span class="blinking-cursor"><</span>
-                        <p>
-                            - Developed a fully functional MapReduce server for the EECS485 web systems class, utilizing Python to handle large-scale data processing tasks.<br>
-                            - Implemented advanced networking techniques using TCP and UDP protocols to manage communication between server components, ensuring efficient data transfer and task coordination.<br>
-                            - Enhanced server performance and responsiveness through multithreading, enabling concurrent processing of multiple tasks.<br>
-                            - Designed and developed a Master and Worker architecture to effectively distribute workloads, manage task execution, and ensure system scalability.<br>
-                            - Incorporated fault tolerance mechanisms to detect and recover from worker failures, maintaining the reliability and stability of the server.<br>
-                            - Enabled efficient inter-worker communication to coordinate task execution and share intermediate results.<br>
-                        </p>
-                        <p><strong>Skills:</strong></p>
-                        <p>
-                            Fault Tolerance · Multithreaded Development · Git · Network Programming · Multithreading · TCP · MapReduce · Data Processing · WebSocket · Systems Design · Concurrent Programming · Python · UDP · Distributed Computing
-                        </p>
-                        <p><strong>Links:</strong></p>
-                        <p>
-                            <a href="https://github.com/abtaylor02/p4-mapreduce" target="_blank" onclick="preventClose(event)">
-                                <i class="fab fa-github"></i>GitHub Repo (Private)
-                            </a>
-                        </p>
-                        <p><strong>Disclaimer:</strong> This repository is private due to the University of Michigan honor code policies. It was developed as part of the EECS485 course (Web Systems) at the University of Michigan. Please contact me directly if you need more information about this project.</p>            
-                        <span class="blinking-cursor">></span>
-                    </div>
-                </div>
-            </div>
-            <div class="entry" onclick="toggleDropdown(this)">
-                <div class="entry-header">
-                    <div class="title">Insta485, University of Michigan</div>
-                    <div class="date-location">Jan 2024-Mar 2024</div>
-                </div>
-                <div class="dropdown">
-                    <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
-                        def reset_blink<span class="cyan-text">()</span>
-                    </button> -->
-                    <div class="dropdown-content">
-                        <span class="blinking-cursor"><</span>
-                        <p>
-                            - Insta485 is a set of 3 projects completed in UMich's EECS485 - Web Systems class. These projects focus on full-stack development of an Instagram-like system, aiming to incorporate all the basic user flows of an image-sharing site.<br>
-                            - The frontend was built using React, Jinja, HTML, and CSS, and served using Python's Flask framework.<br>
-                            - The backend consisted of a REST API built with Python's Flask and a SQLite database.<br>
-                            - Deployment was carried out on AWS using tools like EC2, ensuring robust and scalable infrastructure.<br>
-                        </p>
-                        <p><strong>Skills:</strong></p>
-                        <p>
-                            HTTP · REST APIs · Full-Stack Development · WebSocket · JavaScript · Python · Jinja
-                        </p>
-                        <p><strong>Technologies Used:</strong></p>
-                        <p>
-                            SQLite · Git · Node.js · Amazon Web Services (AWS) · Flask · React.js · HTML/CSS
-                        </p>
-                        <p><strong>Links:</strong></p>
-                        <p>
-                            <a href="https://github.com/abtaylor02/p3-insta485-clientside" target="_blank" onclick="preventClose(event)">
-                                <i class="fab fa-github"></i>GitHub Repo (Private)
-                            </a>
-                        </p>
-                        <p><strong>Disclaimer:</strong> This repository is private due to the University of Michigan honor code policies. It was developed as part of the EECS 485 course (Web Systems) at the University of Michigan. Please contact me directly if you need more information about this project.</p>
-            
-                        <p><strong>Video:</strong></p>
-                        <video id="insta485Video" width="500" controls onclick="preventDropdown(event)">
-                            <source src="insta485.mp4" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                        <span class="blinking-cursor">></span>
-                    </div>
-                </div>
-            </div>
-            <div class="entry" onclick="toggleDropdown(this)">
-                <div class="entry-header">
-                    <div class="title">Architectural Style Detection, IFSA</div>
-                    <div class="date-location">Feb 2023-May 2023</div>
-                </div>
-                <div class="dropdown">
-                    <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
-                        def reset_blink<span class="cyan-text">()</span>
-                    </button> -->
-                    <div class="dropdown-content">
-                        <span class="blinking-cursor"><</span>
-                        <p>
-                            This project is dedicated to the development of an advanced AI model that excels at detecting architectural styles. The model has undergone rigorous training on a diverse dataset consisting of 10,000 high-quality images encompassing 25 different architectural styles. These images have been carefully selected from the renowned Kaggle architectural style database (accessible at <a href="https://www.kaggle.com/datasets/dumitrux/architectural-styles-dataset" target="_blank" onclick="preventClose(event)">Kaggle Database</a>).
-                        </p>
-                        <p><strong>Skills:</strong> Computer Vision · AI Model Creation · Model Training · Python · Machine Learning</p>
-                        <p><strong>Technologies Used:</strong> numpy · torchvision · sklearn · pandas · seaborn</p>
-                        <p><strong>Links:</strong></p>
-                        <p>
-                            <a href="https://github.com/ezequielcutin/architecture-style-detection" target="_blank" onclick="preventClose(event)"><i class="fab fa-github"></i>GitHub Repo</a>
-                            <br>
-                            <a href="https://www.kaggle.com/datasets/dumitrux/architectural-styles-dataset" target="_blank" onclick="event.stopPropagation();"><i class="fas fa-link"></i> Kaggle Database</a>
-                        </p>
-                        <span class="blinking-cursor">></span>
-                    </div>
-                </div>
-            </div>
-            <div class="entry" onclick="toggleDropdown(this)">
-                <div class="entry-header">
-                    <div class="title">European Flights Web-App (DinoSoar)</div>
-                    <div class="date-location">Feb 2023-May 2023</div>
-                </div>
-                <div class="dropdown">
-                    <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
-                        def reset_blink<span class="cyan-text">()</span>
-                    </button> -->
-                    <div class="dropdown-content">
-                        <span class="blinking-cursor"><</span>
-                        <p>
-                            Developed a dynamic web application, DinoSoar, that aggregates and presents detailed information on European flights. Leveraged Node.js and key airline APIs to seamlessly integrate real-time flight data and pricing models. The application was designed with a focus on optimizing accessibility and enhancing user experience, providing users with an intuitive and efficient platform to access comprehensive flight information.
-                        </p>
-                        <p><strong>Skills:</strong> Web Development · API Integration · User Experience Design · Real-time Data Processing · Full Stack Development</p>
-                        <p><strong>Technologies Used:</strong> Node.js · Express.js · JavaScript · HTML/CSS · Airline APIs</p>
-                        <p><strong>Links:</strong></p>
-                        <p>
-                            <a href="https://github.com/ezequielcutin/dinoSOAR" target="_blank" onclick="preventClose(event)"><i class="fab fa-github"></i>GitHub Repo</a>
-                        </p>
-                        <span class="blinking-cursor">></span>
-                    </div>
-                </div>
-            </div>
-            <div class="entry" onclick="toggleDropdown(this)">
-                <div class="entry-header">
-                    <div class="title">Simple Diffusion, University of Michigan</div>
-                    <div class="date-location">Nov 2023-Dec 2023</div>
-                </div>
-                <div class="dropdown">
-                    <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
-                        def reset_blink<span class="cyan-text">()</span>
-                    </button> -->
-                    <div class="dropdown-content">
-                        <span class="blinking-cursor"><</span>
-                        <p>
-                            Developed a generative AI model using diffusion methods to produce lifelike floral images. Improved model efficacy by experimenting with various weight initializations and activation functions, and optimized the model's architectural depth to enhance adaptability and image quality.
-                        </p>
-                        <p><strong>Skills:</strong> Generative AI · Diffusion Methods · Model Optimization · Python · Machine Learning</p>
-                        <p><strong>Technologies Used:</strong> PyTorch · NumPy · Matplotlib · Jupyter Notebook</p>
-                        <p><strong>Links:</strong></p>
-                        <p>
-                            <a href="https://github.com/ezequielcutin/simple-diffusion" target="_blank" onclick="preventClose(event)"><i class="fab fa-github"></i>GitHub Repo</a>
-                            <p><strong><i class="fas fa-image"></i> Images:</strong></p>
-                            <img src="diffusion-process.png" alt="Process of training diffusion" width="500">
-                            <img src="diffusion-image-results.png" alt="Diffusion image results" height="130">
-                        </p>
-                        <span class="blinking-cursor">></span>
-                    </div>
-                </div>
-            </div>
-            <div class="entry" onclick="toggleDropdown(this)">
-                <div class="entry-header">
-                    <div class="title">Universal Bank Customer Analysis, University of Michigan</div>
-                    <div class="date-location">Mar 2024-May 2024</div>
-                </div>
-                <div class="dropdown">
-                    <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
-                        def reset_blink<span class="cyan-text">()</span>
-                    </button> -->
-                    <div class="dropdown-content">
-                        <span class="blinking-cursor"><</span>
-                        <p>
-                            - Analyzed customer data to predict personal loan uptake, leading to optimized marketing strategies. Processed and organized a dataset of 5,000 customer records using SQL for accurate analysis. Created a logistic regression model in Python, achieving 92.16% accuracy, to guide targeted marketing towards customers with CD accounts and advanced education.
-                        </p>
-                        <span class="blinking-cursor">></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="music" class="content">
-            <br>
-            <div class="entry">
-                <div class="entry-header">
-                </div>
-                <div class="music-content">
-                    <div class="soundcloud-block">
-                        <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1867505247&color=%231cc258&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"></iframe>
-        
-                    </div>
-                    <div class="soundcloud-block">
-                        <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1844941479&color=%231cc258&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"></iframe>
-
+                            <div class="carousel-container">
+                                <div class="carousel-slide">
+                                    <img src="uglybuckets.png" alt="Ugly Buckets">
+                                    <img src="3dmodel.png" alt="3D Model 1">
+                                    <img src="3dmodel1.png" alt="3D Model 2" width="500px">
+                                </div>
+                                <div class="slider-controls">
+                                    <button class="prev">&#10094;</button>
+                                    <button class="next">&#10095;</button>
+                                </div>
+                            </div>
+                            <span class="blinking-cursor">></span>
                         </div>
                     </div>
-                    <div class="soundcloud-block">
-                        <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1838947944&color=%231cc258&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"></iframe>
-
+                </div>
+                <div class="entry" onclick="toggleDropdown(this)">
+                    <div class="entry-header">
+                        <div class="title">Data Analyst at City of Detroit</div>
+                        <div class="date-location">May 2022-July 2022 | Detroit, MI</div>
                     </div>
-                    <div class="soundcloud-block">
-                        <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1254042886&color=%231cc258&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"></iframe>
+                    <div class="dropdown">
+                        <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
+                            def reset_blink<span class="cyan-text">()</span>
+                        </button> -->
+                        <div class="dropdown-content">
+                            <span class="blinking-cursor"><</span>
+                            <p>
+                                - Conducted in-depth analysis and validation of housing imagery to ensure compliance with Detroit's Census criteria for identifying habitable residences.<br>
+                                - Utilized advanced geospatial data analysis techniques to assess housing conditions and accuracy of imagery data.<br>
+                                - Coordinated with cross-functional teams to integrate housing data into the city's comprehensive database, ensuring alignment with Census data for precise fund allocation.<br>
+                                - Applied machine learning algorithms to predict housing habitability, enhancing the city's data-driven decision-making process.<br>
+                                - Developed detailed reports and visualizations to communicate findings and recommendations to city officials, facilitating informed policy-making.<br>
+                            </p>
+                            <p><strong>Skills:</strong></p>
+                            <p>
+                                Data Analysis · Geospatial Data Analysis · Machine Learning · Data Validation · Report Generation · Cross-Functional Collaboration · Policy Recommendations · Advanced Excel · Python · SQL
+                            </p>
+                            <span class="blinking-cursor">></span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
+            </section>
+
+            <section id="projects" class="content">
+                <!-- Project entries -->
+                <br>
+                <div class="entry" onclick="toggleDropdown(this)">
+                    <div class="entry-header">
+                        <div class="title">Spotify Track Downloader with Enhanced Metadata</div>
+                        <div class="date-location">Aug 2024-Sep 2024</div>
+                    </div>
+                    <div class="dropdown">
+                        <div class="dropdown-content project-description">
+                            <span class="blinking-cursor"><</span>
+                            <p>
+                                Developed a full-stack web application that allows users to download Spotify tracks as MP3 files with enhanced metadata. This project showcases advanced API integration, audio processing, and metadata management skills, combining the Spotify Web API for track information and the YouTube Data API for full-length tracks.
+                            </p>
+                            <p>Key Features:</p>
+                            <ul>
+                                <li>Secure OAuth 2.0 authentication for Spotify API access</li>
+                                <li>Integration of Spotify Web API for metadata and 30-second track previews</li>
+                                <li>YouTube Data API integration for full-length track retrieval</li>
+                                <li>Efficient MP3 downloading with error handling and file integrity verification</li>
+                                <li>Metadata enhancement using Mutagen library to embed track information and album art</li>
+                                <li>Comprehensive error logging and recovery mechanisms</li>
+                            </ul>
+                            <p><strong>Skills:</strong> Full-Stack Development · API Integration · OAuth 2.0 · Audio Processing · Metadata Management</p>
+                            <p><strong>Technologies Used:</strong> Python · Flask · HTML · CSS · JavaScript · Bootstrap · jQuery · Spotify Web API · YouTube Data API · Spotipy · yt-dlp · Mutagen</p>
+                            <p><strong>Links:</strong></p>
+                            <p>
+                                <a href="https://github.com/ezequielcutin/spotify-to-mp3" target="_blank" onclick="event.stopPropagation();"><i class="fab fa-github"></i>GitHub Repo</a>
+                            </p>
+                            <p><strong>Video:</strong></p>
+                            <video id="spotifyToMp3Video" width="500" controls onclick="preventDropdown(event)">
+                                <source src="spotify-to-mp3-demo-video.mp4" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                            <p><strong>Future Plans:</strong></p>
+                            <ul>
+                                <li>Implement Apple Music to MP3 conversion</li>
+                                <li>Add functionality to convert any YouTube link to MP3</li>
+                                <li>Enable Spotify playlist conversion to a .zip file containing all MP3s</li>
+                                <li>Explore integration with Genius API for lyrics retrieval</li>
+                            </ul>
+                            <p><strong>Disclaimer:</strong> This project is for educational purposes only, showcasing skills in coding and API integration. It is not intended for public use or profit. Downloading copyrighted content without permission violates Spotify's terms of service and copyright laws. Due to these legal considerations, the code has not been deployed live and remains solely in the repository for demonstration of technical skills.</p>
+                            <span class="blinking-cursor">></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="entry" onclick="toggleDropdown(this)">
+                    <div class="entry-header">
+                        <div class="title">Fractal Mountain Generator</div>
+                        <div class="date-location">Aug 2024-Aug 2024</div>
+                    </div>
+                    <div class="dropdown">
+                        <div class="dropdown-content project-description">
+                            <span class="blinking-cursor"><</span>
+                            <p>
+                                Explore the intersection of art and science with my Fractal Mountain Generator, an introductory project in computer graphics that leverages advanced linear algebra techniques. Using WebGL, this project brings to life stunning, fractal-based mountain landscapes, showcasing how vector operations and geometric transformations can be used to create complex, recursive patterns.
+                            </p>
+                            <p>
+                                At its core, this project applies key linear algebra concepts:
+                            </p>
+                            <ul>
+                                <li>Vector Operations: Fundamental vector arithmetic, including addition, subtraction, and scaling, underpins the creation of the fractal structures.</li>
+                                <li>Geometric Transformations: The project employs transformations such as rotation and scaling to craft the intricate peaks and valleys of the fractal.</li>
+                                <li>Recursive Geometry: Recursive techniques iteratively build the fractal mountain, demonstrating the power of mathematical recursion in visual design.</li>
+                            </ul>
+                            <p>
+                                This project serves as a foundational exploration of computer graphics, blending mathematical elegance with digital artistry.
+                            </p>
+                            <p><strong>Skills:</strong> Frontend Development · Linear Algebra · Mathematical Art · Computer Graphics</p>
+                            <p><strong>Technologies Used:</strong> JavaScript · HTML/CSS · WebGL</p>
+                            <p><strong>Links:</strong></p>
+                            <p>
+                                <a href="https://github.com/ezequielcutin/fractal-mountain" target="_blank" onclick="event.stopPropagation();"><i class="fab fa-github"></i>GitHub Repo</a>
+                                <br>
+                                <a href="https://ezequielcutin.github.io/fractal-mountain/" target="_blank" onclick="event.stopPropagation();"><i class="fas fa-link"></i>Live Demo</a>
+                            </p>
+                            <p><strong><i class="fas fa-image"></i> Images:</strong></p>
+                            <div class="carousel-container">
+                                <div class="carousel-slide">
+                                    <img src="fractal-mountain.png" alt="Fractal Mountain Image 1" width="500">
+                                    <img src="fractal-mountain-inputs.png" alt="Fractal Mountain Image 2" width="500">
+                                </div>
+                                <div class="slider-controls">
+                                    <button class="prev">&#10094;</button>
+                                    <button class="next">&#10095;</button>
+                                </div>
+                            </div>
+                            <span class="blinking-cursor">></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="entry" onclick="toggleDropdown(this)">
+                    <div class="entry-header">
+                        <div class="title">Customer Support Ticket Management Microservice</div>
+                        <div class="date-location">Jun 2024-Jul 2024</div>
+                    </div>
+                    <div class="dropdown">
+                        <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
+                            def reset_blink<span class="cyan-text">()</span>
+                        </button> -->
+                        <div class="dropdown-content">
+                            <span class="blinking-cursor"><</span>
+                            <p>
+                            - Spearheaded the development of a highly efficient and scalable customer support microservice using Node.js, Express.js, and MongoDB. Designed and implemented secure authentication and role-based access control to ensure data security and compliance. Developed comprehensive CRUD operations and integrated real-time notifications to enhance user experience and operational efficiency. Successfully deployed the microservice on Heroku, complemented by detailed Swagger API documentation for seamless integration and collaboration.
+                            </p>
+                            <p><strong>Skills:</strong> Secure Authentication · Role-Based Access Control · Real-Time Notifications · API Creation</p>
+                            <p><strong>Technologies Used:</strong> Node.js · Express.js · MongoDB · Mongoose · JWT · Nodemailer · WebSockets · Jest · Swagger</p>
+                            <p><strong><i class="fas fa-link"></i> Links:</strong></p>
+                            <p>
+                                <a href="https://rayca-eval-live-deae50ac2c84.herokuapp.com/api-docs" target="_blank" onclick="event.stopPropagation();">
+                                    <i class="fas fa-link"></i>API Endpoint
+                                </a><br>
+                                <a href="https://github.com/ezequielcutin/rayca-eval" target="_blank" onclick="event.stopPropagation();">
+                                    <i class="fab fa-github"></i>GitHub Repo
+                                </a>
+                                <p><strong><i class="fas fa-image"></i> Images:</strong></p>
+                                <img src="api-endpoint.png" alt="Project Image 1" width="500">
+                            </p>
+                            <span class="blinking-cursor">></span>
     
-    <!-- <div class="profile-links">
-        <span class="expand-arrow">&larr;</span>
-        <a href="https://www.linkedin.com/in/ezequiel-cutin/" target="_blank">> linkedin</a>
-        <a href="https://github.com/ezequielcutin" target="_blank">> github</a>
-        <a href="mailto:ezequielcutin@gmail.com">> email</a>
-    </div> -->
-     
-    <script>
-        function logWindowWidth() {
-            const width = window.innerWidth;
-            console.log(`Current window width: ${width}px`);
-        }
+                        </div>
+                    </div>
+                </div>
+                <div class="entry" onclick="toggleDropdown(this)">
+                    <div class="entry-header">
+                        <div class="title">Wikipedia Search Engine, University of Michigan</div>
+                        <div class="date-location">Apr 2024-May 2024</div>
+                    </div>
+                    <div class="dropdown">
+                        <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
+                            def reset_blink<span class="cyan-text">()</span>
+                        </button> -->
+                        <div class="dropdown-content">
+                            <span class="blinking-cursor"><</span>
+                            <p>
+                                This project focuses on developing a robust search engine using advanced algorithms and tools to optimize document retrieval. The search engine integrates Hadoop MapReduce, TF-IDF scoring, and Google's PageRank algorithm to enhance search accuracy and efficiency. The system is deployed on AWS to ensure scalability and performance.
+                            </p>
+                            <p><strong>Skills:</strong> Document Retrieval · Algorithm Implementation · Full-Stack Development · Cloud Deployment</p>
+                            <p><strong>Technologies Used:</strong> ReactJS · Hadoop MapReduce · AWS · TF-IDF · PageRank</p>
+                            <p><strong>Links:</strong></p>
+                            <p>
+                                <a href="https://github.com/ezequielcutin/wikipedia-search-engine" target="_blank" onclick="preventClose(event)"><i class="fab fa-github"></i>GitHub Repo (Private)</a>
+                            </p>
+                            <p><strong>Disclaimer:</strong> This repository is private due to the University of Michigan honor code policies. It was developed as part of the EECS 485 course (Web Systems) at the University of Michigan. Please contact me directly if you need more information about this project.</p>
+                            <img src="ask485.png" alt="Image of the ask485 browser" height="500">
+                            <span class="blinking-cursor">></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="entry" onclick="toggleDropdown(this)">
+                    <div class="entry-header">
+                        <div class="title">Custom MapReduce, University of Michigan</div>
+                        <div class="date-location">Mar 2024-Apr 2024</div>
+                    </div>
+                    <div class="dropdown">
+                        <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
+                            def reset_blink<span class="cyan-text">()</span>
+                        </button> -->
+                        <div class="dropdown-content">
+                            <span class="blinking-cursor"><</span>
+                            <p>
+                                - Developed a fully functional MapReduce server for the EECS485 web systems class, utilizing Python to handle large-scale data processing tasks.<br>
+                                - Implemented advanced networking techniques using TCP and UDP protocols to manage communication between server components, ensuring efficient data transfer and task coordination.<br>
+                                - Enhanced server performance and responsiveness through multithreading, enabling concurrent processing of multiple tasks.<br>
+                                - Designed and developed a Master and Worker architecture to effectively distribute workloads, manage task execution, and ensure system scalability.<br>
+                                - Incorporated fault tolerance mechanisms to detect and recover from worker failures, maintaining the reliability and stability of the server.<br>
+                                - Enabled efficient inter-worker communication to coordinate task execution and share intermediate results.<br>
+                            </p>
+                            <p><strong>Skills:</strong></p>
+                            <p>
+                                Fault Tolerance · Multithreaded Development · Git · Network Programming · Multithreading · TCP · MapReduce · Data Processing · WebSocket · Systems Design · Concurrent Programming · Python · UDP · Distributed Computing
+                            </p>
+                            <p><strong>Links:</strong></p>
+                            <p>
+                                <a href="https://github.com/abtaylor02/p4-mapreduce" target="_blank" onclick="preventClose(event)">
+                                    <i class="fab fa-github"></i>GitHub Repo (Private)
+                                </a>
+                            </p>
+                            <p><strong>Disclaimer:</strong> This repository is private due to the University of Michigan honor code policies. It was developed as part of the EECS485 course (Web Systems) at the University of Michigan. Please contact me directly if you need more information about this project.</p>            
+                            <span class="blinking-cursor">></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="entry" onclick="toggleDropdown(this)">
+                    <div class="entry-header">
+                        <div class="title">Insta485, University of Michigan</div>
+                        <div class="date-location">Jan 2024-Mar 2024</div>
+                    </div>
+                    <div class="dropdown">
+                        <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
+                            def reset_blink<span class="cyan-text">()</span>
+                        </button> -->
+                        <div class="dropdown-content">
+                            <span class="blinking-cursor"><</span>
+                            <p>
+                                - Insta485 is a set of 3 projects completed in UMich's EECS485 - Web Systems class. These projects focus on full-stack development of an Instagram-like system, aiming to incorporate all the basic user flows of an image-sharing site.<br>
+                                - The frontend was built using React, Jinja, HTML, and CSS, and served using Python's Flask framework.<br>
+                                - The backend consisted of a REST API built with Python's Flask and a SQLite database.<br>
+                                - Deployment was carried out on AWS using tools like EC2, ensuring robust and scalable infrastructure.<br>
+                            </p>
+                            <p><strong>Skills:</strong></p>
+                            <p>
+                                HTTP · REST APIs · Full-Stack Development · WebSocket · JavaScript · Python · Jinja
+                            </p>
+                            <p><strong>Technologies Used:</strong></p>
+                            <p>
+                                SQLite · Git · Node.js · Amazon Web Services (AWS) · Flask · React.js · HTML/CSS
+                            </p>
+                            <p><strong>Links:</strong></p>
+                            <p>
+                                <a href="https://github.com/abtaylor02/p3-insta485-clientside" target="_blank" onclick="preventClose(event)">
+                                    <i class="fab fa-github"></i>GitHub Repo (Private)
+                                </a>
+                            </p>
+                            <p><strong>Disclaimer:</strong> This repository is private due to the University of Michigan honor code policies. It was developed as part of the EECS 485 course (Web Systems) at the University of Michigan. Please contact me directly if you need more information about this project.</p>
+                
+                            <p><strong>Video:</strong></p>
+                            <video id="insta485Video" width="500" controls onclick="preventDropdown(event)">
+                                <source src="insta485.mp4" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                            <span class="blinking-cursor">></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="entry" onclick="toggleDropdown(this)">
+                    <div class="entry-header">
+                        <div class="title">Architectural Style Detection, IFSA</div>
+                        <div class="date-location">Feb 2023-May 2023</div>
+                    </div>
+                    <div class="dropdown">
+                        <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
+                            def reset_blink<span class="cyan-text">()</span>
+                        </button> -->
+                        <div class="dropdown-content">
+                            <span class="blinking-cursor"><</span>
+                            <p>
+                                This project is dedicated to the development of an advanced AI model that excels at detecting architectural styles. The model has undergone rigorous training on a diverse dataset consisting of 10,000 high-quality images encompassing 25 different architectural styles. These images have been carefully selected from the renowned Kaggle architectural style database (accessible at <a href="https://www.kaggle.com/datasets/dumitrux/architectural-styles-dataset" target="_blank" onclick="preventClose(event)">Kaggle Database</a>).
+                            </p>
+                            <p><strong>Skills:</strong> Computer Vision · AI Model Creation · Model Training · Python · Machine Learning</p>
+                            <p><strong>Technologies Used:</strong> numpy · torchvision · sklearn · pandas · seaborn</p>
+                            <p><strong>Links:</strong></p>
+                            <p>
+                                <a href="https://github.com/ezequielcutin/architecture-style-detection" target="_blank" onclick="preventClose(event)"><i class="fab fa-github"></i>GitHub Repo</a>
+                                <br>
+                                <a href="https://www.kaggle.com/datasets/dumitrux/architectural-styles-dataset" target="_blank" onclick="event.stopPropagation();"><i class="fas fa-link"></i> Kaggle Database</a>
+                            </p>
+                            <span class="blinking-cursor">></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="entry" onclick="toggleDropdown(this)">
+                    <div class="entry-header">
+                        <div class="title">European Flights Web-App (DinoSoar)</div>
+                        <div class="date-location">Feb 2023-May 2023</div>
+                    </div>
+                    <div class="dropdown">
+                        <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
+                            def reset_blink<span class="cyan-text">()</span>
+                        </button> -->
+                        <div class="dropdown-content">
+                            <span class="blinking-cursor"><</span>
+                            <p>
+                                Developed a dynamic web application, DinoSoar, that aggregates and presents detailed information on European flights. Leveraged Node.js and key airline APIs to seamlessly integrate real-time flight data and pricing models. The application was designed with a focus on optimizing accessibility and enhancing user experience, providing users with an intuitive and efficient platform to access comprehensive flight information.
+                            </p>
+                            <p><strong>Skills:</strong> Web Development · API Integration · User Experience Design · Real-time Data Processing · Full Stack Development</p>
+                            <p><strong>Technologies Used:</strong> Node.js · Express.js · JavaScript · HTML/CSS · Airline APIs</p>
+                            <p><strong>Links:</strong></p>
+                            <p>
+                                <a href="https://github.com/ezequielcutin/dinoSOAR" target="_blank" onclick="preventClose(event)"><i class="fab fa-github"></i>GitHub Repo</a>
+                            </p>
+                            <span class="blinking-cursor">></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="entry" onclick="toggleDropdown(this)">
+                    <div class="entry-header">
+                        <div class="title">Simple Diffusion, University of Michigan</div>
+                        <div class="date-location">Nov 2023-Dec 2023</div>
+                    </div>
+                    <div class="dropdown">
+                        <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
+                            def reset_blink<span class="cyan-text">()</span>
+                        </button> -->
+                        <div class="dropdown-content">
+                            <span class="blinking-cursor"><</span>
+                            <p>
+                                Developed a generative AI model using diffusion methods to produce lifelike floral images. Improved model efficacy by experimenting with various weight initializations and activation functions, and optimized the model's architectural depth to enhance adaptability and image quality.
+                            </p>
+                            <p><strong>Skills:</strong> Generative AI · Diffusion Methods · Model Optimization · Python · Machine Learning</p>
+                            <p><strong>Technologies Used:</strong> PyTorch · NumPy · Matplotlib · Jupyter Notebook</p>
+                            <p><strong>Links:</strong></p>
+                            <p>
+                                <a href="https://github.com/ezequielcutin/simple-diffusion" target="_blank" onclick="preventClose(event)"><i class="fab fa-github"></i>GitHub Repo</a>
+                                <p><strong><i class="fas fa-image"></i> Images:</strong></p>
+                                <img src="diffusion-process.png" alt="Process of training diffusion" width="500">
+                                <img src="diffusion-image-results.png" alt="Diffusion image results" height="130">
+                            </p>
+                            <span class="blinking-cursor">></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="entry" onclick="toggleDropdown(this)">
+                    <div class="entry-header">
+                        <div class="title">Universal Bank Customer Analysis, University of Michigan</div>
+                        <div class="date-location">Mar 2024-May 2024</div>
+                    </div>
+                    <div class="dropdown">
+                        <!-- <button class="reset-btn" onclick="resetDropdown(event, this)">
+                            def reset_blink<span class="cyan-text">()</span>
+                        </button> -->
+                        <div class="dropdown-content">
+                            <span class="blinking-cursor"><</span>
+                            <p>
+                                - Analyzed customer data to predict personal loan uptake, leading to optimized marketing strategies. Processed and organized a dataset of 5,000 customer records using SQL for accurate analysis. Created a logistic regression model in Python, achieving 92.16% accuracy, to guide targeted marketing towards customers with CD accounts and advanced education.
+                            </p>
+                            <span class="blinking-cursor">></span>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-        window.addEventListener('resize', logWindowWidth);
-        window.addEventListener('load', logWindowWidth); // Log the width when the page loads
-    </script>
+            <section id="music" class="content">
+                <!-- Music production content -->
+            </section>
+        </main>
 
+        <footer>
+            <a href="https://www.linkedin.com/in/ezequiel-cutin/" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin"></i> linkedin</a>
+            <a href="https://github.com/ezequielcutin" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> github</a>
+            <a href="mailto:ezequielcutin@gmail.com"><i class="fas fa-envelope"></i> email</a>
+            <a href="https://x.com/ezecutin" target="_blank" rel="noopener noreferrer"><i class="fab fa-twitter"></i> @ezecutin</a>
+        </footer>
+    </div>
+    <div id="terminal">
+        <div id="terminal-header">
+            <span>History</span>
+            <button id="close-terminal">&times;</button>
+        </div>
+        <div id="terminal-content"></div>
+    </div>
     <script src="scripts.js"></script>
 </body>
 </html>
