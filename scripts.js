@@ -225,36 +225,36 @@ function initCarousel(carouselContainer) {
     });
 }
 
+
+function createCursor() {
+    const cursor = document.querySelector('#cursor');
+  
+    document.addEventListener('mousemove', (e) => {
+      gsap.to(cursor, {
+        duration: 0.1,
+        x: e.clientX,
+        y: e.clientY
+      });
+    });
+  
+    const interactiveElements = 'a, button, .entry, video, .plyr__controls *, .plyr__progress *, .plyr__menu *';
+  
+    document.querySelectorAll(interactiveElements).forEach((el) => {
+      el.addEventListener('mouseenter', () => {
+        gsap.to('#outer-square', { duration: 0.3, scale: 1.5 });
+        gsap.to('#inner-square', { duration: 0.3, scale: 0.5 });
+        gsap.to('#center-line', { duration: 0.3, scaleX: 1.5 });
+      });
+      el.addEventListener('mouseleave', () => {
+        gsap.to('#outer-square', { duration: 0.3, scale: 1 });
+        gsap.to('#inner-square', { duration: 0.3, scale: 1 });
+        gsap.to('#center-line', { duration: 0.3, scaleX: 1 });
+      });
+    });
+  }
+
 document.addEventListener('DOMContentLoaded', function() {
-    // const cursor = document.querySelector('.custom-cursor');
-    // const cursorTriangle = cursor.querySelector('.cursor-triangle');
-    // const clickables = document.querySelectorAll('a, button, .tab, .entry, .dropdown-content a, .dropdown-content video, .prev, .next, video::-webkit-media-controls-panel *');
-    // document.addEventListener('mousemove', (e) => {
-    //     cursor.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
-    // });
-
-    // document.addEventListener('mousedown', () => {
-    //     cursor.classList.add('clicking');
-    // });
-
-    // document.addEventListener('mouseup', () => {
-    //     cursor.classList.remove('clicking');
-    // });
-
-    // clickables.forEach((el) => {
-    //     el.addEventListener('mouseover', () => {
-    //         if (!el.closest('.dropdown-content') || 
-    //             (el.closest('.dropdown-content') && 
-    //              (el.tagName === 'A' || el.tagName === 'VIDEO' || 
-    //               el.classList.contains('prev') || el.classList.contains('next')))) {
-    //             cursor.classList.add('hovering');
-    //         }
-    //     });
-    //     el.addEventListener('mouseout', () => {
-    //         cursor.classList.remove('hovering');
-    //     });
-    // });
-    
+    createCursor();
     createBlinkingLights();
     initCyberpunkGallery();
 

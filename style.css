@@ -1,4 +1,5 @@
-body, html {
+body,
+html {
     height: 100%;
     width: 100%;
     margin: 0;
@@ -10,10 +11,29 @@ body, html {
     line-height: 1.6;
     overflow-x: hidden;
     /* cursor: none !important; */
+    cursor: none;
 }
 
+.tab:hover, a:hover, button:hover, .entry:hover, video:hover, .plyr__controls *:hover, .plyr__progress *:hover, .plyr__menu *:hover {
+    cursor: none;
+}
 
+* {
+    cursor: none;
+}
 
+.cursor {
+    pointer-events: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    mix-blend-mode: difference;
+    z-index: 1000;
+}
+
+#cursor {
+    transform: translate(-50%, -50%);
+}
 
 main {
     flex: 1 0 auto;
@@ -25,7 +45,10 @@ body {
     min-height: 100vh;
 }
 
-header, nav, main, footer {
+header,
+nav,
+main,
+footer {
     text-align: center;
 }
 
@@ -65,16 +88,34 @@ h1 {
 }
 
 @keyframes glitch-anim {
-    0% { clip: rect(31px, 9999px, 94px, 0); }
-    5% { clip: rect(70px, 9999px, 71px, 0); }
-    10% { clip: rect(29px, 9999px, 83px, 0); }
+    0% {
+        clip: rect(31px, 9999px, 94px, 0);
+    }
+
+    5% {
+        clip: rect(70px, 9999px, 71px, 0);
+    }
+
+    10% {
+        clip: rect(29px, 9999px, 83px, 0);
+    }
+
     /* Add more keyframes as needed */
 }
 
 @keyframes glitch-anim2 {
-    0% { clip: rect(65px, 9999px, 119px, 0); }
-    5% { clip: rect(79px, 9999px, 19px, 0); }
-    10% { clip: rect(93px, 9999px, 28px, 0); }
+    0% {
+        clip: rect(65px, 9999px, 119px, 0);
+    }
+
+    5% {
+        clip: rect(79px, 9999px, 19px, 0);
+    }
+
+    10% {
+        clip: rect(93px, 9999px, 28px, 0);
+    }
+
     /* Add more keyframes as needed */
 }
 
@@ -122,7 +163,8 @@ h1 {
     transform: translate(-50%, -50%) scale(1);
 }
 
-.tab.active, .tab:hover {
+.tab.active,
+.tab:hover {
     background-color: rgba(0, 255, 0, 0.2);
     border-radius: 10px;
 }
@@ -137,15 +179,22 @@ h1 {
     animation: fadeIn 0.5s ease-out;
 }
 
-main p, .content p, #blurb p {
+main p,
+.content p,
+#blurb p {
     padding-left: 20px;
     padding-right: 20px;
     text-align: center;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 /* .gallery-wrapper {
@@ -324,19 +373,25 @@ footer i {
 }
 
 @keyframes blink {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 1;
     }
+
     50% {
         opacity: 0;
     }
 }
 
 .cyberpunk-gallery-container {
-    width: 50%; /* Reduce to 50% of its original width */
-    max-width: 400px; /* Half of the original 800px */
+    width: 50%;
+    /* Reduce to 50% of its original width */
+    max-width: 400px;
+    /* Half of the original 800px */
     height: 0;
-    padding-bottom: 28.125%; /* Half of 56.25% to maintain 16:9 aspect ratio */
+    padding-bottom: 28.125%;
+    /* Half of 56.25% to maintain 16:9 aspect ratio */
     position: relative;
     overflow: hidden;
     margin: 0 auto;
@@ -425,66 +480,69 @@ footer i {
     }
 }
 
-@media (max-width: 990px){
-    .title, .date-location{
+@media (max-width: 990px) {
+
+    .title,
+    .date-location {
         font-size: 13px;
     }
 
-    body, html {
-      font-size: 14px;
+    body,
+    html {
+        font-size: 14px;
     }
-  
+
     .container {
-      padding: 10px;
+        padding: 10px;
     }
-  
+
     h1 {
-      font-size: 2em;
+        font-size: 2em;
     }
-  
+
     .subtitle {
-      font-size: 0.9em;
+        font-size: 0.9em;
     }
-  
+
     .tabs {
-      flex-direction: row;
-      align-items: center;
-      text-align: center;
+        flex-direction: row;
+        align-items: center;
+        text-align: center;
     }
-  
+
     .tab {
-      margin: 5px 0;
-      width: auto;
-      max-width:80%;
-      text-align: center;
-      padding: 10px 20px;
-      font-size: 13px;
+        margin: 5px 0;
+        width: auto;
+        max-width: 80%;
+        text-align: center;
+        padding: 10px 20px;
+        font-size: 13px;
     }
-  
+
     .entry {
-      padding-left: 10px;
-      padding-right: 10px;
+        padding-left: 10px;
+        padding-right: 10px;
     }
-  
+
     .entry-header {
-      flex-direction: column;
-      align-items: center;
+        flex-direction: column;
+        align-items: center;
     }
-  
+
     .title {
-      font-size: 1.1em;
-      padding-right: 0;
-      margin-bottom: 5px;
-      text-align: center;
-      width: 100%;
+        font-size: 1.1em;
+        padding-right: 0;
+        margin-bottom: 5px;
+        text-align: center;
+        width: 100%;
     }
-  
+
     .date-location {
-      font-size: 0.9em;
-      text-align: center;
-      margin-left: 0;
+        font-size: 0.9em;
+        text-align: center;
+        margin-left: 0;
     }
-  
+
     .image-gallery {
         grid-template-columns: repeat(2, 1fr);
         gap: 10px;
@@ -521,12 +579,15 @@ footer i {
 
 @media (max-width: 768px) {
     .cyberpunk-gallery-container {
-        padding-bottom: 75%; /* 4:3 aspect ratio for mobile */
+        padding-bottom: 75%;
+        /* 4:3 aspect ratio for mobile */
     }
 }
-  
+
 @media (max-width: 480px) {
-    body, html {
+
+    body,
+    html {
         font-size: 12px;
     }
 
