@@ -9,19 +9,11 @@ body, html {
     font-size: 16px;
     line-height: 1.6;
     overflow-x: hidden;
+    /* cursor: none !important; */
 }
 
-/* .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    text-align: center;
-} */
-.container {
-    flex: 1 0 auto;
-    display: flex;
-    flex-direction: column;
-}
+
+
 
 main {
     flex: 1 0 auto;
@@ -207,56 +199,6 @@ footer a:hover {
 
 footer i {
     margin-right: 5px;
-}
-
-#terminal {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    width: 250px;
-    height: 150px;
-    background-color: rgba(0, 0, 0, 0.8);
-    border: 1px solid #00ff00;
-    display: none;
-    flex-direction: column;
-    z-index: 1000;
-    transition: all 0.3s ease;
-    transform: scale(0.7);
-    transform-origin: top left;
-    opacity: 0.7;
-}
-
-#terminal:hover {
-    transform: scale(0.8);
-    opacity: 1;
-}
-
-#terminal-header {
-    background-color: #00ff00;
-    color: #000;
-    padding: 3px 5px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-}
-
-#terminal-content {
-    flex-grow: 1;
-    padding: 5px;
-    overflow-y: auto;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10.5px;
-    color: #00ff00;
-}
-
-#close-terminal {
-    background: none;
-    border: none;
-    color: #000;
-    cursor: pointer;
-    font-size: 14px;
-    padding: 0;
-    line-height: 1;
 }
 
 .entry {
@@ -484,10 +426,6 @@ footer i {
 }
 
 @media (max-width: 990px){
-    #terminal{
-        display: none !important;
-    }
-
     .title, .date-location{
         font-size: 13px;
     }
