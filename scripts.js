@@ -229,6 +229,10 @@ function initCarousel(carouselContainer) {
 
 
 function createCursor() {
+    if (isMobileOrTablet()) {
+        return; // Don't create cursor aura for mobile or tablet devices
+    }
+    
     const cursorAura = document.createElement('div');
     cursorAura.className = 'cursor-aura';
     document.body.appendChild(cursorAura);
@@ -310,6 +314,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.carousel-container').forEach(initCarousel);
 });
 
-// Initialize carousels
-
-// Add any other necessary functions and event listeners
+function isMobileOrTablet() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
