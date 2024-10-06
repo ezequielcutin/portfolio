@@ -227,31 +227,35 @@ function initCarousel(carouselContainer) {
 
 
 function createCursor() {
-    const cursor = document.querySelector('#cursor');
-  
+    const cursorAura = document.createElement('div');
+    cursorAura.className = 'cursor-aura';
+    document.body.appendChild(cursorAura);
+
     document.addEventListener('mousemove', (e) => {
-      gsap.to(cursor, {
-        duration: 0.1,
-        x: e.clientX,
-        y: e.clientY
-      });
+        cursorAura.style.left = `${e.clientX - 20}px`;
+        cursorAura.style.top = `${e.clientY - 20}px`;
     });
-  
-    const interactiveElements = 'a, button, .entry, video, .plyr__controls *, .plyr__progress *, .plyr__menu *';
-  
+
+    const interactiveElements = 'a, button, .entry, video, .plyr__controls *, .plyr__progress *, .plyr__menu *, .soundcloud-block';
+
     document.querySelectorAll(interactiveElements).forEach((el) => {
-      el.addEventListener('mouseenter', () => {
-        gsap.to('#outer-square', { duration: 0.3, scale: 1.5 });
-        gsap.to('#inner-square', { duration: 0.3, scale: 0.5 });
-        gsap.to('#center-line', { duration: 0.3, scaleX: 1.5 });
-      });
-      el.addEventListener('mouseleave', () => {
-        gsap.to('#outer-square', { duration: 0.3, scale: 1 });
-        gsap.to('#inner-square', { duration: 0.3, scale: 1 });
-        gsap.to('#center-line', { duration: 0.3, scaleX: 1 });
-      });
+        el.addEventListener('mouseenter', () => {
+            cursorAura.classList.add('clickable');
+        });
+        el.addEventListener('mouseleave', () => {
+            cursorAura.classList.remove('clickable');
+        });
     });
-  }
+
+    document.querySelectorAll('.soundcloud-block iframe').forEach((iframe) => {
+        iframe.addEventListener('mouseenter', () => {
+            cursorAura.style.opacity = '0';
+        });
+        iframe.addEventListener('mouseleave', () => {
+            cursorAura.style.opacity = '1';
+        });
+    });
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     createCursor();
