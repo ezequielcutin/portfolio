@@ -317,3 +317,224 @@ document.addEventListener('DOMContentLoaded', function() {
 function isMobileOrTablet() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
+
+// Easter Egg 1: Reactive Glitch Header
+function initReactiveGlitchHeader() {
+    const glitchHeader = document.querySelector('.glitch');
+    if (!glitchHeader) return;
+    
+    let isHovering = false;
+    let glitchInterval = null;
+    let coolDownTimeout = null;
+    
+    glitchHeader.addEventListener('mouseenter', () => {
+        isHovering = true;
+        // Clear any pending cooldown to prevent it from interfering
+        if (coolDownTimeout) {
+            clearTimeout(coolDownTimeout);
+            coolDownTimeout = null;
+        }
+        intensifyGlitch();
+    });
+    
+    glitchHeader.addEventListener('mouseleave', () => {
+        isHovering = false;
+        resetGlitch();
+    });
+    
+    function intensifyGlitch() {
+        // Restore original text content in case it's in a cooldown state from a previous hover
+        glitchHeader.textContent = glitchHeader.getAttribute('data-text') || 'Ezequiel Cutin v33.3';
+
+        // Add intense glitch class
+        glitchHeader.classList.add('intense-glitch');
+        
+        // Create random character swaps
+        const originalText = glitchHeader.textContent;
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
+        
+        // Clear any existing interval to avoid stacking them
+        if (glitchInterval) clearInterval(glitchInterval);
+
+        glitchInterval = setInterval(() => {
+            if (!isHovering) {
+                clearInterval(glitchInterval);
+                glitchInterval = null;
+                return;
+            };
+            
+            // Randomly swap some characters
+            let newText = originalText;
+            for (let i = 0; i < 3; i++) {
+                const randomIndex = Math.floor(Math.random() * originalText.length);
+                const randomChar = chars[Math.floor(Math.random() * chars.length)];
+                newText = newText.substring(0, randomIndex) + randomChar + newText.substring(randomIndex + 1);
+            }
+            glitchHeader.textContent = newText;
+            
+            // Reset after a short delay
+            setTimeout(() => {
+                if (isHovering) {
+                    glitchHeader.textContent = originalText;
+                }
+            }, 100);
+        }, 200);
+        
+        // Add sound effect (optional - creates a subtle audio cue)
+        playGlitchSound();
+    }
+    
+    function resetGlitch() {
+        glitchHeader.classList.remove('intense-glitch');
+        
+        if (glitchInterval) {
+            clearInterval(glitchInterval);
+            glitchInterval = null;
+        }
+        
+        const originalText = glitchHeader.getAttribute('data-text') || 'Ezequiel Cutin v33.3';
+
+        // Helper function to replace char at index
+        const replaceAt = (str, index, replacement) => {
+            return str.substring(0, index) + replacement + str.substring(index + 1);
+        };
+
+        // A few last flickers for a "cool-down" effect
+        coolDownTimeout = setTimeout(() => {
+            if (!isHovering) { // Check if user hasn't re-hovered
+                glitchHeader.textContent = replaceAt(originalText, Math.floor(Math.random() * originalText.length), '_');
+            }
+        }, 50);
+        setTimeout(() => {
+            glitchHeader.textContent = originalText;
+        }, 150);
+        setTimeout(() => {
+            if (!isHovering) {
+                glitchHeader.textContent = replaceAt(originalText, Math.floor(Math.random() * originalText.length), '█');
+            }
+        }, 250);
+        setTimeout(() => {
+            glitchHeader.textContent = originalText;
+        }, 350);
+    }
+    
+    function playGlitchSound() {
+        // Create a subtle glitch sound using Web Audio API
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.1);
+            
+            gainNode.gain.setValueAtTime(0.01, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        } catch (e) {
+            // Silently fail if audio context is not supported
+        }
+    }
+}
+
+// Easter Egg 2: Developer Console Greeting
+function initConsoleEasterEgg() {
+    // ASCII Art for the console
+    const asciiArt = `
+    ╔══════════════════════════════════════════════════════════════╗
+    ║                                                              ║
+    ║    ███████╗███████╗███████╗███████╗ ██████╗ ██╗   ██╗      ║
+    ║    ██╔════╝╚══███╔╝██╔════╝██╔════╝██╔═══██╗██║   ██║      ║
+    ║    ███████╗  ███╔╝ █████╗  █████╗  ██║   ██║██║   ██║      ║
+    ║    ╚════██║ ███╔╝  ██╔══╝  ██╔══╝  ██║   ██║╚██╗ ██╔╝      ║
+    ║    ███████║███████╗███████╗███████╗╚██████╔╝ ╚████╔╝       ║
+    ║    ╚══════╝╚══════╝╚══════╝╚══════╝ ╚═════╝   ╚═══╝        ║
+    ║                                                              ║
+    ║                    ╔══════════════════════════════════════╗  ║
+    ║                    ║  Ezequiel Cutin v33.3               ║  ║
+    ║                    ║  Software Engineer | Data Analyst   ║  ║
+    ║                    ║  Sales Engineer | Music Producer    ║  ║
+    ║                    ╚══════════════════════════════════════╝  ║
+    ║                                                              ║
+    ║  Greetings, developer! You've accessed the mainframe.      ║
+    ║  Type 'help()' for available commands.                     ║
+    ║                                                              ║
+    ╚══════════════════════════════════════════════════════════════╝
+    `;
+    
+    // Console greeting
+    console.log('%c' + asciiArt, 'color: #00ff00; font-family: monospace; font-size: 8px;');
+    console.log('%cWelcome to the secret terminal! Type help() for commands.', 'color: #00ff00; font-size: 14px; font-weight: bold;');
+    
+    // Define interactive functions
+    window.help = function() {
+        console.log('%cAvailable commands:', 'color: #00ffff; font-weight: bold;');
+        console.log('%c  contact() - Get contact information', 'color: #00ff00;');
+        console.log('%c  projects() - View project links', 'color: #00ff00;');
+        console.log('%c  skills() - Show technical skills', 'color: #00ff00;');
+        console.log('%c  secret() - Reveal a secret message', 'color: #00ff00;');
+        console.log('%c  about() - Learn more about Ezequiel', 'color: #00ff00;');
+    };
+    
+    window.contact = function() {
+        console.log('%c📧 Contact Information:', 'color: #00ffff; font-weight: bold;');
+        console.log('%c  Email: ezequielcutin@gmail.com', 'color: #00ff00;');
+        console.log('%c  LinkedIn: linkedin.com/in/ezequiel-cutin', 'color: #00ff00;');
+        console.log('%c  GitHub: github.com/ezequielcutin', 'color: #00ff00;');
+        console.log('%c  Twitter: @ezecutin', 'color: #00ff00;');
+    };
+    
+    window.projects = function() {
+        console.log('%c🚀 Featured Projects:', 'color: #00ffff; font-weight: bold;');
+        console.log('%c  • Job Application Tracker: job-application-tracker-nu.vercel.app', 'color: #00ff00;');
+        console.log('%c  • GoBank: github.com/ezequielcutin/gobank', 'color: #00ff00;');
+        console.log('%c  • Spotify Track Downloader: github.com/ezequielcutin/spotify-to-mp3', 'color: #00ff00;');
+        console.log('%c  • Fractal Mountain: ezequielcutin.github.io/fractal-mountain', 'color: #00ff00;');
+        console.log('%c  • Architecture Style Detection: github.com/ezequielcutin/architecture-style-detection', 'color: #00ff00;');
+    };
+    
+    window.skills = function() {
+        console.log('%c💻 Technical Skills:', 'color: #00ffff; font-weight: bold;');
+        console.log('%c  Languages: JavaScript, Python, C#, Java, Go, SQL', 'color: #00ff00;');
+        console.log('%c  Frontend: React, TypeScript, HTML/CSS, WebGL', 'color: #00ff00;');
+        console.log('%c  Backend: Node.js, Express, Flask, .NET Core', 'color: #00ff00;');
+        console.log('%c  Databases: PostgreSQL, MongoDB, SQLite', 'color: #00ff00;');
+        console.log('%c  Tools: Git, Docker, AWS, Heroku, Vercel', 'color: #00ff00;');
+        console.log('%c  AI/ML: PyTorch, TensorFlow, Computer Vision', 'color: #00ff00;');
+    };
+    
+    window.secret = function() {
+        console.log('%c🤫 Secret Message:', 'color: #ff00ff; font-weight: bold;');
+        console.log('%c  "The best code is the code that makes you smile."', 'color: #ff00ff;');
+        console.log('%c  - Ezequiel Cutin', 'color: #ff00ff;');
+        console.log('%c  P.S. You found the easter egg! 🎉', 'color: #ff00ff;');
+    };
+    
+    window.about = function() {
+        console.log('%c👨‍💻 About Ezequiel:', 'color: #00ffff; font-weight: bold;');
+        console.log('%c  First-generation American with Argentinian roots', 'color: #00ff00;');
+        console.log('%c  University of Michigan CS Graduate', 'color: #00ff00;');
+        console.log('%c  Passionate about fútbol, hiking, and electronic music', 'color: #00ff00;');
+        console.log('%c  Currently working at United Wholesale Mortgage', 'color: #00ff00;');
+        console.log('%c  Building the future, one line of code at a time!', 'color: #00ff00;');
+    };
+    
+    // Auto-run help if console is opened
+    setTimeout(() => {
+        if (window.help) {
+            console.log('%c💡 Tip: Type help() to see available commands', 'color: #ffff00; font-style: italic;');
+        }
+    }, 1000);
+}
+
+// Initialize easter eggs when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    initReactiveGlitchHeader();
+    initConsoleEasterEgg();
+});
