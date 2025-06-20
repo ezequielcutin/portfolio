@@ -327,33 +327,39 @@ function initReactiveGlitchHeader() {
     let glitchInterval = null;
     let coolDownTimeout = null;
     
+    // --- Audio Synthesis Variables ---
+    let audioContext = null;
+    let oscillator = null;
+    let filter = null;
+    let gainNode = null;
+    let distortion = null;
+    let lfo = null;
+    let lfoGain = null;
+    let intensityInterval = null;
+
     glitchHeader.addEventListener('mouseenter', () => {
         isHovering = true;
-        // Clear any pending cooldown to prevent it from interfering
         if (coolDownTimeout) {
             clearTimeout(coolDownTimeout);
             coolDownTimeout = null;
         }
         intensifyGlitch();
+        startAcidSound();
     });
     
     glitchHeader.addEventListener('mouseleave', () => {
         isHovering = false;
         resetGlitch();
+        stopAcidSound();
     });
     
     function intensifyGlitch() {
-        // Restore original text content in case it's in a cooldown state from a previous hover
         glitchHeader.textContent = glitchHeader.getAttribute('data-text') || 'Ezequiel Cutin v33.3';
-
-        // Add intense glitch class
         glitchHeader.classList.add('intense-glitch');
         
-        // Create random character swaps
         const originalText = glitchHeader.textContent;
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
         
-        // Clear any existing interval to avoid stacking them
         if (glitchInterval) clearInterval(glitchInterval);
 
         glitchInterval = setInterval(() => {
@@ -363,7 +369,6 @@ function initReactiveGlitchHeader() {
                 return;
             };
             
-            // Randomly swap some characters
             let newText = originalText;
             for (let i = 0; i < 3; i++) {
                 const randomIndex = Math.floor(Math.random() * originalText.length);
@@ -372,36 +377,26 @@ function initReactiveGlitchHeader() {
             }
             glitchHeader.textContent = newText;
             
-            // Reset after a short delay
             setTimeout(() => {
                 if (isHovering) {
                     glitchHeader.textContent = originalText;
                 }
             }, 100);
         }, 200);
-        
-        // Add sound effect (optional - creates a subtle audio cue)
-        playGlitchSound();
     }
     
     function resetGlitch() {
         glitchHeader.classList.remove('intense-glitch');
-        
         if (glitchInterval) {
             clearInterval(glitchInterval);
             glitchInterval = null;
         }
-        
         const originalText = glitchHeader.getAttribute('data-text') || 'Ezequiel Cutin v33.3';
-
-        // Helper function to replace char at index
         const replaceAt = (str, index, replacement) => {
             return str.substring(0, index) + replacement + str.substring(index + 1);
         };
-
-        // A few last flickers for a "cool-down" effect
         coolDownTimeout = setTimeout(() => {
-            if (!isHovering) { // Check if user hasn't re-hovered
+            if (!isHovering) {
                 glitchHeader.textContent = replaceAt(originalText, Math.floor(Math.random() * originalText.length), '_');
             }
         }, 50);
@@ -418,27 +413,111 @@ function initReactiveGlitchHeader() {
         }, 350);
     }
     
-    function playGlitchSound() {
-        // Create a subtle glitch sound using Web Audio API
+    function startAcidSound() {
+        if (audioContext && audioContext.state !== 'closed') {
+             stopAcidSound(true);
+        }
+
         try {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            oscillator = audioContext.createOscillator();
+            filter = audioContext.createBiquadFilter();
+            gainNode = audioContext.createGain();
+            distortion = audioContext.createWaveShaper();
+            lfo = audioContext.createOscillator();
+            lfoGain = audioContext.createGain();
+
+            // Distortion Curve
+            const makeDistortionCurve = (amount) => {
+                let k = typeof amount === 'number' ? amount : 50,
+                    n_samples = 44100,
+                    curve = new Float32Array(n_samples),
+                    deg = Math.PI / 180,
+                    i = 0,
+                    x;
+                for ( ; i < n_samples; ++i ) {
+                    x = i * 2 / n_samples - 1;
+                    curve[i] = ( 3 + k ) * x * 20 * deg / ( Math.PI + k * Math.abs(x) );
+                }
+                return curve;
+            };
+
+            // Main Oscillator (the sound) - Higher pitch
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(138.59, audioContext.currentTime); // C#3
+
+            // Filter (the "acid")
+            filter.type = 'lowpass';
+            filter.Q.value = 25;
+            filter.frequency.value = 100;
+
+            // LFO (modulates the filter) - Faster rhythm
+            lfo.type = 'sawtooth';
+            lfo.frequency.value = 8; // 16th notes at 120bpm
+
+            // LFO Gain (controls wobble intensity)
+            lfoGain.gain.value = 400;
+
+            // Distortion Node
+            distortion.curve = makeDistortionCurve(100);
+            distortion.oversample = '4x';
+
+            // Connect nodes: osc -> filter -> distortion -> gain -> destination
+            oscillator.connect(filter);
+            filter.connect(distortion);
+            distortion.connect(gainNode);
             gainNode.connect(audioContext.destination);
             
-            oscillator.type = 'sawtooth';
-            oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.1);
-            
-            gainNode.gain.setValueAtTime(0.01, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.1);
+            // Connect LFO to modulate filter freq
+            lfo.connect(lfoGain);
+            lfoGain.connect(filter.frequency);
+
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            oscillator.start();
+            lfo.start();
+
+            // Smoother fade-in
+            gainNode.gain.linearRampToValueAtTime(0.035, audioContext.currentTime + 0.5);
+
+            let baseFrequency = 300;
+            let intensity = 400;
+            if (intensityInterval) clearInterval(intensityInterval);
+            intensityInterval = setInterval(() => {
+                if (!isHovering || !audioContext || audioContext.state === 'closed') {
+                    clearInterval(intensityInterval);
+                    return;
+                }
+                baseFrequency += 150;
+                intensity += 150;
+                filter.frequency.linearRampToValueAtTime(baseFrequency, audioContext.currentTime + 0.5);
+                lfoGain.gain.linearRampToValueAtTime(intensity, audioContext.currentTime + 0.5);
+            }, 500);
+
         } catch (e) {
-            // Silently fail if audio context is not supported
+            console.warn("Could not create acid sound.", e);
+        }
+    }
+
+    function stopAcidSound(immediate = false) {
+        if (intensityInterval) {
+            clearInterval(intensityInterval);
+            intensityInterval = null;
+        }
+
+        if (gainNode && audioContext && audioContext.state === 'running') {
+            // Smoother fade-out
+            const fadeOutDuration = immediate ? 0.05 : 1.0; 
+            gainNode.gain.cancelScheduledValues(audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + fadeOutDuration);
+
+            setTimeout(() => {
+                if (audioContext && audioContext.state !== 'closed') {
+                    oscillator.stop();
+                    lfo.stop();
+                    audioContext.close().catch(e => {});
+                }
+                audioContext = null;
+            }, (fadeOutDuration * 1000) + 50);
         }
     }
 }
