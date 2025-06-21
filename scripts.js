@@ -3,7 +3,15 @@ let currentTab = null;
 function initCyberpunkGallery() {
     const container = document.querySelector('.cyberpunk-gallery-container');
     const images = document.querySelectorAll('.cyberpunk-image');
+    const thumbnails = document.querySelectorAll('.thumbnail');
+    const progressBar = document.querySelector('.gallery-progress-bar');
+    const controlBtns = document.querySelectorAll('.gallery-control-btn');
+    
     let currentIndex = 0;
+    let isAutoMode = true;
+    let transitionInterval;
+    let progressInterval;
+    let transitionDuration = 6000; // 6 seconds
 
     // Create matrix rain canvas
     const matrixRain = document.createElement('canvas');
@@ -12,7 +20,7 @@ function initCyberpunkGallery() {
     const ctx = matrixRain.getContext('2d');
 
     // Set up matrix rain
-    let fontSize = 14;
+    let fontSize = 12;
     let columns = 0;
     let drops = [];
 
@@ -27,7 +35,7 @@ function initCyberpunkGallery() {
     }
 
     function drawMatrixRain() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Increased opacity for faster fade
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
         ctx.fillRect(0, 0, matrixRain.width, matrixRain.height);
         ctx.fillStyle = '#0f0';
         ctx.font = fontSize + 'px monospace';
@@ -35,35 +43,150 @@ function initCyberpunkGallery() {
         for (let i = 0; i < drops.length; i++) {
             const text = String.fromCharCode(Math.random() * 128);
             ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-            if (drops[i] * fontSize > matrixRain.height && Math.random() > 0.95) { // Increased probability of resetting
+            if (drops[i] * fontSize > matrixRain.height && Math.random() > 0.95) {
                 drops[i] = 0;
             }
-            drops[i] += 2; // Increased speed
+            drops[i] += 2;
         }
     }
 
-    async function transitionImages() {
-        images[currentIndex].classList.remove('active');
-        currentIndex = (currentIndex + 1) % images.length;
+    function updateProgressBar(progress) {
+        if (progressBar) {
+            progressBar.style.width = `${progress}%`;
+        }
+    }
 
-        // Start matrix rain animation
-        matrixRain.style.opacity = '1';
-        let frames = 0;
-        const maxFrames = 60; // Adjust this value to control the duration of the animation
+    function showImage(index) {
+        // Hide all images and thumbnails
+        images.forEach((img) => {
+            img.classList.remove('active');
+        });
         
-        return new Promise((resolve) => {
+        thumbnails.forEach((thumb) => {
+            thumb.classList.remove('active');
+        });
+
+        // Show current image and thumbnail
+        images[index].classList.add('active');
+        thumbnails[index].classList.add('active');
+
+        currentIndex = index;
+    }
+
+    async function transitionImages() {
+        // Start matrix rain animation
+        matrixRain.classList.add('active');
+        
+        // Add glitch effect to current image
+        images[currentIndex].classList.add('glitching');
+        
+        // Wait for glitch effect
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Hide current image
+        images[currentIndex].classList.remove('active', 'glitching');
+
+        // Matrix rain effect
+        let frames = 0;
+        const maxFrames = 60;
+        
+        await new Promise((resolve) => {
             const rainAnimation = setInterval(() => {
                 drawMatrixRain();
                 frames++;
                 if (frames >= maxFrames) {
                     clearInterval(rainAnimation);
-                    matrixRain.style.opacity = '0';
-                    images[currentIndex].classList.add('active');
+                    matrixRain.classList.remove('active');
                     resolve();
                 }
-            }, 16); // Run at approximately 60 FPS
+            }, 16);
         });
+
+        // Move to next image
+        currentIndex = (currentIndex + 1) % images.length;
+        showImage(currentIndex);
     }
+
+    function startAutoMode() {
+        if (transitionInterval) {
+            clearInterval(transitionInterval);
+        }
+        if (progressInterval) {
+            clearInterval(progressInterval);
+        }
+
+        // Start progress bar
+        let progress = 0;
+        progressInterval = setInterval(() => {
+            progress += (100 / (transitionDuration / 100));
+            updateProgressBar(progress);
+            if (progress >= 100) {
+                progress = 0;
+                updateProgressBar(0);
+            }
+        }, 100);
+
+        // Start image transitions
+        transitionInterval = setInterval(async () => {
+            await transitionImages();
+        }, transitionDuration);
+    }
+
+    function stopAutoMode() {
+        if (transitionInterval) {
+            clearInterval(transitionInterval);
+        }
+        if (progressInterval) {
+            clearInterval(progressInterval);
+        }
+        updateProgressBar(0);
+    }
+
+    // Thumbnail click handlers
+    thumbnails.forEach((thumb, index) => {
+        thumb.addEventListener('click', () => {
+            currentIndex = index;
+            showImage(index);
+            
+            // If in auto mode, restart the timer
+            if (isAutoMode) {
+                stopAutoMode();
+                startAutoMode();
+            }
+        });
+    });
+
+    // Control button event listeners
+    controlBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mode = btn.dataset.mode;
+            
+            // Update button states
+            controlBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            if (mode === 'auto') {
+                isAutoMode = true;
+                startAutoMode();
+            } else if (mode === 'manual') {
+                isAutoMode = false;
+                stopAutoMode();
+            }
+        });
+    });
+
+    // Keyboard controls
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            currentIndex = (currentIndex + 1) % images.length;
+            showImage(currentIndex);
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            currentIndex = (currentIndex - 1 + images.length) % images.length;
+            showImage(currentIndex);
+        }
+    });
 
     // Resize canvas when window is resized
     function resizeCanvas() {
@@ -71,17 +194,10 @@ function initCyberpunkGallery() {
     }
 
     window.addEventListener('resize', resizeCanvas);
-    initializeRain(); // Initialize on load
+    initializeRain();
 
-    // Start the image transition loop
-    async function transitionLoop() {
-        while (true) {
-            await transitionImages();
-            await new Promise(resolve => setTimeout(resolve, 8000)); // Wait 8 seconds between transitions
-        }
-    }
-
-    transitionLoop();
+    // Start auto mode by default
+    startAutoMode();
 }
 
 
