@@ -528,21 +528,14 @@ function initConsoleEasterEgg() {
     const asciiArt = `
     ╔══════════════════════════════════════════════════════════════╗
     ║                                                              ║
-    ║    ███████╗███████╗███████╗███████╗ ██████╗ ██╗   ██╗      ║
-    ║    ██╔════╝╚══███╔╝██╔════╝██╔════╝██╔═══██╗██║   ██║      ║
-    ║    ███████╗  ███╔╝ █████╗  █████╗  ██║   ██║██║   ██║      ║
-    ║    ╚════██║ ███╔╝  ██╔══╝  ██╔══╝  ██║   ██║╚██╗ ██╔╝      ║
-    ║    ███████║███████╗███████╗███████╗╚██████╔╝ ╚████╔╝       ║
-    ║    ╚══════╝╚══════╝╚══════╝╚══════╝ ╚═════╝   ╚═══╝        ║
-    ║                                                              ║
     ║                    ╔══════════════════════════════════════╗  ║
-    ║                    ║  Ezequiel Cutin v33.3               ║  ║
-    ║                    ║  Software Engineer | Data Analyst   ║  ║
-    ║                    ║  Sales Engineer | Music Producer    ║  ║
+    ║                    ║  Ezequiel Cutin v33.3                ║  ║
+    ║                    ║  Software Engineer | Data Analyst    ║  ║
+    ║                    ║  Sales Engineer | Music Producer     ║  ║
     ║                    ╚══════════════════════════════════════╝  ║
     ║                                                              ║
-    ║  Greetings, developer! You've accessed the mainframe.      ║
-    ║  Type 'help()' for available commands.                     ║
+    ║  Greetings, fellow dev. You've accessed the mainframe.       ║
+    ║  Type 'help()' for console commands.                         ║
     ║                                                              ║
     ╚══════════════════════════════════════════════════════════════╝
     `;
