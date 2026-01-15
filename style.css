@@ -592,6 +592,52 @@ footer i {
     pointer-events: none;
 }
 
+.gallery-loader {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: radial-gradient(circle at center, rgba(0, 15, 10, 0.6) 0%, rgba(2, 6, 5, 0.9) 70%);
+    color: #7bffcf;
+    font-size: 0.8em;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    z-index: 5;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+}
+
+.gallery-loader.is-visible {
+    opacity: 1;
+}
+
+.loader-orb {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 255, 180, 0.4);
+    box-shadow: 0 0 18px rgba(0, 255, 200, 0.45);
+    position: relative;
+    animation: orbPulse 1.4s ease-in-out infinite;
+}
+
+.loader-orb::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, rgba(0, 255, 180, 0.1), rgba(0, 255, 220, 0.8), rgba(0, 255, 180, 0.1));
+    animation: orbSpin 1s linear infinite;
+}
+
+.loader-text {
+    text-shadow: 0 0 8px rgba(0, 255, 180, 0.45);
+}
+
 .cyberpunk-gallery-container.is-transitioning .gallery-sweep {
     animation: scanSweep 0.8s ease-out;
 }
@@ -639,6 +685,24 @@ footer i {
     50% {
         transform: translateY(-50%) scale(1.15);
         opacity: 1;
+    }
+}
+
+@keyframes orbPulse {
+    0%,
+    100% {
+        transform: scale(0.92);
+        opacity: 0.7;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+}
+
+@keyframes orbSpin {
+    to {
+        transform: rotate(360deg);
     }
 }
 

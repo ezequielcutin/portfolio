@@ -3,6 +3,7 @@ let currentTab = null;
 function initCyberpunkGallery() {
     const container = document.querySelector('.cyberpunk-gallery-container');
     const images = document.querySelectorAll('.cyberpunk-image');
+    const loader = container ? container.querySelector('.gallery-loader') : null;
     const shell = container ? container.closest('.gallery-shell') : null;
     const titleEl = shell ? shell.querySelector('#galleryTitle') : null;
     const locationEl = shell ? shell.querySelector('#galleryLocation') : null;
@@ -79,6 +80,30 @@ function initCyberpunkGallery() {
         });
     }
 
+    function setLoaderVisible(isVisible) {
+        if (!loader) return;
+        loader.classList.toggle('is-visible', isVisible);
+    }
+
+    function waitForImage(image) {
+        if (!image) return Promise.resolve();
+        if (image.complete && image.naturalWidth > 0) return Promise.resolve();
+        return new Promise((resolve) => {
+            const onLoad = () => resolve();
+            const onError = () => resolve();
+            image.addEventListener('load', onLoad, { once: true });
+            image.addEventListener('error', onError, { once: true });
+        });
+    }
+
+    function preloadImages() {
+        images.forEach((image) => {
+            if (image.complete) return;
+            const preloader = new Image();
+            preloader.src = image.src;
+        });
+    }
+
     function setHudText(image) {
         if (!image) return;
         const title = image.dataset.title || image.alt || '';
@@ -97,6 +122,12 @@ function initCyberpunkGallery() {
         }
         images[currentIndex].classList.remove('active');
         currentIndex = (currentIndex + 1) % images.length;
+        const nextImage = images[currentIndex];
+
+        if (nextImage && (!nextImage.complete || nextImage.naturalWidth === 0)) {
+            setLoaderVisible(true);
+            await waitForImage(nextImage);
+        }
 
         // Start matrix rain animation
         matrixRain.style.opacity = '1';
@@ -113,6 +144,7 @@ function initCyberpunkGallery() {
                     images[currentIndex].classList.add('active');
                     setHudText(images[currentIndex]);
                     setHudFading(false);
+                    setLoaderVisible(false);
                     if (container) {
                         setTimeout(() => {
                             container.classList.remove('is-transitioning');
@@ -132,8 +164,13 @@ function initCyberpunkGallery() {
 
     window.addEventListener('resize', resizeCanvas);
     initializeRain(); // Initialize on load
-    setHudText(images[currentIndex]);
-    setHudFading(false);
+    setLoaderVisible(true);
+    waitForImage(images[currentIndex]).then(() => {
+        setHudText(images[currentIndex]);
+        setHudFading(false);
+        setLoaderVisible(false);
+    });
+    preloadImages();
 
     // Start the image transition loop
     async function transitionLoop() {

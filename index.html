@@ -67,10 +67,14 @@
                             <div class="gallery-scanlines" aria-hidden="true"></div>
                             <div class="gallery-vignette" aria-hidden="true"></div>
                             <div class="gallery-sweep" aria-hidden="true"></div>
-                            <img src="headshot_budapest.png" alt="Ezequiel in Budapest" data-title="Budapest / Scenic Spot" data-location="Budapest, HU" data-date="2023" class="cyberpunk-image active">
-                            <img src="canaries_mountain.png" alt="Ezequiel in Canary Islands" data-title="Canary Islands / Summit" data-location="Canary Islands, ES" data-date="2022" class="cyberpunk-image">
-                            <img src="camel_qatar.png" alt="Ezequiel with a camel in Qatar" data-title="Qatar / Desert Route" data-location="Doha, QA" data-date="2021" class="cyberpunk-image">
-                            <img src="umich grad.jpg" alt="Ezequiel at University of Michigan graduation" data-title="Michigan / Graduation" data-location="Ann Arbor, MI" data-date="2024" class="cyberpunk-image">
+                            <div class="gallery-loader" aria-live="polite">
+                                <div class="loader-orb"></div>
+                                <div class="loader-text">LINK ESTABLISHING...</div>
+                            </div>
+                            <img src="headshot_budapest.png" alt="Ezequiel in Budapest" data-title="Budapest / Scenic Spot" data-location="Budapest, HU" data-date="2023" class="cyberpunk-image active" loading="eager" decoding="async" fetchpriority="high">
+                            <img src="canaries_mountain.png" alt="Ezequiel in Canary Islands" data-title="Canary Islands / Summit" data-location="Canary Islands, ES" data-date="2022" class="cyberpunk-image" loading="lazy" decoding="async">
+                            <img src="camel_qatar.png" alt="Ezequiel with a camel in Qatar" data-title="Qatar / Desert Route" data-location="Doha, QA" data-date="2021" class="cyberpunk-image" loading="lazy" decoding="async">
+                            <img src="umich grad.jpg" alt="Ezequiel at University of Michigan graduation" data-title="Michigan / Graduation" data-location="Ann Arbor, MI" data-date="2024" class="cyberpunk-image" loading="lazy" decoding="async">
                         </div>
                     </div>
                 </div>
