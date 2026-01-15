@@ -3,6 +3,10 @@ let currentTab = null;
 function initCyberpunkGallery() {
     const container = document.querySelector('.cyberpunk-gallery-container');
     const images = document.querySelectorAll('.cyberpunk-image');
+    const shell = container ? container.closest('.gallery-shell') : null;
+    const titleEl = shell ? shell.querySelector('#galleryTitle') : null;
+    const locationEl = shell ? shell.querySelector('#galleryLocation') : null;
+    const dateEl = shell ? shell.querySelector('#galleryDate') : null;
     let currentIndex = 0;
 
     // Create matrix rain canvas
@@ -10,11 +14,37 @@ function initCyberpunkGallery() {
     matrixRain.className = 'matrix-rain';
     container.appendChild(matrixRain);
     const ctx = matrixRain.getContext('2d');
+    matrixRain.style.opacity = '0';
 
     // Set up matrix rain
     let fontSize = 14;
     let columns = 0;
     let drops = [];
+
+    function setContainerRatio(image) {
+        if (!container || !image) return;
+        const applyRatio = () => {
+            const width = image.naturalWidth;
+            const height = image.naturalHeight;
+            if (!width || !height) return;
+            const ratio = (width / height).toFixed(4);
+            container.style.aspectRatio = `${ratio} / 1`;
+            const maxWidth = Math.min(640, window.innerWidth * 0.9);
+            const maxHeight = window.innerHeight * 0.55;
+            const targetWidth = Math.min(maxWidth, maxHeight * ratio);
+            const widthPx = `${Math.max(280, targetWidth)}px`;
+            container.style.width = widthPx;
+            if (shell) {
+                shell.style.width = widthPx;
+            }
+        };
+
+        if (image.complete) {
+            applyRatio();
+        } else {
+            image.addEventListener('load', applyRatio, { once: true });
+        }
+    }
 
     function initializeRain() {
         matrixRain.width = container.clientWidth;
@@ -42,7 +72,29 @@ function initCyberpunkGallery() {
         }
     }
 
+    function setHudFading(isFading) {
+        [titleEl, locationEl, dateEl].forEach((el) => {
+            if (!el) return;
+            el.classList.toggle('is-fading', isFading);
+        });
+    }
+
+    function setHudText(image) {
+        if (!image) return;
+        const title = image.dataset.title || image.alt || '';
+        const location = image.dataset.location || 'Unknown';
+        const date = image.dataset.date || '----';
+        if (titleEl) titleEl.textContent = title;
+        if (locationEl) locationEl.textContent = location;
+        if (dateEl) dateEl.textContent = date;
+        setContainerRatio(image);
+    }
+
     async function transitionImages() {
+        setHudFading(true);
+        if (container) {
+            container.classList.add('is-transitioning');
+        }
         images[currentIndex].classList.remove('active');
         currentIndex = (currentIndex + 1) % images.length;
 
@@ -59,6 +111,13 @@ function initCyberpunkGallery() {
                     clearInterval(rainAnimation);
                     matrixRain.style.opacity = '0';
                     images[currentIndex].classList.add('active');
+                    setHudText(images[currentIndex]);
+                    setHudFading(false);
+                    if (container) {
+                        setTimeout(() => {
+                            container.classList.remove('is-transitioning');
+                        }, 350);
+                    }
                     resolve();
                 }
             }, 16); // Run at approximately 60 FPS
@@ -68,10 +127,13 @@ function initCyberpunkGallery() {
     // Resize canvas when window is resized
     function resizeCanvas() {
         initializeRain();
+        setContainerRatio(images[currentIndex]);
     }
 
     window.addEventListener('resize', resizeCanvas);
     initializeRain(); // Initialize on load
+    setHudText(images[currentIndex]);
+    setHudFading(false);
 
     // Start the image transition loop
     async function transitionLoop() {
