@@ -628,7 +628,7 @@ function isMobileOrTablet() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-// Easter Egg 1: Reactive Glitch Header
+// Easter Egg 1: Reactive Glitch Header (visual only)
 function initReactiveGlitchHeader() {
     const glitchHeader = document.querySelector('.glitch');
     if (!glitchHeader) return;
@@ -636,16 +636,6 @@ function initReactiveGlitchHeader() {
     let isHovering = false;
     let glitchInterval = null;
     let coolDownTimeout = null;
-    
-    // --- Audio Synthesis Variables ---
-    let audioContext = null;
-    let oscillator = null;
-    let filter = null;
-    let gainNode = null;
-    let distortion = null;
-    let lfo = null;
-    let lfoGain = null;
-    let intensityInterval = null;
 
     glitchHeader.addEventListener('mouseenter', () => {
         isHovering = true;
@@ -654,13 +644,11 @@ function initReactiveGlitchHeader() {
             coolDownTimeout = null;
         }
         intensifyGlitch();
-        startAcidSound();
     });
     
     glitchHeader.addEventListener('mouseleave', () => {
         isHovering = false;
         resetGlitch();
-        stopAcidSound();
     });
     
     function intensifyGlitch() {
@@ -721,117 +709,6 @@ function initReactiveGlitchHeader() {
         setTimeout(() => {
             glitchHeader.textContent = originalText;
         }, 350);
-    }
-    
-    function startAcidSound() {
-        if (audioContext && audioContext.state !== 'closed') {
-             stopAcidSound(true);
-        }
-
-        try {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            
-            // Create two oscillators for a richer, warmer pad sound
-            oscillator = audioContext.createOscillator();
-            const oscillator2 = audioContext.createOscillator();
-            filter = audioContext.createBiquadFilter();
-            gainNode = audioContext.createGain();
-            lfo = audioContext.createOscillator();
-            lfoGain = audioContext.createGain();
-
-            // Main Oscillator - soft sine wave at a low frequency
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(65.41, audioContext.currentTime); // C2 - deep and warm
-
-            // Second oscillator - slight detune for richness
-            oscillator2.type = 'sine';
-            oscillator2.frequency.setValueAtTime(130.81, audioContext.currentTime); // C3 - octave up
-            oscillator2.detune.setValueAtTime(5, audioContext.currentTime); // Slight detune for shimmer
-
-            // Gentle lowpass filter
-            filter.type = 'lowpass';
-            filter.Q.value = 1; // Very gentle resonance
-            filter.frequency.value = 800;
-
-            // Slow, gentle LFO for subtle movement
-            lfo.type = 'sine';
-            lfo.frequency.value = 0.5; // Very slow modulation
-
-            // LFO modulates filter subtly
-            lfoGain.gain.value = 200;
-
-            // Create a second gain for oscillator2
-            const gain2 = audioContext.createGain();
-            gain2.gain.value = 0.3; // Quieter layer
-
-            // Connect: oscillators -> filter -> gain -> destination
-            oscillator.connect(filter);
-            oscillator2.connect(gain2);
-            gain2.connect(filter);
-            filter.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            // Connect LFO to filter frequency
-            lfo.connect(lfoGain);
-            lfoGain.connect(filter.frequency);
-
-            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-            oscillator.start();
-            oscillator2.start();
-            lfo.start();
-
-            // Gentle fade-in
-            gainNode.gain.linearRampToValueAtTime(0.06, audioContext.currentTime + 1.0);
-
-            // Store oscillator2 for cleanup
-            window._oscillator2 = oscillator2;
-            window._gain2 = gain2;
-
-            // Subtle intensity increase over time
-            if (intensityInterval) clearInterval(intensityInterval);
-            intensityInterval = setInterval(() => {
-                if (!isHovering || !audioContext || audioContext.state === 'closed') {
-                    clearInterval(intensityInterval);
-                    return;
-                }
-                // Gently increase filter frequency for slight brightness
-                const currentFreq = filter.frequency.value;
-                if (currentFreq < 1500) {
-                    filter.frequency.linearRampToValueAtTime(currentFreq + 50, audioContext.currentTime + 0.5);
-                }
-            }, 800);
-
-        } catch (e) {
-            console.warn("Could not create ambient sound.", e);
-        }
-    }
-
-    function stopAcidSound(immediate = false) {
-        if (intensityInterval) {
-            clearInterval(intensityInterval);
-            intensityInterval = null;
-        }
-
-        if (gainNode && audioContext && audioContext.state === 'running') {
-            // Gentle fade-out
-            const fadeOutDuration = immediate ? 0.05 : 1.5; 
-            gainNode.gain.cancelScheduledValues(audioContext.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + fadeOutDuration);
-
-            setTimeout(() => {
-                if (audioContext && audioContext.state !== 'closed') {
-                    try {
-                        oscillator.stop();
-                        if (window._oscillator2) window._oscillator2.stop();
-                        lfo.stop();
-                    } catch (e) {}
-                    audioContext.close().catch(e => {});
-                }
-                audioContext = null;
-                window._oscillator2 = null;
-                window._gain2 = null;
-            }, (fadeOutDuration * 1000) + 50);
-        }
     }
 }
 
