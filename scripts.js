@@ -425,13 +425,15 @@ function createBlinkingLights() {
         const light = document.createElement('div');
         light.className = 'blink';
         light.style.position = 'absolute';
-        light.style.left = `${Math.random() * 100}%`;
-        light.style.top = `${Math.random() * 100}%`;
+        // Keep lights away from edges (5% to 95% range)
+        light.style.left = `${5 + Math.random() * 90}%`;
+        light.style.top = `${5 + Math.random() * 90}%`;
         light.style.width = '2px';
         light.style.height = '2px';
         light.style.backgroundColor = '#00ff00';
         light.style.borderRadius = '50%';
         light.style.opacity = '0';
+        light.style.pointerEvents = 'none';
         body.appendChild(light);
 
         setInterval(() => {

@@ -13,6 +13,11 @@ html {
     cursor: default;
 }
 
+/* Prevent edge flickering from animated overlays */
+html {
+    overflow-x: clip;
+}
+
 /* Custom scrollbar (theme-matched, only shows when needed) */
 html {
     scrollbar-width: thin;
@@ -1160,7 +1165,7 @@ footer i {
     overflow: hidden;
 }
 
-/* ===== NOISE OVERLAY ===== */
+/* ===== VIGNETTE OVERLAY ===== */
 .noise-overlay {
     position: fixed;
     top: 0;
@@ -1169,17 +1174,13 @@ footer i {
     height: 100%;
     pointer-events: none;
     z-index: 9998;
-    opacity: 0.03;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    animation: noiseShift 0.5s steps(5) infinite;
-}
-
-@keyframes noiseShift {
-    0% { transform: translate(0, 0); }
-    25% { transform: translate(-2%, -2%); }
-    50% { transform: translate(2%, 1%); }
-    75% { transform: translate(-1%, 2%); }
-    100% { transform: translate(1%, -1%); }
+    background: radial-gradient(
+        ellipse at center,
+        transparent 0%,
+        transparent 50%,
+        rgba(0, 0, 0, 0.3) 80%,
+        rgba(0, 0, 0, 0.6) 100%
+    );
 }
 
 /* ===== 3D TILT EFFECT ON CARDS ===== */
