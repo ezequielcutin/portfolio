@@ -821,6 +821,17 @@ footer i {
     .soundcloud-block {
         max-width: 100%;
     }
+    
+    .music-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    /* Compact player for tablets */
+    .soundcloud-block iframe {
+        height: 120px !important;
+    }
 }
 
 @media (max-width: 990px) {
@@ -1113,6 +1124,7 @@ footer i {
 .boot-line .success { color: #00ff88; }
 .boot-line .warning { color: #ffaa00; }
 .boot-line .error { color: #ff4444; }
+.boot-line .secure { color: #00aaff; text-shadow: 0 0 8px rgba(0, 170, 255, 0.6); }
 .boot-line .highlight { 
     color: #00ffff; 
     font-weight: bold;
@@ -1305,43 +1317,358 @@ body.secret-mode .soundcloud-block:hover {
     animation: crtFlicker 0.1s ease;
 }
 
-/* ===== RESPONSIVE STYLES FOR NEW FEATURES ===== */
+/* ===== COMPREHENSIVE MOBILE STYLES ===== */
+
+/* Tablet and below (768px) */
 @media (max-width: 768px) {
+    /* Boot screen adjustments */
     .ascii-logo {
-        font-size: 0.25em;
-        overflow-x: scroll;
+        font-size: 0.22em;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
     
     .boot-terminal {
-        font-size: 0.7em;
+        font-size: 0.75em;
     }
     
     .boot-line {
-        margin: 5px 0;
+        margin: 6px 0;
+        word-wrap: break-word;
     }
     
+    /* Header adjustments */
+    h1.glitch {
+        font-size: 1.6em;
+        padding: 0 10px;
+        word-break: break-word;
+    }
+    
+    .subtitle {
+        font-size: 0.85em;
+        padding: 0 15px;
+    }
+    
+    /* Navigation - better touch targets */
+    .tabs {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 0 10px;
+    }
+    
+    .tab {
+        padding: 12px 16px;
+        font-size: 0.8em;
+        min-height: 44px; /* iOS touch target minimum */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* About me blurb */
+    #about-me-blurb {
+        font-size: 0.9em;
+        line-height: 1.7;
+        padding: 0 15px;
+    }
+    
+    /* Entry cards - disable 3D tilt on touch */
+    .entry {
+        transform: none !important;
+    }
+    
+    .entry:hover {
+        transform: none !important;
+        box-shadow: none;
+    }
+    
+    .entry::before {
+        display: none;
+    }
+    
+    /* Dropdown content */
+    .dropdown-content {
+        padding: 10px 5px;
+    }
+    
+    .dropdown-content p,
+    .dropdown-content ul {
+        font-size: 0.9em;
+        padding-right: 10px;
+    }
+    
+    .dropdown-content img {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* Secret mode notification */
     .secret-mode-notification {
-        padding: 20px 30px;
-        width: 90%;
+        padding: 20px;
+        width: 85%;
+        max-width: 320px;
     }
     
     .secret-mode-notification h2 {
-        font-size: 1.1em;
+        font-size: 1em;
+    }
+    
+    .secret-mode-notification p {
+        font-size: 0.8em;
+    }
+    
+    /* Footer improvements */
+    footer {
+        padding: 20px 10px;
+    }
+    
+    footer a {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px;
+        margin: 5px;
+        font-size: 0.9em;
+    }
+    
+    /* Disable cursor rain on touch devices (handled in JS but backup) */
+    .cursor-rain-container {
+        display: none;
+    }
+    
+    /* Reduce noise overlay on mobile for performance */
+    .noise-overlay {
+        opacity: 0.015;
     }
 }
 
+/* Small phones (480px and below) */
 @media (max-width: 480px) {
+    /* Hide ASCII logo, show simple text */
     .ascii-logo {
         display: none;
     }
     
     .boot-container::before {
-        content: 'EZECUTIN v33.3';
+        content: 'EZEQUIEL CUTIN';
         display: block;
         color: #00ff00;
-        font-size: 1.5em;
+        font-size: 1.4em;
+        font-weight: bold;
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
         text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+        letter-spacing: 0.1em;
+    }
+    
+    .boot-terminal {
+        font-size: 0.65em;
+    }
+    
+    .boot-line {
+        margin: 4px 0;
+    }
+    
+    /* Stack header elements */
+    h1.glitch {
+        font-size: 1.3em;
+        line-height: 1.3;
+    }
+    
+    .subtitle {
+        font-size: 0.75em;
+    }
+    
+    /* Stack navigation vertically */
+    .tabs {
+        flex-direction: column;
+        align-items: center;
+        padding: 0 20px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .tab {
+        width: 80%;
+        max-width: 300px;
+        margin: 4px 0;
+        padding: 14px 20px;
+        font-size: 0.85em;
+        border: 1px solid rgba(0, 255, 0, 0.3);
+        border-radius: 8px;
+        text-align: center;
+    }
+    
+    /* Gallery adjustments */
+    .gallery-shell {
+        max-width: 100%;
+    }
+    
+    .gallery-hud {
+        padding: 8px 10px;
+    }
+    
+    .hud-title {
+        font-size: 0.8em;
+    }
+    
+    .hud-chip {
+        font-size: 0.55em;
+    }
+    
+    /* Footer - icons with abbreviated text */
+    footer {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 5px;
+        padding: 15px 10px;
+    }
+    
+    footer a {
+        font-size: 0.8em;
+        padding: 10px 12px;
+        border: 1px solid rgba(0, 255, 0, 0.2);
+        border-radius: 6px;
+        margin: 3px;
+    }
+    
+    footer a i {
+        margin-right: 4px;
+    }
+    
+    /* Music section */
+    .music-content {
+        padding: 10px;
+        gap: 15px;
+    }
+    
+    .soundcloud-block {
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    
+    /* Use smaller SoundCloud player on mobile */
+    .soundcloud-block iframe {
+        height: 100px !important;
+    }
+    
+    /* Disable hover effects on mobile */
+    .soundcloud-block:hover {
+        transform: none;
+    }
+    
+    /* Carousel */
+    .carousel-slide img {
+        border-radius: 8px;
+    }
+    
+    .prev, .next {
+        padding: 10px;
+        font-size: 16px;
+    }
+}
+
+/* Extra small phones (360px and below) */
+@media (max-width: 360px) {
+    h1.glitch {
+        font-size: 1.1em;
+    }
+    
+    .subtitle {
+        font-size: 0.7em;
+    }
+    
+    .boot-container::before {
+        font-size: 1.1em;
+    }
+    
+    .boot-terminal {
+        font-size: 0.6em;
+    }
+    
+    .tab {
+        font-size: 0.75em;
+        padding: 12px 15px;
+    }
+    
+    .entry-header .title {
+        font-size: 0.95em;
+    }
+    
+    .entry-header .date-location {
+        font-size: 0.75em;
+    }
+    
+    footer a {
+        font-size: 0.7em;
+        padding: 8px 10px;
+    }
+}
+
+/* Landscape phones - prevent awkward layouts */
+@media (max-height: 500px) and (orientation: landscape) {
+    .boot-screen {
+        padding: 10px;
+    }
+    
+    .boot-container {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .ascii-logo {
+        display: none;
+    }
+    
+    .boot-container::before {
+        content: 'EZEQUIEL CUTIN';
+        display: block;
+        color: #00ff00;
+        font-size: 1.2em;
+        text-align: center;
+        margin-bottom: 10px;
+        text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+    }
+    
+    .boot-terminal {
+        font-size: 0.6em;
+    }
+    
+    .boot-line {
+        margin: 3px 0;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    /* Disable all hover-dependent effects */
+    .entry:hover {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+    
+    .soundcloud-block:hover {
+        transform: none !important;
+    }
+    
+    .soundcloud-block:hover::before {
+        opacity: 0 !important;
+    }
+    
+    .tab:hover::before {
+        transform: translate(-50%, -50%) scale(0) !important;
+    }
+    
+    /* Better tap feedback */
+    .tab:active,
+    .entry:active,
+    footer a:active {
+        opacity: 0.7;
+        transition: opacity 0.1s ease;
+    }
+    
+    /* Hide cursor effects */
+    .cursor-rain-container {
+        display: none !important;
     }
 }
