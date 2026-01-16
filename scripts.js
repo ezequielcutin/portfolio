@@ -480,35 +480,87 @@ function initCarousel(carouselContainer) {
 
 function createCursor() {
     if (isMobileOrTablet()) {
-        return; // Don't create cursor aura for mobile or tablet devices
+        return; // Don't create cursor effect for mobile or tablet devices
     }
     
-    const cursorAura = document.createElement('div');
-    cursorAura.className = 'cursor-aura';
-    document.body.appendChild(cursorAura);
+    // Create container for falling characters
+    const cursorContainer = document.createElement('div');
+    cursorContainer.className = 'cursor-rain-container';
+    document.body.appendChild(cursorContainer);
 
+    const chars = '01アイウエオカキクケコサシスセソタチツテト10';
+    const particles = [];
+    const maxParticles = 25;
+    let mouseX = 0;
+    let mouseY = 0;
+    let lastX = 0;
+    let lastY = 0;
+    let isOverInteractive = false;
+
+    function createParticle(x, y) {
+        if (particles.length >= maxParticles) {
+            const oldParticle = particles.shift();
+            if (oldParticle.element.parentNode) {
+                oldParticle.element.remove();
+            }
+        }
+
+        const particle = document.createElement('span');
+        particle.className = 'cursor-rain-char';
+        particle.textContent = chars[Math.floor(Math.random() * chars.length)];
+        particle.style.left = `${x + (Math.random() - 0.5) * 20}px`;
+        particle.style.top = `${y}px`;
+        
+        // Vary the animation slightly
+        const duration = 0.8 + Math.random() * 0.4;
+        const drift = (Math.random() - 0.5) * 30;
+        particle.style.setProperty('--fall-duration', `${duration}s`);
+        particle.style.setProperty('--drift', `${drift}px`);
+        
+        if (isOverInteractive) {
+            particle.classList.add('interactive');
+        }
+        
+        cursorContainer.appendChild(particle);
+        particles.push({ element: particle, created: Date.now() });
+
+        // Remove after animation
+        setTimeout(() => {
+            if (particle.parentNode) {
+                particle.remove();
+            }
+            const index = particles.findIndex(p => p.element === particle);
+            if (index > -1) particles.splice(index, 1);
+        }, duration * 1000);
+    }
+
+    let frameCount = 0;
     document.addEventListener('mousemove', (e) => {
-        cursorAura.style.left = `${e.clientX - 20}px`;
-        cursorAura.style.top = `${e.clientY - 20}px`;
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        
+        // Calculate movement distance
+        const distance = Math.sqrt((mouseX - lastX) ** 2 + (mouseY - lastY) ** 2);
+        
+        frameCount++;
+        // Spawn particles based on movement (more movement = more particles)
+        if (frameCount % 2 === 0 && distance > 5) {
+            createParticle(mouseX, mouseY);
+        }
+        
+        lastX = mouseX;
+        lastY = mouseY;
     });
 
+    // Track interactive elements
     const interactiveElements = 'a, button, .entry, video, .plyr__controls *, .plyr__progress *, .plyr__menu *, .soundcloud-block';
 
     document.querySelectorAll(interactiveElements).forEach((el) => {
         el.addEventListener('mouseenter', () => {
-            cursorAura.classList.add('clickable');
+            isOverInteractive = true;
         });
         el.addEventListener('mouseleave', () => {
-            cursorAura.classList.remove('clickable');
-        });
-    });
-
-    document.querySelectorAll('.soundcloud-block iframe').forEach((iframe) => {
-        iframe.addEventListener('mouseenter', () => {
-            cursorAura.style.opacity = '0';
-        });
-        iframe.addEventListener('mouseleave', () => {
-            cursorAura.style.opacity = '1';
+            isOverInteractive = false;
         });
     });
 }

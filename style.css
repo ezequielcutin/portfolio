@@ -41,20 +41,55 @@ body::-webkit-scrollbar-thumb:hover {
 }
 
 
-.cursor-aura {
-    pointer-events: none;
+/* Binary/Code Rain Cursor */
+.cursor-rain-container {
     position: fixed;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: rgba(0, 255, 0, 0.2);
-    transition: transform 0.1s ease;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
     z-index: 9999;
+    overflow: hidden;
 }
 
-.cursor-aura.clickable {
-    background: rgba(0, 255, 0, 0.4);
-    transform: scale(1.2);
+.cursor-rain-char {
+    position: absolute;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    color: #00ff00;
+    text-shadow: 0 0 8px rgba(0, 255, 0, 0.8);
+    pointer-events: none;
+    opacity: 1;
+    animation: cursorRainFall var(--fall-duration, 0.8s) ease-out forwards;
+    transform: translateX(var(--drift, 0px));
+}
+
+.cursor-rain-char.interactive {
+    color: #00ffff;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.9);
+    font-size: 16px;
+}
+
+body.secret-mode .cursor-rain-char {
+    color: #ff00ff;
+    text-shadow: 0 0 8px rgba(255, 0, 255, 0.8);
+}
+
+body.secret-mode .cursor-rain-char.interactive {
+    color: #ffff00;
+    text-shadow: 0 0 10px rgba(255, 255, 0, 0.9);
+}
+
+@keyframes cursorRainFall {
+    0% {
+        opacity: 1;
+        transform: translateY(0) translateX(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(50px) translateX(var(--drift, 0px));
+    }
 }
 
 .soundcloud-block {
@@ -1213,14 +1248,6 @@ body.secret-mode .gallery-border {
 body.secret-mode .tab.active,
 body.secret-mode .tab:hover {
     background-color: rgba(255, 0, 255, 0.2) !important;
-}
-
-body.secret-mode .cursor-aura {
-    background: rgba(255, 0, 255, 0.2) !important;
-}
-
-body.secret-mode .cursor-aura.clickable {
-    background: rgba(255, 0, 255, 0.4) !important;
 }
 
 body.secret-mode .soundcloud-block {
