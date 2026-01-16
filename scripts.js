@@ -1,5 +1,151 @@
 let currentTab = null;
 
+// ===== BOOT SEQUENCE LOADING SCREEN =====
+function initBootSequence() {
+    const bootScreen = document.getElementById('boot-screen');
+    const bootLines = document.querySelectorAll('.boot-line');
+    const progressBar = document.querySelector('.progress-bar');
+    const bootHex = document.getElementById('boot-hex');
+    
+    if (!bootScreen) return;
+
+    // Generate random hex stream
+    function generateHex() {
+        let hex = '';
+        for (let i = 0; i < 200; i++) {
+            hex += Math.floor(Math.random() * 16).toString(16).toUpperCase();
+            if (i % 4 === 3) hex += ' ';
+        }
+        return hex;
+    }
+
+    // Update hex display rapidly
+    const hexInterval = setInterval(() => {
+        if (bootHex) bootHex.textContent = generateHex();
+    }, 50);
+
+    // Animate boot lines
+    bootLines.forEach((line, index) => {
+        const delay = parseInt(line.dataset.delay) || index * 200;
+        setTimeout(() => {
+            line.classList.add('visible');
+        }, delay);
+    });
+
+    // Animate progress bar (slower for 5 second duration)
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        progress += Math.random() * 3 + 1;
+        if (progress >= 100) {
+            progress = 100;
+            clearInterval(progressInterval);
+        }
+        progressBar.style.width = progress + '%';
+    }, 100);
+
+    // Hide boot screen after animation
+    const totalDuration = 5000;
+    setTimeout(() => {
+        clearInterval(hexInterval);
+        bootScreen.classList.add('hidden');
+        // Remove from DOM after transition
+        setTimeout(() => {
+            bootScreen.remove();
+        }, 800);
+    }, totalDuration);
+}
+
+// ===== KONAMI CODE SECRET MODE =====
+function initKonamiCode() {
+    const konamiCode = [
+        'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
+        'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
+        'KeyB', 'KeyA'
+    ];
+    let konamiIndex = 0;
+    let secretModeActive = false;
+
+    document.addEventListener('keydown', (e) => {
+        if (e.code === konamiCode[konamiIndex]) {
+            konamiIndex++;
+            
+            if (konamiIndex === konamiCode.length) {
+                activateSecretMode();
+                konamiIndex = 0;
+            }
+        } else {
+            konamiIndex = 0;
+        }
+    });
+
+    function activateSecretMode() {
+        secretModeActive = !secretModeActive;
+        
+        if (secretModeActive) {
+            document.body.classList.add('secret-mode');
+            showSecretNotification();
+            triggerCRTFlicker();
+        } else {
+            document.body.classList.remove('secret-mode');
+        }
+    }
+
+    function showSecretNotification() {
+        const notification = document.createElement('div');
+        notification.className = 'secret-mode-notification';
+        notification.innerHTML = `
+            <h2>// SECRET MODE ACTIVATED //</h2>
+            <p>Welcome to the other side, hacker.</p>
+            <p style="margin-top: 10px; font-size: 0.75em; color: #ff00ff;">Press Konami code again to deactivate</p>
+        `;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.animation = 'secretReveal 0.3s ease reverse forwards';
+            setTimeout(() => notification.remove(), 300);
+        }, 2500);
+    }
+
+    function triggerCRTFlicker() {
+        document.body.classList.add('crt-flicker');
+        setTimeout(() => document.body.classList.remove('crt-flicker'), 100);
+    }
+}
+
+// ===== 3D TILT EFFECT ON CARDS =====
+function init3DTilt() {
+    // Exclude entries in the music section
+    const entries = document.querySelectorAll('.entry:not(#music .entry)');
+    
+    entries.forEach(entry => {
+        entry.addEventListener('mousemove', (e) => {
+            const rect = entry.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            const rotateX = (y - centerY) / centerY * -8;
+            const rotateY = (x - centerX) / centerX * 8;
+            
+            const mouseXPercent = (x / rect.width) * 100;
+            const mouseYPercent = (y / rect.height) * 100;
+            
+            entry.style.setProperty('--rotateX', `${rotateX}deg`);
+            entry.style.setProperty('--rotateY', `${rotateY}deg`);
+            entry.style.setProperty('--mouseX', `${mouseXPercent}%`);
+            entry.style.setProperty('--mouseY', `${mouseYPercent}%`);
+        });
+
+        entry.addEventListener('mouseleave', () => {
+            entry.style.setProperty('--rotateX', '0deg');
+            entry.style.setProperty('--rotateY', '0deg');
+        });
+    });
+}
+
+
 function initCyberpunkGallery() {
     const container = document.querySelector('.cyberpunk-gallery-container');
     const images = document.querySelectorAll('.cyberpunk-image');
@@ -233,6 +379,11 @@ function showTab(tabName) {
                 entry.classList.add('fade-in');
             }, index * 100);
         });
+        
+        // Reinitialize 3D tilt effect for newly visible entries
+        setTimeout(() => {
+            init3DTilt();
+        }, 500);
 
     }, 250);
 
@@ -363,6 +514,14 @@ function createCursor() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize boot sequence first
+    initBootSequence();
+    
+    // Initialize new features
+    initKonamiCode();
+    init3DTilt();
+    
+    // Original initializations
     createCursor();
     createBlinkingLights();
     initCyberpunkGallery();
@@ -519,81 +678,79 @@ function initReactiveGlitchHeader() {
 
         try {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Create two oscillators for a richer, warmer pad sound
             oscillator = audioContext.createOscillator();
+            const oscillator2 = audioContext.createOscillator();
             filter = audioContext.createBiquadFilter();
             gainNode = audioContext.createGain();
-            distortion = audioContext.createWaveShaper();
             lfo = audioContext.createOscillator();
             lfoGain = audioContext.createGain();
 
-            // Distortion Curve
-            const makeDistortionCurve = (amount) => {
-                let k = typeof amount === 'number' ? amount : 50,
-                    n_samples = 44100,
-                    curve = new Float32Array(n_samples),
-                    deg = Math.PI / 180,
-                    i = 0,
-                    x;
-                for ( ; i < n_samples; ++i ) {
-                    x = i * 2 / n_samples - 1;
-                    curve[i] = ( 3 + k ) * x * 20 * deg / ( Math.PI + k * Math.abs(x) );
-                }
-                return curve;
-            };
+            // Main Oscillator - soft sine wave at a low frequency
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(65.41, audioContext.currentTime); // C2 - deep and warm
 
-            // Main Oscillator (the sound) - Higher pitch
-            oscillator.type = 'sawtooth';
-            oscillator.frequency.setValueAtTime(138.59, audioContext.currentTime); // C#3
+            // Second oscillator - slight detune for richness
+            oscillator2.type = 'sine';
+            oscillator2.frequency.setValueAtTime(130.81, audioContext.currentTime); // C3 - octave up
+            oscillator2.detune.setValueAtTime(5, audioContext.currentTime); // Slight detune for shimmer
 
-            // Filter (the "acid")
+            // Gentle lowpass filter
             filter.type = 'lowpass';
-            filter.Q.value = 25;
-            filter.frequency.value = 100;
+            filter.Q.value = 1; // Very gentle resonance
+            filter.frequency.value = 800;
 
-            // LFO (modulates the filter) - Faster rhythm
-            lfo.type = 'sawtooth';
-            lfo.frequency.value = 8; // 16th notes at 120bpm
+            // Slow, gentle LFO for subtle movement
+            lfo.type = 'sine';
+            lfo.frequency.value = 0.5; // Very slow modulation
 
-            // LFO Gain (controls wobble intensity)
-            lfoGain.gain.value = 400;
+            // LFO modulates filter subtly
+            lfoGain.gain.value = 200;
 
-            // Distortion Node
-            distortion.curve = makeDistortionCurve(100);
-            distortion.oversample = '4x';
+            // Create a second gain for oscillator2
+            const gain2 = audioContext.createGain();
+            gain2.gain.value = 0.3; // Quieter layer
 
-            // Connect nodes: osc -> filter -> distortion -> gain -> destination
+            // Connect: oscillators -> filter -> gain -> destination
             oscillator.connect(filter);
-            filter.connect(distortion);
-            distortion.connect(gainNode);
+            oscillator2.connect(gain2);
+            gain2.connect(filter);
+            filter.connect(gainNode);
             gainNode.connect(audioContext.destination);
             
-            // Connect LFO to modulate filter freq
+            // Connect LFO to filter frequency
             lfo.connect(lfoGain);
             lfoGain.connect(filter.frequency);
 
             gainNode.gain.setValueAtTime(0, audioContext.currentTime);
             oscillator.start();
+            oscillator2.start();
             lfo.start();
 
-            // Smoother fade-in
-            gainNode.gain.linearRampToValueAtTime(0.035, audioContext.currentTime + 0.5);
+            // Gentle fade-in
+            gainNode.gain.linearRampToValueAtTime(0.06, audioContext.currentTime + 1.0);
 
-            let baseFrequency = 300;
-            let intensity = 400;
+            // Store oscillator2 for cleanup
+            window._oscillator2 = oscillator2;
+            window._gain2 = gain2;
+
+            // Subtle intensity increase over time
             if (intensityInterval) clearInterval(intensityInterval);
             intensityInterval = setInterval(() => {
                 if (!isHovering || !audioContext || audioContext.state === 'closed') {
                     clearInterval(intensityInterval);
                     return;
                 }
-                baseFrequency += 150;
-                intensity += 150;
-                filter.frequency.linearRampToValueAtTime(baseFrequency, audioContext.currentTime + 0.5);
-                lfoGain.gain.linearRampToValueAtTime(intensity, audioContext.currentTime + 0.5);
-            }, 500);
+                // Gently increase filter frequency for slight brightness
+                const currentFreq = filter.frequency.value;
+                if (currentFreq < 1500) {
+                    filter.frequency.linearRampToValueAtTime(currentFreq + 50, audioContext.currentTime + 0.5);
+                }
+            }, 800);
 
         } catch (e) {
-            console.warn("Could not create acid sound.", e);
+            console.warn("Could not create ambient sound.", e);
         }
     }
 
@@ -604,18 +761,23 @@ function initReactiveGlitchHeader() {
         }
 
         if (gainNode && audioContext && audioContext.state === 'running') {
-            // Smoother fade-out
-            const fadeOutDuration = immediate ? 0.05 : 1.0; 
+            // Gentle fade-out
+            const fadeOutDuration = immediate ? 0.05 : 1.5; 
             gainNode.gain.cancelScheduledValues(audioContext.currentTime);
             gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + fadeOutDuration);
 
             setTimeout(() => {
                 if (audioContext && audioContext.state !== 'closed') {
-                    oscillator.stop();
-                    lfo.stop();
+                    try {
+                        oscillator.stop();
+                        if (window._oscillator2) window._oscillator2.stop();
+                        lfo.stop();
+                    } catch (e) {}
                     audioContext.close().catch(e => {});
                 }
                 audioContext = null;
+                window._oscillator2 = null;
+                window._gain2 = null;
             }, (fadeOutDuration * 1000) + 50);
         }
     }

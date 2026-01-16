@@ -21,17 +21,47 @@
     <link rel="icon" href="favicon.png" type="image/png">
 </head>
 <body>
-    <!-- <div class="cursor">
-        <div id="cursor">
-          <svg width="30" height="30" xmlns="http://www.w3.org/2000/svg">
-            <g>
-              <rect id="outer-square" height="30" width="30" y="0" x="0" fill="#00ff00"/>
-              <rect id="inner-square" height="24" width="24" y="3" x="3" fill="#0c0c0c"/>
-              <rect id="center-line" height="3" width="12" y="13.5" x="9" fill="#00ff00"/>
-            </g>
-          </svg>
+    <!-- Boot Sequence Loading Screen -->
+    <div id="boot-screen" class="boot-screen">
+        <div class="boot-container">
+            <div class="boot-logo">
+                <pre class="ascii-logo">
+███████╗███████╗███████╗ ██████╗ ██╗   ██╗██╗███████╗██╗     
+██╔════╝╚══███╔╝██╔════╝██╔═══██╗██║   ██║██║██╔════╝██║     
+█████╗    ███╔╝ █████╗  ██║   ██║██║   ██║██║█████╗  ██║     
+██╔══╝   ███╔╝  ██╔══╝  ██║▄▄ ██║██║   ██║██║██╔══╝  ██║     
+███████╗███████╗███████╗╚██████╔╝╚██████╔╝██║███████╗███████╗
+╚══════╝╚══════╝╚══════╝ ╚══▀▀═╝  ╚═════╝ ╚═╝╚══════╝╚══════╝
+
+ ██████╗██╗   ██╗████████╗██╗███╗   ██╗
+██╔════╝██║   ██║╚══██╔══╝██║████╗  ██║
+██║     ██║   ██║   ██║   ██║██╔██╗ ██║
+██║     ██║   ██║   ██║   ██║██║╚██╗██║
+╚██████╗╚██████╔╝   ██║   ██║██║ ╚████║
+ ╚═════╝ ╚═════╝    ╚═╝   ╚═╝╚═╝  ╚═══╝
+                </pre>
+            </div>
+            <div class="boot-terminal">
+                <div class="boot-line" data-delay="0">[SYSTEM] Initializing neural interface...</div>
+                <div class="boot-line" data-delay="200">[KERNEL] Loading cyberpunk.core v33.3...</div>
+                <div class="boot-line" data-delay="400">[MEMORY] Allocating 64TB holographic RAM... <span class="success">OK</span></div>
+                <div class="boot-line" data-delay="600">[NETWORK] Establishing quantum tunnel... <span class="success">CONNECTED</span></div>
+                <div class="boot-line" data-delay="800">[ENCRYPTION] Quantum cipher synchronization... <span class="secure">LOCKED</span></div>
+                <div class="boot-line" data-delay="1000">[PROFILE] Loading user.ezequiel.cutin...</div>
+                <div class="boot-line" data-delay="1200">[RENDER] Compiling visual matrix... <span class="success">DONE</span></div>
+                <div class="boot-line" data-delay="1400">[STATUS] All systems nominal</div>
+                <div class="boot-line" data-delay="1600"><span class="highlight">>> WELCOME TO THE GRID</span></div>
+            </div>
+            <div class="boot-progress">
+                <div class="progress-bar"></div>
+            </div>
+            <div class="boot-hex" id="boot-hex"></div>
         </div>
-      </div> -->
+    </div>
+
+    <!-- Noise Overlay -->
+    <div class="noise-overlay"></div>
+
     <div class="container">
         <header>
             <h1 class="glitch" data-text="Ezequiel Cutin v33.3">Ezequiel Cutin v33.3</h1>
