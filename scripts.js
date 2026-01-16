@@ -112,7 +112,7 @@ function initKonamiCode() {
     }
 }
 
-// ===== 3D TILT EFFECT ON CARDS =====
+// ===== PREMIUM CARD EFFECTS (shine & glow) =====
 function init3DTilt() {
     // Exclude entries in the music section
     const entries = document.querySelectorAll('.entry:not(#music .entry)');
@@ -123,24 +123,19 @@ function init3DTilt() {
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            
-            const rotateX = (y - centerY) / centerY * -8;
-            const rotateY = (x - centerX) / centerX * 8;
-            
             const mouseXPercent = (x / rect.width) * 100;
             const mouseYPercent = (y / rect.height) * 100;
             
-            entry.style.setProperty('--rotateX', `${rotateX}deg`);
-            entry.style.setProperty('--rotateY', `${rotateY}deg`);
+            // Calculate shine position based on mouse
+            const shineX = ((x / rect.width) * 200) - 100; // -100% to 100%
+            
             entry.style.setProperty('--mouseX', `${mouseXPercent}%`);
             entry.style.setProperty('--mouseY', `${mouseYPercent}%`);
+            entry.style.setProperty('--shineX', `${shineX}%`);
         });
 
         entry.addEventListener('mouseleave', () => {
-            entry.style.setProperty('--rotateX', '0deg');
-            entry.style.setProperty('--rotateY', '0deg');
+            entry.style.setProperty('--shineX', '-100%');
         });
     });
 }

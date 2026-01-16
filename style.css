@@ -1183,17 +1183,22 @@ footer i {
     );
 }
 
-/* ===== 3D TILT EFFECT ON CARDS ===== */
+/* ===== PREMIUM CARD EFFECTS ===== */
 .entry {
-    transform-style: preserve-3d;
-    transition: opacity 0.5s ease-in-out, transform 0.3s ease, box-shadow 0.3s ease;
+    transition: opacity 0.5s ease-in-out, transform 0.3s ease, box-shadow 0.4s ease, border-color 0.4s ease, background 0.4s ease;
+    background: transparent;
+    border: 1px solid transparent;
+    overflow: hidden;
 }
 
 .entry:hover {
-    transform: perspective(1000px) rotateX(var(--rotateX, 0deg)) rotateY(var(--rotateY, 0deg)) scale(1.02);
+    transform: scale(1.01);
+    background: linear-gradient(135deg, rgba(0, 255, 0, 0.03) 0%, transparent 100%);
+    border-color: rgba(0, 255, 0, 0.3);
     box-shadow: 
-        0 20px 40px rgba(0, 255, 0, 0.15),
-        0 0 30px rgba(0, 255, 0, 0.1);
+        0 10px 30px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 255, 0, 0.15),
+        0 0 40px rgba(0, 255, 0, 0.08);
 }
 
 .entry .entry-header {
@@ -1201,9 +1206,10 @@ footer i {
 }
 
 .entry:hover .entry-header {
-    transform: translateZ(20px);
+    transform: translateX(5px);
 }
 
+/* Light reflection / shine effect */
 .entry::before {
     content: '';
     position: absolute;
@@ -1211,19 +1217,97 @@ footer i {
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(
-        circle at var(--mouseX, 50%) var(--mouseY, 50%),
-        rgba(0, 255, 0, 0.1) 0%,
-        transparent 50%
+    background: linear-gradient(
+        105deg,
+        transparent 40%,
+        rgba(0, 255, 0, 0.1) 45%,
+        rgba(0, 255, 255, 0.15) 50%,
+        rgba(0, 255, 0, 0.1) 55%,
+        transparent 60%
     );
-    opacity: 0;
-    transition: opacity 0.3s ease;
+    transform: translateX(var(--shineX, -100%));
+    transition: transform 0.3s ease;
     pointer-events: none;
     border-radius: 8px;
+    z-index: 2;
 }
 
 .entry:hover::before {
+    transform: translateX(var(--shineX, 0%));
+}
+
+/* Cursor glow that follows mouse */
+.entry::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+        600px circle at var(--mouseX, 50%) var(--mouseY, 50%),
+        rgba(0, 255, 0, 0.15) 0%,
+        rgba(0, 255, 255, 0.05) 25%,
+        transparent 50%
+    );
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    border-radius: 8px;
+    z-index: 1;
+}
+
+.entry:hover::after {
     opacity: 1;
+}
+
+/* Glowing border animation */
+@keyframes borderGlow {
+    0%, 100% { border-color: rgba(0, 255, 0, 0.4); }
+    50% { border-color: rgba(0, 255, 255, 0.6); }
+}
+
+.entry:hover {
+    animation: borderGlow 2s ease-in-out infinite;
+}
+
+/* Secret mode adjustments */
+body.secret-mode .entry:hover {
+    border-color: rgba(255, 0, 255, 0.4);
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(255, 0, 255, 0.2),
+        0 0 40px rgba(255, 0, 255, 0.1),
+        inset 0 0 20px rgba(255, 0, 255, 0.05);
+}
+
+body.secret-mode .entry::before {
+    background: linear-gradient(
+        105deg,
+        transparent 40%,
+        rgba(255, 0, 255, 0.1) 45%,
+        rgba(255, 255, 0, 0.15) 50%,
+        rgba(255, 0, 255, 0.1) 55%,
+        transparent 60%
+    );
+}
+
+body.secret-mode .entry::after {
+    background: radial-gradient(
+        600px circle at var(--mouseX, 50%) var(--mouseY, 50%),
+        rgba(255, 0, 255, 0.15) 0%,
+        rgba(255, 255, 0, 0.05) 25%,
+        transparent 50%
+    );
+}
+
+@keyframes borderGlowSecret {
+    0%, 100% { border-color: rgba(255, 0, 255, 0.4); }
+    50% { border-color: rgba(255, 255, 0, 0.6); }
+}
+
+body.secret-mode .entry:hover {
+    animation: borderGlowSecret 2s ease-in-out infinite;
 }
 
 /* ===== KONAMI CODE SECRET MODE ===== */
