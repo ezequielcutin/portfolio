@@ -360,6 +360,7 @@ function showTab(tabName) {
 
     currentTab = tabName;
 
+    
     setTimeout(() => {
         document.querySelectorAll('.content').forEach(content => {
             content.classList.remove('active');
@@ -379,6 +380,9 @@ function showTab(tabName) {
         setTimeout(() => {
             init3DTilt();
         }, 500);
+
+        // Notify visualizer after tab is actually active
+        document.dispatchEvent(new CustomEvent('visualizer-tab-change', { detail: tabName }));
 
     }, 250);
 
@@ -414,8 +418,20 @@ function synchronizeBlinking() {
     });
 }
 
+// Prevents dropdown from closing when clicking videos/links inside
+function preventDropdown(event) {
+    event.stopPropagation();
+}
+
+// Alias for consistency
+function preventClose(event) {
+    event.stopPropagation();
+}
+
 function createBlinkingLights() {
     const body = document.body;
+    const intervals = []; // Store intervals for cleanup
+    
     for (let i = 0; i < 50; i++) {
         const light = document.createElement('div');
         light.className = 'blink';
@@ -431,10 +447,17 @@ function createBlinkingLights() {
         light.style.pointerEvents = 'none';
         body.appendChild(light);
 
-        setInterval(() => {
+        const interval = setInterval(() => {
             light.style.opacity = Math.random() > 0.5 ? 1 : 0;
         }, Math.random() * 3000 + 500);
+        
+        intervals.push(interval);
     }
+    
+    // Cleanup on page unload (optional but good practice)
+    window.addEventListener('beforeunload', () => {
+        intervals.forEach(interval => clearInterval(interval));
+    });
 }
 
 
@@ -569,6 +592,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize new features
     initKonamiCode();
     init3DTilt();
+    initAudioVisualizer();
     
     // Original initializations
     createCursor();
@@ -792,8 +816,815 @@ function initConsoleEasterEgg() {
     }, 1000);
 }
 
+// ===== AUDIO VISUALIZER =====
+let audioVisualizerInitialized = false; // Guard to prevent multiple initializations
+
+function initAudioVisualizer() {
+    // Prevent multiple initializations
+    if (audioVisualizerInitialized) {
+        return;
+    }
+    
+    const canvas = document.getElementById('audio-visualizer');
+    const toggle = document.getElementById('visualizer-toggle');
+    
+    if (!canvas || !toggle) {
+        return;
+    }
+    
+    // Mark as initialized
+    audioVisualizerInitialized = true;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        return;
+    }
+    let audioContext = null;
+    let analyser = null;
+    let microphone = null;
+    let animationFrame = null;
+    let isActive = false;
+    let currentMode = 0; // 0: bars, 1: waveform, 2: circular, 3: ambient
+    let pendingMode = null; // Target mode while waiting for mic (keeps ambient running)
+    let isStartingVisualizer = false; // Guard to prevent concurrent startVisualizer calls
+    
+    const modes = ['bars', 'waveform', 'circular', 'ambient'];
+    let timeData = new Uint8Array(0);
+    let freqData = new Float32Array(0);
+
+    const controls = document.getElementById('visualizer-controls');
+    const modeToggle = document.getElementById('visualizer-mode-toggle');
+    const exitToggle = document.getElementById('visualizer-exit');
+
+    function isMusicTabActive() {
+        const musicSection = document.getElementById('music');
+        return !!musicSection && musicSection.classList.contains('active');
+    }
+
+    function setHidden(el, shouldHide) {
+        if (!el) return;
+        if (shouldHide) {
+            el.classList.add('hidden');
+        } else {
+            el.classList.remove('hidden');
+        }
+    }
+
+    function updateVisualizerUI() {
+        const showMainToggle = isMusicTabActive();
+        setHidden(toggle, !showMainToggle);
+
+        if (controls) {
+            controls.classList.toggle('active', showMainToggle && isActive);
+            controls.setAttribute('aria-hidden', showMainToggle && isActive ? 'false' : 'true');
+        }
+    }
+
+    function applyModeLabel() {
+        const textSpan = toggle.querySelector('.visualizer-toggle-text');
+        if (textSpan) {
+            textSpan.textContent = modes[currentMode].toUpperCase();
+        }
+    }
+
+    function cycleMode() {
+        const nextMode = (currentMode + 1) % modes.length;
+
+        if (nextMode === 3) {
+            // Going TO ambient mode - clean up mic resources if they exist
+            pendingMode = null;
+            currentMode = 3;
+            applyModeLabel();
+            if (analyser) {
+                if (microphone) {
+                    microphone.disconnect();
+                    microphone = null;
+                }
+                if (audioContext) {
+                    audioContext.close();
+                    audioContext = null;
+                }
+                analyser = null;
+            }
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
+                animationFrame = null;
+            }
+            drawAmbientVisualizer();
+            return;
+        }
+
+        if (!analyser) {
+            // Going FROM ambient TO mic-based mode
+            // DON'T change currentMode yet - keep ambient running while we wait for mic
+            // Store the target mode and apply it after mic is acquired
+            if (isStartingVisualizer) return; // Prevent concurrent calls
+            pendingMode = nextMode;
+            // Update label to show what we're switching to
+            const textSpan = toggle.querySelector('.visualizer-toggle-text');
+            if (textSpan) {
+                textSpan.textContent = modes[nextMode].toUpperCase();
+            }
+            startVisualizer();
+            return;
+        }
+
+        // Switching between mic-based modes (analyser already exists)
+        pendingMode = null;
+        currentMode = nextMode;
+        applyModeLabel();
+        if (animationFrame) {
+            cancelAnimationFrame(animationFrame);
+            animationFrame = null;
+        }
+        drawVisualizer();
+    }
+    
+    // Get theme colors (adapts to secret mode)
+    function getThemeColors() {
+        const isSecretMode = document.body.classList.contains('secret-mode');
+        if (isSecretMode) {
+            return {
+                primary: '#ff00ff',
+                secondary: '#ffff00',
+                glow: '#ff00ff',
+                shadow: 'rgba(255, 0, 255, 0.8)'
+            };
+        }
+        return {
+            primary: '#00ff88',
+            secondary: '#00ffb4',
+            glow: '#00ff88',
+            shadow: 'rgba(0, 255, 136, 0.8)'
+        };
+    }
+    
+    // Set canvas size
+    function resizeCanvas() {
+        // Ensure minimum dimensions to prevent 0-size canvas errors
+        const width = Math.max(window.innerWidth || 1, 1);
+        const height = Math.max(window.innerHeight || 1, 1);
+        canvas.width = width;
+        canvas.height = height;
+    }
+    
+    // Initialize canvas dimensions - use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
+        resizeCanvas();
+        // Verify dimensions were set correctly
+        if (canvas.width === 0 || canvas.height === 0) {
+            setTimeout(() => resizeCanvas(), 100);
+        }
+    });
+    window.addEventListener('resize', resizeCanvas);
+    
+    // Request microphone access and initialize audio
+    async function startVisualizer() {
+        // Prevent concurrent calls
+        if (isStartingVisualizer) return;
+        isStartingVisualizer = true;
+        
+        try {
+            // Request microphone permission
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: false,
+                    noiseSuppression: false,
+                    autoGainControl: false
+                } 
+            });
+            
+            // Cancel any lingering animation frame (e.g., ambient still running)
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
+                animationFrame = null;
+            }
+            
+            // Apply pending mode now that mic is ready
+            if (pendingMode !== null) {
+                currentMode = pendingMode;
+                pendingMode = null;
+            }
+            
+            // Create audio context
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256;
+            analyser.smoothingTimeConstant = 0.5;
+            // Increase sensitivity to pick up quieter sounds
+            analyser.minDecibels = -90;
+            analyser.maxDecibels = -10;
+            
+            microphone = audioContext.createMediaStreamSource(stream);
+            microphone.connect(analyser);
+
+            // Create analysis buffers aligned to analyser settings
+            timeData = new Uint8Array(analyser.fftSize);
+            freqData = new Float32Array(analyser.frequencyBinCount);
+            
+            isActive = true;
+            canvas.classList.add('active');
+            toggle.classList.add('active');
+            
+            // Show current mode on button
+            applyModeLabel();
+            updateVisualizerUI();
+            
+            resizeCanvas(); // Ensure canvas is sized before drawing
+            // Double-check dimensions after resize
+            if (canvas.width === 0 || canvas.height === 0) {
+                isStartingVisualizer = false;
+                return;
+            }
+            
+            drawVisualizer();
+        } catch (error) {
+            console.error('Error accessing microphone:', error);
+            // Mic failed - clear pending mode and stay in/return to ambient
+            pendingMode = null;
+            // Don't cancel animation frame - ambient might still be running and that's fine
+            // Just make sure we're in ambient mode
+            currentMode = 3;
+            isActive = true;
+            canvas.classList.add('active');
+            toggle.classList.add('active');
+            
+            // Show mode on button
+            applyModeLabel();
+            updateVisualizerUI();
+            
+            resizeCanvas(); // Ensure canvas is sized before drawing
+            // Only restart ambient if it's not already running
+            if (!animationFrame) {
+                drawAmbientVisualizer();
+            }
+        } finally {
+            isStartingVisualizer = false;
+        }
+    }
+    
+    // Stop visualizer and clean up
+    function stopVisualizer() {
+        isActive = false;
+        canvas.classList.remove('active');
+        toggle.classList.remove('active');
+        
+        // Reset button text
+        const textSpan = toggle.querySelector('.visualizer-toggle-text');
+        if (textSpan) {
+            textSpan.textContent = 'VISUALIZER';
+        }
+        
+        if (animationFrame) {
+            cancelAnimationFrame(animationFrame);
+            animationFrame = null;
+        }
+        
+        if (microphone) {
+            microphone.disconnect();
+            microphone = null;
+        }
+        
+        if (audioContext) {
+            audioContext.close();
+            audioContext = null;
+        }
+        
+        analyser = null;
+        
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        updateVisualizerUI();
+    }
+    
+    // Draw frequency bars - FULL WIDTH SPECTRUM ANALYZER (ENGINEERED)
+    function drawBars() {
+        if (canvas.width === 0 || canvas.height === 0) {
+            resizeCanvas();
+            if (canvas.width === 0 || canvas.height === 0) {
+                return;
+            }
+        }
+        analyser.getFloatFrequencyData(freqData);
+        const colors = getThemeColors();
+        const primaryRgb = hexToRgb(colors.primary);
+        const minDb = analyser.minDecibels;
+        const maxDb = analyser.maxDecibels;
+        
+        // Clear with fade for trail effect
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        const barCount = 96; // Full width bars
+        const barWidth = canvas.width / barCount;
+        const barSpacing = 1;
+        const freqBins = freqData.length;
+        if (freqBins === 0) {
+            return;
+        }
+        
+        // Process frequency data with logarithmic scaling across FULL width
+        const processedData = [];
+        let energySum = 0;
+        
+        for (let i = 0; i < barCount; i++) {
+            const normalizedPos = i / (barCount - 1);
+            const logIndex = Math.pow(normalizedPos, 2.2) * (freqBins - 1);
+            const dataIndex = Math.floor(logIndex);
+            const nextIndex = Math.min(dataIndex + 1, freqBins - 1);
+            const fraction = logIndex - dataIndex;
+            
+            const dbValue = freqData[dataIndex] * (1 - fraction) + freqData[nextIndex] * fraction;
+            let norm = (dbValue - minDb) / (maxDb - minDb);
+            norm = Math.max(0, Math.min(1, norm));
+            
+            // Gentle compression and frequency tilt to lift highs
+            norm = Math.pow(norm, 0.7);
+            if (norm < 0.03) norm = 0; // Noise gate
+            const tilt = 0.8 + Math.pow(normalizedPos, 0.5) * 2.0;
+            const value = Math.min(1, norm * tilt);
+            
+            processedData.push(value);
+            energySum += value;
+        }
+        
+        // Normalize overall energy to reduce "left-heavy" bias
+        const avgEnergy = energySum / barCount;
+        const gain = avgEnergy > 0 ? Math.min(2.5, 0.6 / avgEnergy) : 1;
+        
+        // Smooth the data (moving average) for cleaner visualization
+        const smoothedData = [];
+        const smoothWindow = 2;
+        for (let i = 0; i < barCount; i++) {
+            let sum = 0;
+            let count = 0;
+            for (let j = -smoothWindow; j <= smoothWindow; j++) {
+                const idx = i + j;
+                if (idx >= 0 && idx < barCount) {
+                    sum += processedData[idx] * gain;
+                    count++;
+                }
+            }
+            smoothedData.push(Math.min(1, sum / count));
+        }
+        
+        // Calculate average for reactive effects
+        const avgValue = smoothedData.reduce((a, b) => a + b, 0) / barCount;
+        
+        // Draw bars across full width
+        for (let i = 0; i < barCount; i++) {
+            const intensity = smoothedData[i];
+            const normalizedPos = i / (barCount - 1);
+            
+            // Dynamic minimum height based on position (taller in center)
+            const centerDistance = Math.abs(normalizedPos - 0.5) * 2;
+            const minHeight = 4 + (1 - centerDistance) * 12;
+        const maxHeight = canvas.height - 4;
+        const barHeight = Math.min(maxHeight, minHeight + intensity * (canvas.height * 0.8));
+            
+            // Color gradient across spectrum: green -> cyan -> blue
+            const hueProgress = normalizedPos;
+            const r = Math.floor(primaryRgb.r * (1 - hueProgress * 0.3));
+            const g = primaryRgb.g;
+            const b = Math.floor(primaryRgb.b + hueProgress * 80);
+            
+            const x = i * barWidth;
+            const y = Math.max(0, canvas.height - barHeight);
+            
+            // Create vertical gradient for each bar
+            let gradient;
+            try {
+                gradient = ctx.createLinearGradient(0, canvas.height, 0, y);
+                gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.2)`);
+                gradient.addColorStop(0.4, `rgba(${r}, ${g}, ${b}, ${0.5 + intensity * 0.5})`);
+                gradient.addColorStop(1, `rgba(${Math.min(255, r + 30)}, ${Math.min(255, g + 30)}, ${Math.min(255, b + 30)}, 1)`);
+            } catch (e) {
+                continue;
+            }
+            
+            ctx.fillStyle = gradient;
+            
+            // Glow only on high-intensity bars (performance optimization)
+            if (intensity > 0.5) {
+                ctx.shadowBlur = 8 + intensity * 12;
+                ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${intensity * 0.7})`;
+            } else {
+                ctx.shadowBlur = 0;
+            }
+            
+            ctx.fillRect(x + barSpacing, y, barWidth - barSpacing * 2, barHeight);
+        }
+        
+        // Draw subtle reflection
+        ctx.shadowBlur = 0;
+        const reflectionGradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 50);
+        reflectionGradient.addColorStop(0, `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${0.05 + avgValue * 0.12})`);
+        reflectionGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = reflectionGradient;
+        ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+    }
+    
+    // Helper function to convert hex to RGB
+    function hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : { r: 0, g: 255, b: 136 };
+    }
+    
+    // Draw waveform - OPTIMIZED MULTI-LAYERED VERSION
+    function drawWaveform() {
+        if (canvas.width === 0 || canvas.height === 0) {
+            resizeCanvas();
+            if (canvas.width === 0 || canvas.height === 0) {
+                return;
+            }
+        }
+        analyser.getByteTimeDomainData(timeData);
+        const colors = getThemeColors();
+        const primaryRgb = hexToRgb(colors.primary);
+        
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        const centerY = canvas.height / 2;
+        
+        // Calculate average amplitude for reactive effects
+        let totalAmplitude = 0;
+        for (let i = 0; i < timeData.length; i++) {
+            totalAmplitude += Math.abs(timeData[i] - 128);
+        }
+        const avgAmplitude = totalAmplitude / timeData.length;
+        const amplitudeNormalized = avgAmplitude / 128;
+        
+        // Draw main waveform (only 2 layers for performance)
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        const layers = [
+            { offset: 0, alpha: 1, width: 3, scale: 1 },
+            { offset: 0.2, alpha: 0.4, width: 2, scale: 0.6 }
+        ];
+        
+        layers.forEach((layer, layerIndex) => {
+            ctx.beginPath();
+            ctx.lineWidth = layer.width + amplitudeNormalized * 2;
+            
+            const hueShift = layerIndex * 30;
+            ctx.strokeStyle = `rgba(${Math.min(255, primaryRgb.r + hueShift)}, ${primaryRgb.g}, ${Math.min(255, primaryRgb.b + hueShift)}, ${layer.alpha})`;
+            
+            // Only use shadow on main layer when there's significant audio
+            if (layerIndex === 0 && amplitudeNormalized > 0.3) {
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = colors.glow;
+            } else {
+                ctx.shadowBlur = 0;
+            }
+            
+            const sliceWidth = canvas.width / Math.max(timeData.length - 1, 1);
+            let x = 0;
+            let prevX = 0;
+            let prevY = centerY;
+            
+            for (let i = 0; i < timeData.length; i++) {
+                const left = timeData[i - 1] ?? timeData[i];
+                const right = timeData[i + 1] ?? timeData[i];
+                const smoothed = (left + timeData[i] + right) / 3;
+                
+                const v = (smoothed - 128) / 128.0;
+                const heightScale = canvas.height * 0.4 * layer.scale;
+                const y = centerY + v * heightScale;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    const midX = (prevX + x) / 2;
+                    const midY = (prevY + y) / 2;
+                    ctx.quadraticCurveTo(prevX, prevY, midX, midY);
+                }
+                
+                prevX = x;
+                prevY = y;
+                x += sliceWidth;
+            }
+            
+            ctx.lineTo(prevX, prevY);
+            ctx.stroke();
+        });
+        
+        // Draw subtle center line
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.2)`;
+        ctx.lineWidth = 1;
+        ctx.shadowBlur = 0;
+        ctx.moveTo(0, centerY);
+        ctx.lineTo(canvas.width, centerY);
+        ctx.stroke();
+    }
+    
+    // Draw circular visualization - OPTIMIZED SYMMETRIC VERSION
+    let circularRotation = 0;
+    function drawCircular() {
+        if (canvas.width === 0 || canvas.height === 0) {
+            resizeCanvas();
+            if (canvas.width === 0 || canvas.height === 0) {
+                return;
+            }
+        }
+        analyser.getFloatFrequencyData(freqData);
+        const colors = getThemeColors();
+        const primaryRgb = hexToRgb(colors.primary);
+        const minDb = analyser.minDecibels;
+        const maxDb = analyser.maxDecibels;
+        
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const baseRadius = Math.min(canvas.width, canvas.height) * 0.1;
+        const maxRadius = Math.min(canvas.width, canvas.height) * 0.42;
+        
+        // Process frequency data with logarithmic scaling
+        const numBars = 48; // Reduced for performance
+        const freqBins = freqData.length;
+        if (freqBins === 0) {
+            return;
+        }
+        const processedData = [];
+        for (let i = 0; i < numBars; i++) {
+            const normalizedPos = i / (numBars - 1);
+            const logIndex = Math.pow(normalizedPos, 2.0) * (freqBins - 1);
+            const dataIndex = Math.floor(logIndex);
+            const nextIndex = Math.min(dataIndex + 1, freqBins - 1);
+            const fraction = logIndex - dataIndex;
+            
+            const dbValue = freqData[dataIndex] * (1 - fraction) + freqData[nextIndex] * fraction;
+            let norm = (dbValue - minDb) / (maxDb - minDb);
+            norm = Math.max(0, Math.min(1, norm));
+            
+            // Compression and tilt for higher frequencies
+            norm = Math.pow(norm, 0.7);
+            if (norm < 0.04) norm = 0;
+            const tilt = 0.9 + Math.pow(normalizedPos, 0.6) * 1.8;
+            processedData.push(Math.min(1, norm * tilt));
+        }
+        
+        // Calculate average for effects
+        const avgValue = processedData.reduce((a, b) => a + b, 0) / processedData.length;
+        const avgNormalized = avgValue;
+        const isQuiet = avgNormalized < 0.05;
+        const pulseScale = 0.85 + avgNormalized * 0.3;
+        
+        circularRotation += 0.008 + avgNormalized * 0.012;
+        
+        // Draw center glow (no shadowBlur - use gradient instead)
+        const centerGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, baseRadius * pulseScale * 1.5);
+        centerGradient.addColorStop(0, `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${0.2 + avgNormalized * 0.2})`);
+        centerGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = centerGradient;
+        ctx.fillRect(centerX - baseRadius * 2, centerY - baseRadius * 2, baseRadius * 4, baseRadius * 4);
+        
+        // Batch draw all bars (single path per color group for performance)
+        const innerRadius = baseRadius * pulseScale;
+        
+        // Draw mirrored bars
+        for (let i = 0; i < numBars; i++) {
+            const value = processedData[i];
+            const intensity = value;
+            
+            // Map to half circle, then mirror
+            const halfAngle = (i / numBars) * Math.PI;
+            const angle1 = halfAngle + circularRotation;
+            const angle2 = -halfAngle + circularRotation + Math.PI;
+            
+            if (isQuiet && intensity === 0) {
+                continue;
+            }
+            const minLength = isQuiet ? 0 : 2 + avgNormalized * 8;
+            const energyScale = 0.25 + avgNormalized * 0.75;
+            const barLength = minLength + intensity * (maxRadius - baseRadius) * energyScale;
+            
+            // Color varies with frequency
+            const hueShift = (i / numBars) * 50;
+            const r = Math.min(255, primaryRgb.r + hueShift);
+            const g = primaryRgb.g;
+            const b = Math.min(255, primaryRgb.b - hueShift * 0.4);
+            
+            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.5 + intensity * 0.5})`;
+            ctx.lineWidth = 2 + intensity * 2;
+            
+            // Only apply shadow to high-intensity bars
+            if (intensity > 0.6) {
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
+            } else {
+                ctx.shadowBlur = 0;
+            }
+            
+            // Draw both mirrored bars
+            ctx.beginPath();
+            ctx.moveTo(centerX + Math.cos(angle1) * innerRadius, centerY + Math.sin(angle1) * innerRadius);
+            ctx.lineTo(centerX + Math.cos(angle1) * (innerRadius + barLength), centerY + Math.sin(angle1) * (innerRadius + barLength));
+            ctx.moveTo(centerX + Math.cos(angle2) * innerRadius, centerY + Math.sin(angle2) * innerRadius);
+            ctx.lineTo(centerX + Math.cos(angle2) * (innerRadius + barLength), centerY + Math.sin(angle2) * (innerRadius + barLength));
+            ctx.stroke();
+        }
+        
+        // Draw outer ring
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.3)`;
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 0;
+        ctx.stroke();
+    }
+    
+    // Draw ambient animation (no audio input) - OPTIMIZED VERSION
+    let ambientTime = 0;
+    function drawAmbientVisualizer() {
+        if (canvas.width === 0 || canvas.height === 0) {
+            resizeCanvas();
+            if (canvas.width === 0 || canvas.height === 0) {
+                return;
+            }
+        }
+        ambientTime += 0.02;
+        const colors = getThemeColors();
+        const primaryRgb = hexToRgb(colors.primary);
+        
+        // Faster fade for performance
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const maxRadius = Math.min(canvas.width, canvas.height) * 0.38;
+        
+        // Simplified: 2 rings only, fewer bars, NO shadowBlur (major performance gain)
+        const rings = [
+            { radius: 0.4, bars: 40, speed: 0.8, direction: 1 },
+            { radius: 0.85, bars: 56, speed: 0.4, direction: -1 }
+        ];
+        
+        // Pre-calculate common values
+        const time2 = ambientTime * 2;
+        const time1_5 = ambientTime * 1.5;
+        
+        rings.forEach((ring, ringIndex) => {
+            const baseRadius = maxRadius * ring.radius;
+            const barCount = ring.bars;
+            const rotationOffset = ambientTime * ring.speed * ring.direction;
+            
+            // Batch drawing with single style per ring for performance
+            const hueShift = ringIndex * 20;
+            const r = Math.min(255, primaryRgb.r + hueShift);
+            const g = primaryRgb.g;
+            const b = Math.min(255, primaryRgb.b - hueShift * 0.3);
+            
+            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.7)`;
+            ctx.lineWidth = 3;
+            
+            ctx.beginPath();
+            
+            for (let i = 0; i < barCount; i++) {
+                const angle = (i / barCount) * Math.PI * 2 + rotationOffset;
+                
+                // Simplified wave calculation
+                const wave = Math.sin(time2 + i * 0.25) * 0.5 + 
+                            Math.sin(time1_5 + i * 0.15 + ringIndex * 2) * 0.5;
+                const pulse = (wave + 1) / 2;
+                
+                const minLength = 15 + ringIndex * 10;
+                const barLength = minLength + pulse * (30 + ringIndex * 25);
+                
+                const x1 = centerX + Math.cos(angle) * baseRadius;
+                const y1 = centerY + Math.sin(angle) * baseRadius;
+                const x2 = centerX + Math.cos(angle) * (baseRadius + barLength);
+                const y2 = centerY + Math.sin(angle) * (baseRadius + barLength);
+                
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+            }
+            
+            ctx.stroke();
+        });
+        
+        // Simple center glow (no shadowBlur)
+        const centerPulse = (Math.sin(ambientTime * 2) + 1) / 2;
+        const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 50 + centerPulse * 20);
+        gradient.addColorStop(0, `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${0.2 + centerPulse * 0.15})`);
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(centerX - 80, centerY - 80, 160, 160);
+        
+        if (isActive && currentMode === 3) {
+            animationFrame = requestAnimationFrame(drawAmbientVisualizer);
+        }
+    }
+    
+    // Main draw loop
+    function drawVisualizer() {
+        if (!isActive) return;
+        
+        // Guard: ensure canvas has valid dimensions before drawing
+        if (canvas.width === 0 || canvas.height === 0) {
+            resizeCanvas();
+            if (canvas.width === 0 || canvas.height === 0) {
+                return;
+            }
+        }
+        
+        if (analyser && currentMode !== 3) {
+            switch (currentMode) {
+                case 0:
+                    drawBars();
+                    break;
+                case 1:
+                    drawWaveform();
+                    break;
+                case 2:
+                    drawCircular();
+                    break;
+            }
+        } else if (currentMode === 3) {
+            drawAmbientVisualizer();
+            return; // drawAmbientVisualizer handles its own animation frame
+        }
+        
+        animationFrame = requestAnimationFrame(drawVisualizer);
+    }
+    
+    // Click handling with delay to detect double-click
+    let clickTimeout = null;
+    let clickCount = 0;
+    
+    toggle.addEventListener('click', (e) => {
+        // Prevent clicks while initializing
+        if (isStartingVisualizer) return;
+        
+        clickCount++;
+        
+        if (clickCount === 1) {
+            // Wait to see if it's a double-click
+            clickTimeout = setTimeout(() => {
+                // Single click - toggle on/off
+                if (!isActive) {
+                    startVisualizer();
+                } else {
+                    stopVisualizer();
+                }
+                clickCount = 0;
+            }, 250); // 250ms to detect double-click
+        } else if (clickCount === 2) {
+            // Double-click - cycle modes
+            clearTimeout(clickTimeout);
+            clickCount = 0;
+            
+            if (isActive) {
+                cycleMode();
+            } else {
+                // If not active, start in next mode
+                cycleMode();
+            }
+        }
+    });
+
+    if (modeToggle) {
+        modeToggle.addEventListener('click', () => {
+            if (isStartingVisualizer) return; // Prevent clicks while initializing
+            if (!isActive) {
+                startVisualizer();
+                return;
+            }
+            cycleMode();
+        });
+    }
+
+    if (exitToggle) {
+        exitToggle.addEventListener('click', () => {
+            stopVisualizer();
+        });
+    }
+
+    document.addEventListener('visualizer-tab-change', (event) => {
+        if (event.detail !== 'music') {
+            if (isActive) {
+                stopVisualizer();
+            }
+        }
+        updateVisualizerUI();
+    });
+
+    // Initialize visibility on load
+    updateVisualizerUI();
+}
+
 // Initialize easter eggs when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     initReactiveGlitchHeader();
     initConsoleEasterEgg();
+    initAudioVisualizer();
 });

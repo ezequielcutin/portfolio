@@ -12,6 +12,10 @@
     <meta property="og:url" content="https://ezequielcutin.com">
     <meta property="og:type" content="website">
     <title>Ezequiel Cutin v33.3</title>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://w.soundcloud.com" crossorigin>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
@@ -63,10 +67,21 @@
     <!-- Noise Overlay -->
     <div class="noise-overlay"></div>
 
+    <!-- Audio Visualizer -->
+    <canvas id="audio-visualizer" class="audio-visualizer"></canvas>
+    <div id="visualizer-controls" class="visualizer-controls" aria-hidden="true">
+        <button id="visualizer-mode-toggle" class="visualizer-control" aria-label="Toggle visualizer mode">
+            TOGGLE MODE
+        </button>
+        <button id="visualizer-exit" class="visualizer-control visualizer-exit" aria-label="Exit visualizer">
+            EXIT
+        </button>
+    </div>
+
     <div class="container">
         <header>
             <h1 class="glitch" data-text="Ezequiel Cutin v33.3">Ezequiel Cutin v33.3</h1>
-            <p class="subtitle">software engineer. data analyst. sales engineer.</p>
+            <p class="subtitle">software engineer. data analyst. artist.</p>
         </header>
         <div id="blurb" class="blurb"></div>
         <nav class="tabs">
@@ -701,6 +716,10 @@
                 <div class="entry">
                     <div class="entry-header">
                     </div>
+                    <button id="visualizer-toggle" class="visualizer-toggle" aria-label="Toggle audio visualizer">
+                        <i class="fas fa-wave-square"></i>
+                        <span class="visualizer-toggle-text">AUDIO VISUALIZER (EXPERIMENTAL)</span>
+                    </button>
                     <div class="music-content">
                         <div class="soundcloud-block">
                             <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/ezequiel-cutin-187993918/hardcore-mf&color=%231cc258&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"></iframe>
