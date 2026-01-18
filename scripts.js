@@ -1072,7 +1072,7 @@ function initAudioVisualizer() {
         // Reset button text
         const textSpan = toggle.querySelector('.visualizer-toggle-text');
         if (textSpan) {
-            textSpan.textContent = 'VISUALIZER';
+            textSpan.textContent = 'AUDIO VISUALIZER (EXPERIMENTAL)';
         }
         
         if (animationFrame) {
