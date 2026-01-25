@@ -354,29 +354,21 @@ function initCyberpunkGallery() {
     let columns = 0;
     let drops = [];
 
-    function setContainerRatio(image) {
-        if (!container || !image) return;
-        const applyRatio = () => {
-            const width = image.naturalWidth;
-            const height = image.naturalHeight;
-            if (!width || !height) return;
-            const ratio = (width / height).toFixed(4);
-            container.style.aspectRatio = `${ratio} / 1`;
-            const maxWidth = Math.min(640, window.innerWidth * 0.9);
-            const maxHeight = window.innerHeight * 0.55;
-            const targetWidth = Math.min(maxWidth, maxHeight * ratio);
-            const widthPx = `${Math.max(280, targetWidth)}px`;
-            container.style.width = widthPx;
-            if (shell) {
-                shell.style.width = widthPx;
-            }
-        };
-
-        if (image.complete) {
-            applyRatio();
-        } else {
-            image.addEventListener('load', applyRatio, { once: true });
+    // Use fixed container dimensions - no more jarring resizes between images
+    function initFixedContainer() {
+        if (!container) return;
+        // Fixed aspect ratio (4:5 works well for portraits and landscapes)
+        const maxWidth = Math.min(500, window.innerWidth * 0.85);
+        container.style.width = `${maxWidth}px`;
+        container.style.aspectRatio = '4 / 5';
+        if (shell) {
+            shell.style.width = `${maxWidth}px`;
         }
+    }
+
+    // No-op function to maintain compatibility with existing calls
+    function setContainerRatio(image) {
+        // Container size is now fixed - images use object-fit: contain
     }
 
     function initializeRain() {
@@ -490,11 +482,12 @@ function initCyberpunkGallery() {
 
     // Resize canvas when window is resized
     function resizeCanvas() {
+        initFixedContainer();
         initializeRain();
-        setContainerRatio(images[currentIndex]);
     }
 
     window.addEventListener('resize', debounce(resizeCanvas, 150));
+    initFixedContainer(); // Set fixed container size
     initializeRain(); // Initialize on load
     setLoaderVisible(true);
     waitForImage(images[currentIndex]).then(() => {
