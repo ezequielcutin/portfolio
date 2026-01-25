@@ -1,58 +1,244 @@
 let currentTab = null;
 
+// ===== UTILITY FUNCTIONS =====
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
 // ===== BOOT SEQUENCE LOADING SCREEN =====
 function initBootSequence() {
     const bootScreen = document.getElementById('boot-screen');
     const bootLines = document.querySelectorAll('.boot-line');
     const progressBar = document.querySelector('.progress-bar');
     const bootHex = document.getElementById('boot-hex');
-    
+    const bootContainer = document.querySelector('.boot-container');
+
     if (!bootScreen) return;
 
-    // Generate random hex stream
+    // Generate random hex stream (optimized - pre-generate characters)
+    const hexChars = '0123456789ABCDEF';
     function generateHex() {
         let hex = '';
         for (let i = 0; i < 200; i++) {
-            hex += Math.floor(Math.random() * 16).toString(16).toUpperCase();
+            hex += hexChars[Math.floor(Math.random() * 16)];
             if (i % 4 === 3) hex += ' ';
         }
         return hex;
     }
 
-    // Update hex display rapidly
-    const hexInterval = setInterval(() => {
-        if (bootHex) bootHex.textContent = generateHex();
-    }, 50);
-
-    // Animate boot lines
-    bootLines.forEach((line, index) => {
-        const delay = parseInt(line.dataset.delay) || index * 200;
-        setTimeout(() => {
+    // Typewriter effect for boot lines
+    function typewriterLine(line, text, speed = 15) {
+        return new Promise((resolve) => {
             line.classList.add('visible');
-        }, delay);
-    });
+            const originalHTML = line.innerHTML;
+            line.innerHTML = '';
+            line.style.opacity = '1';
 
-    // Animate progress bar (slower for 5 second duration)
-    let progress = 0;
-    const progressInterval = setInterval(() => {
-        progress += Math.random() * 3 + 1;
-        if (progress >= 100) {
-            progress = 100;
-            clearInterval(progressInterval);
-        }
-        progressBar.style.width = progress + '%';
-    }, 100);
+            let i = 0;
+            let inTag = false;
+            let currentTag = '';
 
-    // Hide boot screen after animation
-    const totalDuration = 5000;
-    setTimeout(() => {
-        clearInterval(hexInterval);
-        bootScreen.classList.add('hidden');
-        // Remove from DOM after transition
+            function typeChar() {
+                if (i < originalHTML.length) {
+                    const char = originalHTML[i];
+
+                    // Handle HTML tags
+                    if (char === '<') {
+                        inTag = true;
+                        currentTag = '<';
+                    } else if (char === '>') {
+                        inTag = false;
+                        currentTag += '>';
+                        line.innerHTML += currentTag;
+                        currentTag = '';
+                        i++;
+                        typeChar();
+                        return;
+                    } else if (inTag) {
+                        currentTag += char;
+                        i++;
+                        typeChar();
+                        return;
+                    } else {
+                        line.innerHTML += char;
+                    }
+
+                    i++;
+                    // Vary typing speed for natural feel
+                    const variance = Math.random() * 20 - 10;
+                    setTimeout(typeChar, speed + variance);
+                } else {
+                    resolve();
+                }
+            }
+            typeChar();
+        });
+    }
+
+    // Screen glitch effect
+    function screenGlitch(intensity = 1, duration = 100) {
+        bootScreen.style.transform = `translate(${(Math.random() - 0.5) * 4 * intensity}px, ${(Math.random() - 0.5) * 4 * intensity}px)`;
+        bootScreen.style.filter = `hue-rotate(${Math.random() * 30 * intensity}deg) brightness(${1 + Math.random() * 0.3 * intensity})`;
+
         setTimeout(() => {
-            bootScreen.remove();
-        }, 800);
-    }, totalDuration);
+            bootScreen.style.transform = '';
+            bootScreen.style.filter = '';
+        }, duration);
+    }
+
+    // Screen flash effect
+    function screenFlash(color = '#00ff00', duration = 150) {
+        const flash = document.createElement('div');
+        flash.style.cssText = `
+            position: fixed;
+            inset: 0;
+            background: ${color};
+            opacity: 0.3;
+            z-index: 999999;
+            pointer-events: none;
+            animation: flashFade ${duration}ms ease-out forwards;
+        `;
+
+        // Add keyframes if not exists
+        if (!document.getElementById('flash-keyframes')) {
+            const style = document.createElement('style');
+            style.id = 'flash-keyframes';
+            style.textContent = `
+                @keyframes flashFade {
+                    0% { opacity: 0.4; }
+                    100% { opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        bootScreen.appendChild(flash);
+        setTimeout(() => flash.remove(), duration);
+    }
+
+    // CRT scan line effect
+    function crtScan() {
+        const scanLine = document.createElement('div');
+        scanLine.style.cssText = `
+            position: fixed;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to bottom, transparent, rgba(0, 255, 0, 0.15), transparent);
+            z-index: 999998;
+            pointer-events: none;
+            animation: scanDown 2s linear infinite;
+        `;
+
+        if (!document.getElementById('scan-keyframes')) {
+            const style = document.createElement('style');
+            style.id = 'scan-keyframes';
+            style.textContent = `
+                @keyframes scanDown {
+                    0% { top: -4px; }
+                    100% { top: 100%; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        bootScreen.appendChild(scanLine);
+        return scanLine;
+    }
+
+    // Start CRT scan effect
+    const scanLine = crtScan();
+
+    // Update hex display with rAF instead of setInterval
+    let hexAnimationId;
+    let lastHexUpdate = 0;
+    function updateHex(timestamp) {
+        if (timestamp - lastHexUpdate > 50) {
+            if (bootHex) bootHex.textContent = generateHex();
+            lastHexUpdate = timestamp;
+        }
+        hexAnimationId = requestAnimationFrame(updateHex);
+    }
+    hexAnimationId = requestAnimationFrame(updateHex);
+
+    // Progress bar - use CSS transitions for smooth GPU-accelerated animation
+    const totalLines = bootLines.length;
+
+    // Enable smooth CSS transition on the progress bar
+    progressBar.style.transition = 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+
+    function setProgressTarget(newTarget) {
+        progressBar.style.width = newTarget + '%';
+    }
+
+    // Animate boot lines with typewriter effect and drama
+    async function animateBootLines() {
+        for (let i = 0; i < bootLines.length; i++) {
+            const line = bootLines[i];
+            const delay = parseInt(line.dataset.delay) || i * 200;
+
+            await new Promise(resolve => setTimeout(resolve, delay - (i > 0 ? parseInt(bootLines[i-1].dataset.delay) || 0 : 0)));
+
+            // Add glitch on reveal
+            if (Math.random() > 0.5) {
+                screenGlitch(0.3, 30);
+            }
+
+            // Typewriter effect for most lines
+            if (line.textContent.length < 80) {
+                await typewriterLine(line, line.innerHTML, 12);
+            } else {
+                line.classList.add('visible');
+            }
+
+            // Update progress target as each line completes (reserve last 15% for final line)
+            const lineProgress = ((i + 1) / totalLines) * 85;
+            setProgressTarget(lineProgress);
+
+            // Special effects for key lines
+            if (line.textContent.includes('VIRTUAL HANDSHAKE')) {
+                // Big dramatic moment - glitches only, no flashes
+                screenGlitch(1.5, 80);
+                await new Promise(r => setTimeout(r, 100));
+                screenGlitch(1, 60);
+                // Final push to 100%
+                setProgressTarget(100);
+            }
+        }
+    }
+
+    // Wait for boot animations to complete, then trigger exit
+    animateBootLines().then(() => {
+        // Give a moment to appreciate the final line
+        setTimeout(() => {
+            cancelAnimationFrame(hexAnimationId);
+
+            // Final dramatic sequence - glitch only, then white flash on exit
+            screenGlitch(2, 100);
+
+            setTimeout(() => {
+                screenFlash('#ffffff', 150);
+                bootScreen.style.transition = 'opacity 0.6s ease, transform 0.6s ease, filter 0.6s ease';
+                bootScreen.style.opacity = '0';
+                bootScreen.style.transform = 'scale(1.02)';
+                bootScreen.style.filter = 'brightness(2) blur(2px)';
+
+                // Remove from DOM after transition
+                setTimeout(() => {
+                    if (scanLine) scanLine.remove();
+                    bootScreen.remove();
+                }, 600);
+            }, 150);
+        }, 800); // 800ms pause after "VIRTUAL HANDSHAKE COMPLETE"
+    });
 }
 
 // ===== KONAMI CODE SECRET MODE =====
@@ -113,31 +299,36 @@ function initKonamiCode() {
 }
 
 // ===== PREMIUM CARD EFFECTS (shine & glow) =====
-function init3DTilt() {
-    // Exclude entries in the music section
-    const entries = document.querySelectorAll('.entry:not(#music .entry)');
-    
-    entries.forEach(entry => {
-        entry.addEventListener('mousemove', (e) => {
-            const rect = entry.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            const mouseXPercent = (x / rect.width) * 100;
-            const mouseYPercent = (y / rect.height) * 100;
-            
-            // Calculate shine position based on mouse
-            const shineX = ((x / rect.width) * 200) - 100; // -100% to 100%
-            
-            entry.style.setProperty('--mouseX', `${mouseXPercent}%`);
-            entry.style.setProperty('--mouseY', `${mouseYPercent}%`);
-            entry.style.setProperty('--shineX', `${shineX}%`);
-        });
+// Use event delegation - attach once to document, handles all entries
+let cardEffectsInitialized = false;
 
-        entry.addEventListener('mouseleave', () => {
-            entry.style.setProperty('--shineX', '-100%');
-        });
+function init3DTilt() {
+    if (cardEffectsInitialized) return; // Only initialize once
+    cardEffectsInitialized = true;
+
+    // Event delegation - single listener for all entries
+    document.addEventListener('mousemove', (e) => {
+        const entry = e.target.closest('.entry:not(#music .entry)');
+        if (!entry) return;
+
+        const rect = entry.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const mouseXPercent = (x / rect.width) * 100;
+        const mouseYPercent = (y / rect.height) * 100;
+        const shineX = ((x / rect.width) * 200) - 100;
+
+        entry.style.setProperty('--mouseX', `${mouseXPercent}%`);
+        entry.style.setProperty('--mouseY', `${mouseYPercent}%`);
+        entry.style.setProperty('--shineX', `${shineX}%`);
     });
+
+    document.addEventListener('mouseleave', (e) => {
+        const entry = e.target.closest('.entry:not(#music .entry)');
+        if (!entry) return;
+        entry.style.setProperty('--shineX', '-100%');
+    }, true);
 }
 
 
@@ -303,7 +494,7 @@ function initCyberpunkGallery() {
         setContainerRatio(images[currentIndex]);
     }
 
-    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('resize', debounce(resizeCanvas, 150));
     initializeRain(); // Initialize on load
     setLoaderVisible(true);
     waitForImage(images[currentIndex]).then(() => {
@@ -376,10 +567,7 @@ function showTab(tabName) {
             }, index * 100);
         });
         
-        // Reinitialize 3D tilt effect for newly visible entries
-        setTimeout(() => {
-            init3DTilt();
-        }, 500);
+        // Note: 3D tilt uses event delegation, no re-init needed
 
         // Notify visualizer after tab is actually active
         document.dispatchEvent(new CustomEvent('visualizer-tab-change', { detail: tabName }));
@@ -430,33 +618,102 @@ function preventClose(event) {
 
 function createBlinkingLights() {
     const body = document.body;
-    const intervals = []; // Store intervals for cleanup
-    
-    for (let i = 0; i < 50; i++) {
+    const lightCount = 60;
+    const lights = [];
+    let animationId = null;
+
+    // Create all light elements once
+    for (let i = 0; i < lightCount; i++) {
         const light = document.createElement('div');
         light.className = 'blink';
-        light.style.position = 'absolute';
-        // Keep lights away from edges (5% to 95% range)
-        light.style.left = `${5 + Math.random() * 90}%`;
-        light.style.top = `${5 + Math.random() * 90}%`;
-        light.style.width = '2px';
-        light.style.height = '2px';
-        light.style.backgroundColor = '#00ff00';
-        light.style.borderRadius = '50%';
-        light.style.opacity = '0';
-        light.style.pointerEvents = 'none';
+        light.style.cssText = `
+            position: absolute;
+            left: ${5 + Math.random() * 90}%;
+            top: ${5 + Math.random() * 90}%;
+            width: ${1.5 + Math.random() * 1.5}px;
+            height: ${1.5 + Math.random() * 1.5}px;
+            background-color: #00ff00;
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, box-shadow 0.3s ease;
+        `;
         body.appendChild(light);
 
-        const interval = setInterval(() => {
-            light.style.opacity = Math.random() > 0.5 ? 1 : 0;
-        }, Math.random() * 3000 + 500);
-        
-        intervals.push(interval);
+        // Store light with its animation state
+        lights.push({
+            element: light,
+            phase: Math.random() * Math.PI * 2,  // Random starting phase
+            speed: 0.3 + Math.random() * 0.7,    // Varied animation speeds
+            brightness: 0.5 + Math.random() * 0.5, // Varied max brightness
+            pulseMode: Math.random() > 0.7,      // 30% pulse smoothly, 70% blink
+            nextToggle: performance.now() + Math.random() * 3000, // For blink mode
+            isOn: false
+        });
     }
-    
-    // Cleanup on page unload (optional but good practice)
+
+    let lastTime = performance.now();
+
+    // Single rAF loop for all lights
+    function animateLights(currentTime) {
+        const deltaTime = (currentTime - lastTime) / 1000;
+        lastTime = currentTime;
+
+        const isSecretMode = document.body.classList.contains('secret-mode');
+        const baseColor = isSecretMode ? '255, 0, 255' : '0, 255, 0';
+
+        for (let i = 0; i < lights.length; i++) {
+            const light = lights[i];
+
+            if (light.pulseMode) {
+                // Smooth pulsing lights (sine wave)
+                light.phase += deltaTime * light.speed * 2;
+                const pulse = (Math.sin(light.phase) + 1) / 2;
+                const opacity = pulse * light.brightness;
+                light.element.style.opacity = opacity.toFixed(3);
+
+                // Add glow on bright pulses
+                if (opacity > 0.6) {
+                    light.element.style.boxShadow = `0 0 ${4 + opacity * 4}px rgba(${baseColor}, ${opacity})`;
+                } else {
+                    light.element.style.boxShadow = 'none';
+                }
+            } else {
+                // Blinking lights (random toggle)
+                if (currentTime > light.nextToggle) {
+                    light.isOn = !light.isOn;
+                    light.element.style.opacity = light.isOn ? light.brightness.toFixed(3) : '0';
+                    light.element.style.boxShadow = light.isOn
+                        ? `0 0 6px rgba(${baseColor}, 0.8)`
+                        : 'none';
+                    // Random interval between 500-3500ms
+                    light.nextToggle = currentTime + 500 + Math.random() * 3000;
+                }
+            }
+        }
+
+        animationId = requestAnimationFrame(animateLights);
+    }
+
+    // Start animation
+    animationId = requestAnimationFrame(animateLights);
+
+    // Cleanup on page unload
     window.addEventListener('beforeunload', () => {
-        intervals.forEach(interval => clearInterval(interval));
+        if (animationId) {
+            cancelAnimationFrame(animationId);
+        }
+    });
+
+    // Pause when tab is hidden (rAF does this automatically, but for cleanup)
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && animationId) {
+            cancelAnimationFrame(animationId);
+            animationId = null;
+        } else if (!document.hidden && !animationId) {
+            lastTime = performance.now();
+            animationId = requestAnimationFrame(animateLights);
+        }
     });
 }
 
@@ -976,8 +1233,8 @@ function initAudioVisualizer() {
             setTimeout(() => resizeCanvas(), 100);
         }
     });
-    window.addEventListener('resize', resizeCanvas);
-    
+    window.addEventListener('resize', debounce(resizeCanvas, 100));
+
     // Request microphone access and initialize audio
     async function startVisualizer() {
         // Prevent concurrent calls

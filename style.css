@@ -1103,9 +1103,14 @@ footer i {
 }
 
 @keyframes logoFlicker {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.95; }
-    75% { opacity: 0.98; }
+    0%, 100% { opacity: 1; text-shadow: 0 0 10px rgba(0, 255, 0, 0.8), 0 0 20px rgba(0, 255, 0, 0.5); }
+    10% { opacity: 0.92; text-shadow: 0 0 12px rgba(0, 255, 0, 0.9), 0 0 25px rgba(0, 255, 0, 0.6); }
+    20% { opacity: 1; }
+    30% { opacity: 0.97; text-shadow: 0 0 8px rgba(0, 255, 0, 0.7), 0 0 15px rgba(0, 255, 0, 0.4); }
+    50% { opacity: 0.94; }
+    70% { opacity: 1; text-shadow: 0 0 15px rgba(0, 255, 0, 1), 0 0 30px rgba(0, 255, 0, 0.7); }
+    80% { opacity: 0.96; }
+    90% { opacity: 1; }
 }
 
 .boot-terminal {
@@ -1126,6 +1131,34 @@ footer i {
     opacity: 1;
     transform: translateX(0);
     transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Typewriter cursor for boot lines */
+.boot-line.visible::after {
+    content: '▊';
+    animation: bootCursorBlink 0.5s step-end infinite;
+    color: #00ff00;
+    margin-left: 2px;
+    opacity: 0;
+}
+
+.boot-line.typing::after {
+    opacity: 1;
+}
+
+@keyframes bootCursorBlink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+/* Boot screen glitch-ready state */
+.boot-screen {
+    will-change: transform, filter, opacity;
+}
+
+/* Enhanced boot container */
+.boot-container {
+    will-change: transform;
 }
 
 .boot-line .success { color: #00ff88; }
