@@ -1413,6 +1413,40 @@ main {
     letter-spacing: 0.02em;
 }
 
+.sc-track-card__waveform {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 40px;
+    cursor: pointer;
+    padding: 6px 0 4px;
+    position: relative;
+}
+
+.sc-track-card__waveform:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.waveform-bar {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    transition: background 0.15s ease;
+    min-height: 4px;
+}
+
+.waveform-bar--active {
+    background: linear-gradient(0deg, color-mix(in srgb, var(--accent) 85%, #6644ff), var(--accent));
+    box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .waveform-bar {
+        transition: none;
+    }
+}
+
 
 .sc-track-card__scrub-hint {
     position: absolute;
