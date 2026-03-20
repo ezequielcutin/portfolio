@@ -1582,6 +1582,49 @@ main {
     padding: 8px 0;
 }
 
+@media (max-width: 768px) {
+    .music-content {
+        grid-template-columns: 1fr;
+    }
+
+    .sc-track-card {
+        grid-template-columns: 96px 1fr;
+    }
+
+    .sc-track-card__art {
+        width: 96px;
+        height: 96px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sc-track-card {
+        grid-template-columns: 64px 1fr;
+        gap: 10px;
+        padding: 12px 12px;
+    }
+
+    .sc-track-card__art {
+        width: 64px;
+        height: 64px;
+    }
+
+    .sc-track-card__title {
+        font-size: 0.9rem;
+    }
+
+    .sc-track-card__play {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+    }
+
+    .sc-track-card__waveform {
+        height: 28px;
+    }
+}
+
 
 .sc-player-host {
     position: fixed;
