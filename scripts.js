@@ -1406,9 +1406,9 @@ function buildScTrackCardMarkup(card, { title, artist, thumb, openUrl }) {
         ? `<a class="sc-track-card__open" href="${escapeHtml(openUrl)}" target="_blank" rel="noopener noreferrer">Open in SoundCloud <i class="fas fa-external-link-alt" aria-hidden="true"></i></a>`
         : '';
 
-    // Generate 16 waveform bars with random heights persisted for card lifetime
+    // Generate 64 waveform bars with random heights persisted for card lifetime
     let waveformBars = '';
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 64; i++) {
         const h = Math.floor(Math.random() * 71) + 20; // 20-90%
         waveformBars += '<div class="waveform-bar" style="height:' + h + '%"></div>';
     }

@@ -1416,7 +1416,7 @@ main {
 .sc-track-card__waveform {
     display: flex;
     align-items: flex-end;
-    gap: 3px;
+    gap: 1px;
     height: 40px;
     cursor: pointer;
     padding: 6px 0 4px;
