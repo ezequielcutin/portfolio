@@ -1264,70 +1264,6 @@ main {
     transform: translateY(0);
 }
 
-/* Track number */
-.sc-track-card__num {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-variant-numeric: tabular-nums;
-    color: var(--text-secondary);
-    opacity: 0.4;
-    text-align: center;
-    line-height: 1;
-    transition: opacity 0.2s ease, color 0.2s ease;
-}
-
-.sc-track-card:hover .sc-track-card__num {
-    opacity: 0.7;
-}
-
-.sc-track-card--playing .sc-track-card__num {
-    color: var(--accent);
-    opacity: 1;
-}
-
-/* Now-playing equalizer bars */
-.sc-track-card__eq {
-    display: none;
-    gap: 2px;
-    align-items: flex-end;
-    height: 14px;
-    justify-content: center;
-}
-
-.sc-track-card--playing .sc-track-card__eq {
-    display: flex;
-}
-
-.sc-track-card--playing .sc-track-card__num-text {
-    display: none;
-}
-
-.sc-track-card__eq-bar {
-    width: 2.5px;
-    background: var(--accent);
-    border-radius: 1px;
-    animation: eqBounce 0.8s ease-in-out infinite alternate;
-}
-
-.sc-track-card__eq-bar:nth-child(1) { height: 40%; animation-delay: 0s; }
-.sc-track-card__eq-bar:nth-child(2) { height: 80%; animation-delay: 0.15s; }
-.sc-track-card__eq-bar:nth-child(3) { height: 55%; animation-delay: 0.3s; }
-.sc-track-card__eq-bar:nth-child(4) { height: 70%; animation-delay: 0.1s; }
-
-@keyframes eqBounce {
-    0% { height: 20%; }
-    100% { height: 100%; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .sc-track-card__eq-bar {
-        animation: none;
-    }
-    .sc-track-card__eq-bar:nth-child(1) { height: 30%; }
-    .sc-track-card__eq-bar:nth-child(2) { height: 80%; }
-    .sc-track-card__eq-bar:nth-child(3) { height: 50%; }
-    .sc-track-card__eq-bar:nth-child(4) { height: 65%; }
-}
 
 .sc-track-card::before {
     content: '';
@@ -1459,18 +1395,6 @@ main {
     letter-spacing: 0.02em;
 }
 
-.sc-track-card__progress-wrap {
-    margin-top: 6px;
-    cursor: pointer;
-    border-radius: 6px;
-    padding: 6px 0 4px;
-}
-
-.sc-track-card__progress-scrub {
-    position: relative;
-    padding-top: 26px;
-    margin-top: -22px;
-}
 
 .sc-track-card__scrub-hint {
     position: absolute;
@@ -1510,37 +1434,6 @@ main {
     }
 }
 
-.sc-track-card__progress-wrap:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-}
-
-.sc-track-card__progress-track {
-    height: 5px;
-    background: rgba(255, 255, 255, 0.06);
-    border-radius: 999px;
-    overflow: hidden;
-    transition: height 0.2s ease, box-shadow 0.2s ease;
-}
-
-.sc-track-card__progress-wrap:hover .sc-track-card__progress-track {
-    height: 6px;
-    box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 15%, transparent);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .sc-track-card__progress-track {
-        transition: none;
-    }
-}
-
-.sc-track-card__progress-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 85%, #6644ff), var(--accent));
-    border-radius: 999px;
-    box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 45%, transparent);
-}
 
 .sc-track-card__times {
     display: flex;
@@ -1551,14 +1444,6 @@ main {
     margin-top: 4px;
 }
 
-.sc-track-card__meta {
-    margin-top: 2px;
-}
-
-.sc-track-card__meta--dynamic:empty {
-    min-height: 0;
-    margin: 0;
-}
 
 .sc-track-card__open {
     font-family: var(--font-mono);
@@ -1645,34 +1530,6 @@ main {
     padding: 8px 0;
 }
 
-@media (max-width: 520px) {
-    .sc-track-card {
-        grid-template-columns: 20px 56px 1fr 44px;
-        gap: 10px;
-        padding: 12px 12px;
-    }
-
-    .sc-track-card__num {
-        font-size: 11px;
-    }
-
-    .sc-track-card__art {
-        width: 56px;
-        height: 56px;
-    }
-
-    .sc-track-card__play {
-        width: 44px;
-        height: 44px;
-        min-width: 44px;
-        min-height: 44px;
-    }
-
-    .sc-track-card__title {
-        font-size: 0.9rem;
-        padding-right: 4px;
-    }
-}
 
 .sc-player-host {
     position: fixed;
