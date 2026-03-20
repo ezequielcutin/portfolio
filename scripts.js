@@ -1398,35 +1398,37 @@ function getScTrackDurationMs(card) {
     return 0;
 }
 
-function buildScTrackCardMarkup(card, { title, artist, thumb, openUrl, trackNum }) {
+function buildScTrackCardMarkup(card, { title, artist, thumb, openUrl }) {
     const art = thumb
-        ? `<img class="sc-track-card__img" src="${escapeHtml(thumb)}" alt="" width="96" height="96" loading="lazy" decoding="async">`
+        ? `<img class="sc-track-card__img" src="${escapeHtml(thumb)}" alt="" width="160" height="160" loading="lazy" decoding="async">`
         : '<div class="sc-track-card__art-fallback" aria-hidden="true"></div>';
     const open = openUrl
         ? `<a class="sc-track-card__open" href="${escapeHtml(openUrl)}" target="_blank" rel="noopener noreferrer">Open in SoundCloud <i class="fas fa-external-link-alt" aria-hidden="true"></i></a>`
         : '';
-    const num = trackNum != null ? String(trackNum).padStart(2, '0') : '01';
+
+    // Generate 64 waveform bars with random heights persisted for card lifetime
+    let waveformBars = '';
+    for (let i = 0; i < 64; i++) {
+        const h = Math.floor(Math.random() * 71) + 20; // 20-90%
+        waveformBars += '<div class="waveform-bar" style="height:' + h + '%"></div>';
+    }
+
     card.innerHTML =
-        '<div class="sc-track-card__num">' +
-        '<span class="sc-track-card__num-text">' + num + '</span>' +
-        '<div class="sc-track-card__eq" aria-hidden="true">' +
-        '<div class="sc-track-card__eq-bar"></div><div class="sc-track-card__eq-bar"></div>' +
-        '<div class="sc-track-card__eq-bar"></div><div class="sc-track-card__eq-bar"></div></div></div>' +
         '<div class="sc-track-card__art">' + art + '</div>' +
         '<div class="sc-track-card__body">' +
         '<h3 class="sc-track-card__title">' + escapeHtml(title) + '</h3>' +
         '<p class="sc-track-card__artist">' + escapeHtml(artist) + '</p>' +
-        '<div class="sc-track-card__progress-wrap" role="slider" tabindex="0" ' +
+        '<div class="sc-track-card__waveform" role="slider" tabindex="0" ' +
         'aria-label="Seek in track" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0:00">' +
-        '<div class="sc-track-card__progress-scrub">' +
         '<span class="sc-track-card__scrub-hint" aria-hidden="true"></span>' +
-        '<div class="sc-track-card__progress-track"><div class="sc-track-card__progress-fill"></div></div></div>' +
+        waveformBars + '</div>' +
         '<div class="sc-track-card__times">' +
         '<span class="sc-track-card__elapsed">0:00</span>' +
-        '<span class="sc-track-card__total">0:00</span></div></div>' +
-        (open ? '<div class="sc-track-card__meta">' + open + '</div>' : '<div class="sc-track-card__meta sc-track-card__meta--dynamic"></div>') +
-        '</div>' +
-        '<button type="button" class="sc-track-card__play" aria-label="Play track"><i class="fas fa-play" aria-hidden="true"></i></button>';
+        '<span class="sc-track-card__total">0:00</span></div>' +
+        '<div class="sc-track-card__controls">' +
+        '<button type="button" class="sc-track-card__play" aria-label="Play track"><i class="fas fa-play" aria-hidden="true"></i></button>' +
+        (open ? open : '<span class="sc-track-card__meta sc-track-card__meta--dynamic"></span>') +
+        '</div></div>';
 }
 
 /** True if widget sound object belongs to this card's track URL (avoids stale metadata after track switch). */
@@ -1454,14 +1456,13 @@ function applySoundMetadata(card, sound) {
     if (artistEl && sound.user && sound.user.username) artistEl.textContent = sound.user.username;
     if (artWrap && sound.artwork_url && !artWrap.querySelector('.sc-track-card__img')) {
         const u = sound.artwork_url.replace('-large', '-t300x300');
-        artWrap.innerHTML = '<img class="sc-track-card__img" src="' + escapeHtml(u) + '" alt="" width="96" height="96" loading="lazy" decoding="async">';
+        artWrap.innerHTML = '<img class="sc-track-card__img" src="' + escapeHtml(u) + '" alt="" width="160" height="160" loading="lazy" decoding="async">';
     }
     if (sound.duration) card.dataset.scDuration = String(sound.duration);
     if (sound.permalink_url && !card.dataset.scOpen) {
         const meta = card.querySelector('.sc-track-card__meta--dynamic');
         if (meta) {
-            meta.classList.remove('sc-track-card__meta--dynamic');
-            meta.innerHTML =
+            meta.outerHTML =
                 '<a class="sc-track-card__open" href="' + escapeHtml(sound.permalink_url) +
                 '" target="_blank" rel="noopener noreferrer">Open in SoundCloud <i class="fas fa-external-link-alt" aria-hidden="true"></i></a>';
         }
@@ -1516,16 +1517,16 @@ function initSoundCloudCards() {
 
     function resetProgressUi(card) {
         if (!card) return;
-        const fill = card.querySelector('.sc-track-card__progress-fill');
+        const bars = card.querySelectorAll('.waveform-bar');
+        bars.forEach(function (b) { b.classList.remove('waveform-bar--active'); });
         const elapsed = card.querySelector('.sc-track-card__elapsed');
         const total = card.querySelector('.sc-track-card__total');
-        const wrap = card.querySelector('.sc-track-card__progress-wrap');
-        if (fill) fill.style.width = '0%';
+        const waveform = card.querySelector('.sc-track-card__waveform');
         if (elapsed) elapsed.textContent = '0:00';
         if (total) total.textContent = formatScTime(parseInt(card.dataset.scDuration, 10) || 0);
-        if (wrap) {
-            wrap.setAttribute('aria-valuenow', '0');
-            wrap.setAttribute('aria-valuetext', '0:00');
+        if (waveform) {
+            waveform.setAttribute('aria-valuenow', '0');
+            waveform.setAttribute('aria-valuetext', '0:00');
         }
     }
 
@@ -1568,16 +1569,23 @@ function initSoundCloudCards() {
         const d = durationMs || parseInt(card.dataset.scDuration, 10) || 0;
         if (d <= 0) return;
         const rel = Math.min(1, Math.max(0, currentMs / d));
-        const fill = card.querySelector('.sc-track-card__progress-fill');
+        const bars = card.querySelectorAll('.waveform-bar');
+        const activeCount = Math.round(rel * bars.length);
+        bars.forEach(function (b, i) {
+            if (i < activeCount) {
+                b.classList.add('waveform-bar--active');
+            } else {
+                b.classList.remove('waveform-bar--active');
+            }
+        });
         const elapsed = card.querySelector('.sc-track-card__elapsed');
         const total = card.querySelector('.sc-track-card__total');
-        const wrap = card.querySelector('.sc-track-card__progress-wrap');
-        if (fill) fill.style.width = rel * 100 + '%';
+        const waveform = card.querySelector('.sc-track-card__waveform');
         if (elapsed) elapsed.textContent = formatScTime(currentMs);
         if (total) total.textContent = formatScTime(d);
-        if (wrap) {
-            wrap.setAttribute('aria-valuenow', String(Math.round(rel * 100)));
-            wrap.setAttribute('aria-valuetext', formatScTime(currentMs) + ' of ' + formatScTime(d));
+        if (waveform) {
+            waveform.setAttribute('aria-valuenow', String(Math.round(rel * 100)));
+            waveform.setAttribute('aria-valuetext', formatScTime(currentMs) + ' of ' + formatScTime(d));
         }
     }
 
@@ -1601,9 +1609,13 @@ function initSoundCloudCards() {
             }
         }
 
-        var fill = card.querySelector('.sc-track-card__progress-fill');
-        if (fill && typeof e.relativePosition === 'number') {
-            fill.style.width = Math.min(100, Math.max(0, e.relativePosition * 100)) + '%';
+        if (typeof e.relativePosition === 'number') {
+            var bars = card.querySelectorAll('.waveform-bar');
+            var activeCount = Math.round(e.relativePosition * bars.length);
+            bars.forEach(function (b, i) {
+                if (i < activeCount) b.classList.add('waveform-bar--active');
+                else b.classList.remove('waveform-bar--active');
+            });
         }
 
         if (seekHoldMs != null && d > 0) {
@@ -1657,7 +1669,7 @@ function initSoundCloudCards() {
 
     function wireCard(card) {
         const playBtn = card.querySelector('.sc-track-card__play');
-        const progressWrap = card.querySelector('.sc-track-card__progress-wrap');
+        const waveformWrap = card.querySelector('.sc-track-card__waveform');
         const url = card.dataset.scUrl;
         if (!playBtn || !url) return;
 
@@ -1751,7 +1763,7 @@ function initSoundCloudCards() {
 
         function seekFromClientX(clientX) {
             if (playingCard !== card) return;
-            const track = card.querySelector('.sc-track-card__progress-track');
+            const track = card.querySelector('.sc-track-card__waveform');
             if (!track) return;
             const rect = track.getBoundingClientRect();
             const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
@@ -1764,29 +1776,27 @@ function initSoundCloudCards() {
             widget.seekTo(targetMs);
         }
 
-        var scrubZone = card.querySelector('.sc-track-card__progress-scrub');
         var scrubHint = card.querySelector('.sc-track-card__scrub-hint');
-        var progressTrack = card.querySelector('.sc-track-card__progress-track');
-        if (scrubZone && scrubHint && progressTrack) {
-            scrubZone.addEventListener('mousemove', function (ev) {
+        if (waveformWrap && scrubHint) {
+            waveformWrap.addEventListener('mousemove', function (ev) {
                 var dur = getScTrackDurationMs(card);
                 if (dur <= 0) return;
-                var tr = progressTrack.getBoundingClientRect();
-                var pct = Math.max(0, Math.min(1, (ev.clientX - tr.left) / tr.width));
+                var rect = waveformWrap.getBoundingClientRect();
+                var pct = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
                 scrubHint.textContent = formatScTime(pct * dur);
                 scrubHint.style.left = Math.max(6, Math.min(94, pct * 100)) + '%';
                 scrubHint.classList.add('is-visible');
             });
-            scrubZone.addEventListener('mouseleave', function () {
+            waveformWrap.addEventListener('mouseleave', function () {
                 scrubHint.classList.remove('is-visible');
             });
         }
 
-        if (progressWrap) {
-            progressWrap.addEventListener('click', function (ev) {
+        if (waveformWrap) {
+            waveformWrap.addEventListener('click', function (ev) {
                 seekFromClientX(ev.clientX);
             });
-            progressWrap.addEventListener('keydown', function (ev) {
+            waveformWrap.addEventListener('keydown', function (ev) {
                 if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
                 ev.preventDefault();
                 const dur = parseInt(card.dataset.scDuration, 10);
@@ -1806,7 +1816,6 @@ function initSoundCloudCards() {
     cards.forEach(function (card, idx) {
         const trackUrl = card.dataset.scUrl;
         const openUrl = card.dataset.scOpen || '';
-        const trackNum = idx + 1;
         fetch('https://soundcloud.com/oembed?format=json&url=' + encodeURIComponent(trackUrl))
             .then(function (r) {
                 return r.ok ? r.json() : null;
@@ -1827,7 +1836,7 @@ function initSoundCloudCards() {
                 if (data && data.thumbnail_url) {
                     thumb = data.thumbnail_url.replace('-large', '-t300x300');
                 }
-                buildScTrackCardMarkup(card, { title: title, artist: artist, thumb: thumb, openUrl: openUrl, trackNum: trackNum });
+                buildScTrackCardMarkup(card, { title: title, artist: artist, thumb: thumb, openUrl: openUrl });
                 card.classList.remove('sc-track-card--loading');
                 wireCard(card);
                 // Staggered entrance with anime.js
@@ -1842,7 +1851,7 @@ function initSoundCloudCards() {
                 });
             })
             .catch(function () {
-                buildScTrackCardMarkup(card, { title: 'Track', artist: 'SoundCloud', thumb: '', openUrl: openUrl, trackNum: trackNum });
+                buildScTrackCardMarkup(card, { title: 'Track', artist: 'SoundCloud', thumb: '', openUrl: openUrl });
                 card.classList.remove('sc-track-card--loading');
                 wireCard(card);
                 anime({
