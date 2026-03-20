@@ -1,0 +1,12 @@
+# OS files
+.DS_Store
+
+# Claude Code
+CLAUDE.md
+
+# Design review artifacts
+portfolio-*.png
+audit-*.png
+
+# Playwright MCP
+.playwright-mcp/

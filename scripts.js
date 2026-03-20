@@ -1,6 +1,6 @@
+// ===== 1. UTILITY FUNCTIONS =====
 let currentTab = null;
 
-// ===== UTILITY FUNCTIONS =====
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -13,235 +13,508 @@ function debounce(func, wait) {
     };
 }
 
-// ===== BOOT SEQUENCE LOADING SCREEN =====
+
+// ===== 2. BOOT SEQUENCE =====
 function initBootSequence() {
     const bootScreen = document.getElementById('boot-screen');
     const bootLines = document.querySelectorAll('.boot-line');
     const progressBar = document.querySelector('.progress-bar');
-    const bootHex = document.getElementById('boot-hex');
-    const bootContainer = document.querySelector('.boot-container');
-
+    const skipBtn = document.getElementById('boot-skip');
     if (!bootScreen) return;
-
-    // Generate random hex stream (optimized - pre-generate characters)
-    const hexChars = '0123456789ABCDEF';
-    function generateHex() {
-        let hex = '';
-        for (let i = 0; i < 200; i++) {
-            hex += hexChars[Math.floor(Math.random() * 16)];
-            if (i % 4 === 3) hex += ' ';
-        }
-        return hex;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        bootScreen.style.display = 'none';
+        document.querySelector('.container').style.opacity = '1';
+        return;
     }
-
-    // Typewriter effect for boot lines
-    function typewriterLine(line, text, speed = 15) {
-        return new Promise((resolve) => {
-            line.classList.add('visible');
-            const originalHTML = line.innerHTML;
-            line.innerHTML = '';
-            line.style.opacity = '1';
-
-            let i = 0;
-            let inTag = false;
-            let currentTag = '';
-
-            function typeChar() {
-                if (i < originalHTML.length) {
-                    const char = originalHTML[i];
-
-                    // Handle HTML tags
-                    if (char === '<') {
-                        inTag = true;
-                        currentTag = '<';
-                    } else if (char === '>') {
-                        inTag = false;
-                        currentTag += '>';
-                        line.innerHTML += currentTag;
-                        currentTag = '';
-                        i++;
-                        typeChar();
-                        return;
-                    } else if (inTag) {
-                        currentTag += char;
-                        i++;
-                        typeChar();
-                        return;
-                    } else {
-                        line.innerHTML += char;
-                    }
-
-                    i++;
-                    // Vary typing speed for natural feel
-                    const variance = Math.random() * 20 - 10;
-                    setTimeout(typeChar, speed + variance);
-                } else {
-                    resolve();
-                }
-            }
-            typeChar();
+    let skipped = false;
+    function skipBoot() {
+        if (skipped) return;
+        skipped = true;
+        bootTimeline.pause();
+        anime({ targets: bootScreen, opacity: 0, duration: 200, easing: 'easeOutQuad',
+            complete: () => { bootScreen.style.display = 'none'; runEntranceAnimation(); }
         });
     }
-
-    // Screen glitch effect
-    function screenGlitch(intensity = 1, duration = 100) {
-        bootScreen.style.transform = `translate(${(Math.random() - 0.5) * 4 * intensity}px, ${(Math.random() - 0.5) * 4 * intensity}px)`;
-        bootScreen.style.filter = `hue-rotate(${Math.random() * 30 * intensity}deg) brightness(${1 + Math.random() * 0.3 * intensity})`;
-
-        setTimeout(() => {
-            bootScreen.style.transform = '';
-            bootScreen.style.filter = '';
-        }, duration);
-    }
-
-    // Screen flash effect
-    function screenFlash(color = '#00ff00', duration = 150) {
-        const flash = document.createElement('div');
-        flash.style.cssText = `
-            position: fixed;
-            inset: 0;
-            background: ${color};
-            opacity: 0.3;
-            z-index: 999999;
-            pointer-events: none;
-            animation: flashFade ${duration}ms ease-out forwards;
-        `;
-
-        // Add keyframes if not exists
-        if (!document.getElementById('flash-keyframes')) {
-            const style = document.createElement('style');
-            style.id = 'flash-keyframes';
-            style.textContent = `
-                @keyframes flashFade {
-                    0% { opacity: 0.4; }
-                    100% { opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
+    if (skipBtn) skipBtn.addEventListener('click', skipBoot);
+    const bootTimeline = anime.timeline({
+        easing: 'easeOutQuad',
+        complete: () => {
+            if (skipped) return;
+            anime({ targets: bootScreen, opacity: 0, duration: 300, easing: 'easeOutQuad',
+                complete: () => { bootScreen.style.display = 'none'; runEntranceAnimation(); }
+            });
         }
+    });
+    bootLines.forEach((line, i) => {
+        const delay = parseInt(line.dataset.delay) || i * 400;
+        bootTimeline.add({ targets: line, opacity: [0, 1], translateY: [4, 0], duration: 300 }, delay);
+    });
+    bootTimeline.add({ targets: progressBar, width: ['0%', '100%'], duration: 2000, easing: 'linear' }, 0);
+}
 
-        bootScreen.appendChild(flash);
-        setTimeout(() => flash.remove(), duration);
+// ===== 3. ENTRANCE ANIMATION =====
+function runEntranceAnimation() {
+    const container = document.querySelector('.container');
+    if (!container) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        container.style.opacity = '1'; return;
     }
-
-    // CRT scan line effect
-    function crtScan() {
-        const scanLine = document.createElement('div');
-        scanLine.style.cssText = `
-            position: fixed;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(to bottom, transparent, rgba(0, 255, 0, 0.15), transparent);
-            z-index: 999998;
-            pointer-events: none;
-            animation: scanDown 2s linear infinite;
-        `;
-
-        if (!document.getElementById('scan-keyframes')) {
-            const style = document.createElement('style');
-            style.id = 'scan-keyframes';
-            style.textContent = `
-                @keyframes scanDown {
-                    0% { top: -4px; }
-                    100% { top: 100%; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        bootScreen.appendChild(scanLine);
-        return scanLine;
-    }
-
-    // Start CRT scan effect
-    const scanLine = crtScan();
-
-    // Update hex display with rAF instead of setInterval
-    let hexAnimationId;
-    let lastHexUpdate = 0;
-    function updateHex(timestamp) {
-        if (timestamp - lastHexUpdate > 50) {
-            if (bootHex) bootHex.textContent = generateHex();
-            lastHexUpdate = timestamp;
-        }
-        hexAnimationId = requestAnimationFrame(updateHex);
-    }
-    hexAnimationId = requestAnimationFrame(updateHex);
-
-    // Progress bar - use CSS transitions for smooth GPU-accelerated animation
-    const totalLines = bootLines.length;
-
-    // Enable smooth CSS transition on the progress bar
-    progressBar.style.transition = 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-
-    function setProgressTarget(newTarget) {
-        progressBar.style.width = newTarget + '%';
-    }
-
-    // Animate boot lines with typewriter effect and drama
-    async function animateBootLines() {
-        for (let i = 0; i < bootLines.length; i++) {
-            const line = bootLines[i];
-            const delay = parseInt(line.dataset.delay) || i * 200;
-
-            await new Promise(resolve => setTimeout(resolve, delay - (i > 0 ? parseInt(bootLines[i-1].dataset.delay) || 0 : 0)));
-
-            // Add glitch on reveal
-            if (Math.random() > 0.5) {
-                screenGlitch(0.3, 30);
-            }
-
-            // Typewriter effect for most lines
-            if (line.textContent.length < 80) {
-                await typewriterLine(line, line.innerHTML, 12);
-            } else {
-                line.classList.add('visible');
-            }
-
-            // Update progress target as each line completes (reserve last 15% for final line)
-            const lineProgress = ((i + 1) / totalLines) * 85;
-            setProgressTarget(lineProgress);
-
-            // Special effects for key lines
-            if (line.textContent.includes('VIRTUAL HANDSHAKE')) {
-                // Big dramatic moment - glitches only, no flashes
-                screenGlitch(1.5, 80);
-                await new Promise(r => setTimeout(r, 100));
-                screenGlitch(1, 60);
-                // Final push to 100%
-                setProgressTarget(100);
-            }
-        }
-    }
-
-    // Wait for boot animations to complete, then trigger exit
-    animateBootLines().then(() => {
-        // Give a moment to appreciate the final line
-        setTimeout(() => {
-            cancelAnimationFrame(hexAnimationId);
-
-            // Final dramatic sequence - glitch only, then white flash on exit
-            screenGlitch(2, 100);
-
-            setTimeout(() => {
-                screenFlash('#ffffff', 150);
-                bootScreen.style.transition = 'opacity 0.6s ease, transform 0.6s ease, filter 0.6s ease';
-                bootScreen.style.opacity = '0';
-                bootScreen.style.transform = 'scale(1.02)';
-                bootScreen.style.filter = 'brightness(2) blur(2px)';
-
-                // Remove from DOM after transition
-                setTimeout(() => {
-                    if (scanLine) scanLine.remove();
-                    bootScreen.remove();
-                }, 600);
-            }, 150);
-        }, 800); // 800ms pause after "VIRTUAL HANDSHAKE COMPLETE"
+    container.style.opacity = '1';
+    const elements = [
+        container.querySelector('header'),
+        container.querySelector('.blurb'),
+        container.querySelector('#more-about-me'),
+        container.querySelector('.tabs'),
+        ...container.querySelectorAll('.entry')
+    ].filter(Boolean);
+    elements.forEach(el => { el.style.opacity = '0'; el.style.transform = 'translateY(16px)'; });
+    anime({
+        targets: elements, opacity: [0, 1], translateY: [16, 0], duration: 400,
+        delay: anime.stagger(50), easing: 'easeOutCubic',
+        complete: () => { elements.forEach(el => { el.style.opacity = ''; el.style.transform = ''; }); }
     });
 }
 
-// ===== KONAMI CODE SECRET MODE =====
+// ===== 4. TAB SWITCHING =====
+function showTab(tabName, pushState) {
+    const panelMap = {
+        'work': 'panel-work',
+        'projects': 'panel-projects',
+        'music': 'panel-music'
+    };
+
+    // "home" means show the about-me section, no tab active
+    const isHome = !tabName || tabName === 'home';
+    const panelId = isHome ? 'more-about-me' : panelMap[tabName];
+    if (!panelId) return;
+
+    // Lazy-init SoundCloud on first music tab visit
+    if (!scInitialized && tabName === 'music') {
+        scInitialized = true;
+        initSoundCloudCards();
+    }
+
+    // Update URL hash (unless called from popstate)
+    if (pushState !== false) {
+        const hash = isHome ? '' : '#' + tabName;
+        if (window.location.hash !== hash) {
+            history.pushState(null, '', hash || window.location.pathname);
+        }
+    }
+
+    // Update tab button states
+    const allTabs = document.querySelectorAll('.tab');
+    allTabs.forEach(tab => {
+        tab.classList.remove('active');
+        tab.setAttribute('aria-selected', 'false');
+    });
+    if (!isHome) {
+        const clickedTab = document.querySelector(`.tab[data-tab="${tabName}"]`);
+        if (clickedTab) {
+            clickedTab.classList.add('active');
+            clickedTab.setAttribute('aria-selected', 'true');
+        }
+    }
+
+    const allPanels = document.querySelectorAll('.content');
+    const currentPanel = document.querySelector('.content.active');
+    const nextPanel = document.getElementById(panelId);
+
+    if (!nextPanel) return;
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // First load or reduced motion: instant switch
+    if (!currentPanel || reducedMotion || currentTab === null) {
+        allPanels.forEach(p => p.classList.remove('active'));
+        nextPanel.classList.add('active');
+        currentTab = tabName || 'home';
+        document.dispatchEvent(new CustomEvent('visualizer-tab-change', { detail: tabName }));
+        return;
+    }
+
+    // Same panel clicked
+    if (currentPanel.id === panelId) return;
+
+    // Lock container height during transition
+    const container = document.querySelector('.tab-content-area') || currentPanel.parentElement;
+    if (container) {
+        container.style.minHeight = container.offsetHeight + 'px';
+    }
+
+    // Fade out current
+    anime({
+        targets: currentPanel, opacity: [1, 0], translateY: [0, -10], duration: 100, easing: 'easeOutQuad',
+        complete: () => {
+            allPanels.forEach(p => p.classList.remove('active'));
+            nextPanel.style.opacity = '0';
+            nextPanel.classList.add('active');
+            // Fade in next
+            anime({
+                targets: nextPanel, opacity: [0, 1], translateY: [10, 0], duration: 100, easing: 'easeOutQuad',
+                complete: () => {
+                    nextPanel.style.opacity = '';
+                    nextPanel.style.transform = '';
+                    currentPanel.style.opacity = '';
+                    currentPanel.style.transform = '';
+                    if (container) container.style.minHeight = '';
+                }
+            });
+        }
+    });
+
+    currentTab = tabName || 'home';
+    document.dispatchEvent(new CustomEvent('visualizer-tab-change', { detail: tabName }));
+}
+
+// ===== 4b. HASH ROUTING =====
+function initRouting() {
+    // Handle back/forward navigation
+    window.addEventListener('popstate', () => {
+        const hash = window.location.hash.replace('#', '');
+        showTab(hash || 'home', false);
+    });
+}
+
+function getInitialTab() {
+    const hash = window.location.hash.replace('#', '');
+    if (['work', 'projects', 'music'].includes(hash)) return hash;
+    return 'home';
+}
+
+// ===== 5. TAB KEYBOARD NAVIGATION =====
+function initTabKeyboard() {
+    const tabList = document.querySelector('[role="tablist"]') || document.querySelector('.tabs');
+    if (!tabList) return;
+    const tabs = Array.from(tabList.querySelectorAll('.tab'));
+    if (tabs.length === 0) return;
+
+    tabList.addEventListener('keydown', (e) => {
+        const currentIndex = tabs.indexOf(document.activeElement);
+        if (currentIndex === -1) return;
+        let newIndex = currentIndex;
+
+        switch (e.key) {
+            case 'ArrowRight':
+            case 'ArrowDown':
+                e.preventDefault();
+                newIndex = (currentIndex + 1) % tabs.length;
+                break;
+            case 'ArrowLeft':
+            case 'ArrowUp':
+                e.preventDefault();
+                newIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+                break;
+            case 'Home':
+                e.preventDefault();
+                newIndex = 0;
+                break;
+            case 'End':
+                e.preventDefault();
+                newIndex = tabs.length - 1;
+                break;
+            default:
+                return;
+        }
+
+        tabs[newIndex].focus();
+        tabs[newIndex].click();
+    });
+}
+
+// ===== 6. ACCORDION TOGGLE =====
+function toggleDropdown(buttonEl) {
+    const entry = buttonEl.closest('.entry');
+    if (!entry) return;
+    const dropdown = entry.querySelector('.dropdown');
+    if (!dropdown) return;
+    const isOpen = dropdown.classList.contains('open');
+    const expanded = !isOpen;
+
+    dropdown.classList.toggle('open', expanded);
+    buttonEl.setAttribute('aria-expanded', String(expanded));
+    dropdown.setAttribute('aria-hidden', String(!expanded));
+}
+
+// ===== 6b. OPEN SPECIFIC ENTRY FROM HOME =====
+function openEntry(tabName, dropdownId) {
+    showTab(tabName);
+    // Wait for tab panel to become visible, then open the dropdown and scroll
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            const dropdown = document.getElementById(dropdownId);
+            if (!dropdown) return;
+            const entry = dropdown.closest('.entry');
+            if (!entry) return;
+            const btn = entry.querySelector('.entry-header');
+            // Open if not already open
+            if (!dropdown.classList.contains('open')) {
+                dropdown.classList.add('open');
+                dropdown.setAttribute('aria-hidden', 'false');
+                if (btn) btn.setAttribute('aria-expanded', 'true');
+            }
+            // Scroll entry into view
+            entry.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 220); // after tab fade transition
+    });
+}
+
+// ===== 7. SCROLL REVEALS =====
+function initScrollReveals() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const entries = document.querySelectorAll('.entry');
+    if (entries.length === 0) return;
+
+    const observer = new IntersectionObserver((items) => {
+        items.forEach(item => {
+            if (item.isIntersecting) {
+                anime({
+                    targets: item.target,
+                    translateY: [20, 0],
+                    opacity: [0, 1],
+                    duration: 400,
+                    easing: 'easeOutCubic',
+                    complete: () => {
+                        item.target.style.opacity = '';
+                        item.target.style.transform = '';
+                    }
+                });
+                observer.unobserve(item.target);
+            }
+        });
+    }, { threshold: 0.1 });
+
+    entries.forEach((entry, i) => {
+        if (i > 3) {
+            entry.style.opacity = '0';
+            observer.observe(entry);
+        }
+    });
+}
+
+// ===== 7b. ENTRY HOVER ANIMATIONS (WORK & PROJECT CARDS) =====
+function initEntryHoverAnimations() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (typeof anime === 'undefined') return;
+
+    const cards = document.querySelectorAll('#panel-work .entry, #panel-projects .entry');
+    if (!cards.length) return;
+
+    cards.forEach((card) => {
+        let hoverAnimation = null;
+        let leaveAnimation = null;
+
+        card.addEventListener('mouseenter', () => {
+            if (leaveAnimation) {
+                leaveAnimation.pause();
+                leaveAnimation = null;
+            }
+            hoverAnimation = anime({
+                targets: card,
+                translateY: -4,
+                scale: 1.015,
+                duration: 220,
+                easing: 'easeOutCubic'
+            });
+        });
+
+        card.addEventListener('mouseleave', () => {
+            if (hoverAnimation) {
+                hoverAnimation.pause();
+                hoverAnimation = null;
+            }
+            leaveAnimation = anime({
+                targets: card,
+                translateY: 0,
+                scale: 1,
+                duration: 200,
+                easing: 'easeOutQuad'
+            });
+        });
+    });
+}
+
+// ===== 8. CURSOR TRAIL =====
+function initCursorTrail() {
+    if (window.matchMedia('(pointer: coarse)').matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const canvas = document.getElementById('cursor-trail');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const particles = [];
+    const maxParticles = 40;
+    let frameCount = 0;
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', debounce(resize, 200));
+
+    document.addEventListener('mousemove', (e) => {
+        if (particles.length >= maxParticles) particles.shift();
+        particles.push({
+            x: e.clientX + (Math.random() - 0.5) * 4,
+            y: e.clientY + (Math.random() - 0.5) * 4,
+            life: 1,
+            size: 1 + Math.random() * 1.5
+        });
+    });
+
+    // Cache accent color, update every 60 frames
+    let r = 68, g = 136, b = 255;
+    function updateAccentColor() {
+        const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4488ff';
+        r = parseInt(accent.slice(1, 3), 16) || 68;
+        g = parseInt(accent.slice(3, 5), 16) || 136;
+        b = parseInt(accent.slice(5, 7), 16) || 255;
+    }
+    updateAccentColor();
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (++frameCount % 60 === 0) updateAccentColor();
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.life -= 0.03;
+            p.y += 0.2;
+            if (p.life <= 0) {
+                particles.splice(i, 1);
+                continue;
+            }
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${p.life * 0.15})`;
+            ctx.fill();
+        }
+        requestAnimationFrame(animate);
+    }
+    animate();
+}
+
+// ===== 9. CAROUSEL =====
+function initCarousel(carousel) {
+    const slides = carousel.querySelectorAll('.carousel__slide');
+    const prevBtn = carousel.querySelector('.carousel__btn--prev');
+    const nextBtn = carousel.querySelector('.carousel__btn--next');
+    const counter = carousel.querySelector('.carousel__counter');
+    const total = slides.length;
+    let current = 0;
+    let animating = false;
+
+    function goTo(idx, animate = true) {
+        const next = (idx + total) % total;
+        if (next === current || animating) return;
+
+        const outSlide = slides[current];
+        const inSlide = slides[next];
+        const direction = idx > current || (current === total - 1 && next === 0) ? 1 : -1;
+
+        if (!animate) {
+            outSlide.classList.remove('is-active');
+            inSlide.classList.add('is-active');
+            current = next;
+            counter.textContent = (current + 1) + ' of ' + total;
+            return;
+        }
+
+        animating = true;
+
+        const track = carousel.querySelector('.carousel__track');
+        const outHeight = outSlide.offsetHeight;
+
+        // Position incoming slide offscreen to measure its natural height
+        inSlide.style.position = 'absolute';
+        inSlide.style.top = '0';
+        inSlide.style.left = '0';
+        inSlide.style.width = '100%';
+        inSlide.style.opacity = '0';
+        inSlide.classList.add('is-active');
+
+        // Wait for image to load (if not cached) before measuring
+        const img = inSlide.querySelector('img');
+        const measure = () => {
+            const inHeight = inSlide.offsetHeight;
+
+            // Lock track height to prevent layout jump
+            track.style.height = outHeight + 'px';
+
+            // Animate track height if different
+            if (Math.abs(inHeight - outHeight) > 1) {
+                anime({
+                    targets: track,
+                    height: [outHeight, inHeight],
+                    duration: 400,
+                    easing: 'easeInOutQuad',
+                });
+            }
+
+            // Animate out old, animate in new
+            anime({
+                targets: outSlide,
+                opacity: [1, 0],
+                translateX: [0, -30 * direction],
+                duration: 400,
+                easing: 'easeInOutQuad',
+            });
+
+            anime({
+                targets: inSlide,
+                opacity: [0, 1],
+                translateX: [30 * direction, 0],
+                duration: 400,
+                easing: 'easeInOutQuad',
+                complete: () => {
+                    outSlide.classList.remove('is-active');
+                    outSlide.style.opacity = '';
+                    outSlide.style.transform = '';
+                    inSlide.style.position = '';
+                    inSlide.style.top = '';
+                    inSlide.style.left = '';
+                    inSlide.style.width = '';
+                    inSlide.style.opacity = '';
+                    inSlide.style.transform = '';
+                    track.style.height = '';
+                    current = next;
+                    counter.textContent = (current + 1) + ' of ' + total;
+                    animating = false;
+                }
+            });
+        };
+
+        if (img && !img.complete) {
+            img.addEventListener('load', measure, { once: true });
+        } else {
+            measure();
+        }
+    }
+
+    // Show first slide immediately
+    slides[0].classList.add('is-active');
+    counter.textContent = '1 of ' + total;
+
+    prevBtn.addEventListener('click', (e) => { e.stopPropagation(); goTo(current - 1); });
+    nextBtn.addEventListener('click', (e) => { e.stopPropagation(); goTo(current + 1); });
+
+    // Keyboard nav
+    carousel.setAttribute('tabindex', '0');
+    carousel.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(current - 1); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); goTo(current + 1); }
+    });
+}
+
+function initCarousels() {
+    document.querySelectorAll('.carousel').forEach(initCarousel);
+}
+
+// ===== 10. KONAMI CODE =====
 function initKonamiCode() {
     const konamiCode = [
         'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
@@ -249,14 +522,12 @@ function initKonamiCode() {
         'KeyB', 'KeyA'
     ];
     let konamiIndex = 0;
-    let secretModeActive = false;
 
     document.addEventListener('keydown', (e) => {
         if (e.code === konamiCode[konamiIndex]) {
             konamiIndex++;
-            
             if (konamiIndex === konamiCode.length) {
-                activateSecretMode();
+                toggleSecretMode();
                 konamiIndex = 0;
             }
         } else {
@@ -264,733 +535,51 @@ function initKonamiCode() {
         }
     });
 
-    function activateSecretMode() {
-        secretModeActive = !secretModeActive;
-        
-        if (secretModeActive) {
-            document.body.classList.add('secret-mode');
-            showSecretNotification();
-            triggerCRTFlicker();
-        } else {
-            document.body.classList.remove('secret-mode');
-        }
+    function toggleSecretMode() {
+        const isNowActive = document.body.classList.toggle('secret-mode');
+        showSecretNotification(isNowActive);
     }
 
-    function showSecretNotification() {
+    function showSecretNotification(activated) {
         const notification = document.createElement('div');
         notification.className = 'secret-mode-notification';
-        notification.innerHTML = `
-            <h2>// SECRET MODE ACTIVATED //</h2>
-            <p>Welcome to the other side, hacker.</p>
-            <p style="margin-top: 10px; font-size: 0.75em; color: #ff00ff;">Press Konami code again to deactivate</p>
+        notification.innerHTML = activated
+            ? `<h2>SECRET MODE ACTIVATED</h2><p>Press Konami code again to deactivate</p>`
+            : `<h2>SECRET MODE DEACTIVATED</h2>`;
+        notification.style.cssText = `
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            padding: 24px 40px; z-index: 100000; text-align: center;
+            background: rgba(0, 0, 0, 0.9); border: 1px solid var(--accent, #4488ff);
+            color: var(--accent, #4488ff); font-family: inherit; border-radius: 8px;
+            pointer-events: none; animation: fadeInOut 2.5s ease forwards;
         `;
+
+        if (!document.getElementById('secret-notif-keyframes')) {
+            const style = document.createElement('style');
+            style.id = 'secret-notif-keyframes';
+            style.textContent = `
+                @keyframes fadeInOut {
+                    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+                    15% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                    75% { opacity: 1; }
+                    100% { opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
         document.body.appendChild(notification);
-
-        setTimeout(() => {
-            notification.style.animation = 'secretReveal 0.3s ease reverse forwards';
-            setTimeout(() => notification.remove(), 300);
-        }, 2500);
-    }
-
-    function triggerCRTFlicker() {
-        document.body.classList.add('crt-flicker');
-        setTimeout(() => document.body.classList.remove('crt-flicker'), 100);
+        setTimeout(() => notification.remove(), 2500);
     }
 }
 
-// ===== PREMIUM CARD EFFECTS (shine & glow) =====
-// Use event delegation - attach once to document, handles all entries
-let cardEffectsInitialized = false;
-
-function init3DTilt() {
-    if (cardEffectsInitialized) return; // Only initialize once
-    cardEffectsInitialized = true;
-
-    // Event delegation - single listener for all entries
-    document.addEventListener('mousemove', (e) => {
-        const entry = e.target.closest('.entry:not(#music .entry)');
-        if (!entry) return;
-
-        const rect = entry.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        const mouseXPercent = (x / rect.width) * 100;
-        const mouseYPercent = (y / rect.height) * 100;
-        const shineX = ((x / rect.width) * 200) - 100;
-
-        entry.style.setProperty('--mouseX', `${mouseXPercent}%`);
-        entry.style.setProperty('--mouseY', `${mouseYPercent}%`);
-        entry.style.setProperty('--shineX', `${shineX}%`);
-    });
-
-    document.addEventListener('mouseleave', (e) => {
-        const entry = e.target.closest('.entry:not(#music .entry)');
-        if (!entry) return;
-        entry.style.setProperty('--shineX', '-100%');
-    }, true);
-}
-
-
-function initCyberpunkGallery() {
-    const container = document.querySelector('.cyberpunk-gallery-container');
-    const images = document.querySelectorAll('.cyberpunk-image');
-    const loader = container ? container.querySelector('.gallery-loader') : null;
-    const shell = container ? container.closest('.gallery-shell') : null;
-    const titleEl = shell ? shell.querySelector('#galleryTitle') : null;
-    const locationEl = shell ? shell.querySelector('#galleryLocation') : null;
-    const dateEl = shell ? shell.querySelector('#galleryDate') : null;
-    let currentIndex = 0;
-
-    // Create matrix rain canvas
-    const matrixRain = document.createElement('canvas');
-    matrixRain.className = 'matrix-rain';
-    container.appendChild(matrixRain);
-    const ctx = matrixRain.getContext('2d');
-    matrixRain.style.opacity = '0';
-
-    // Set up matrix rain
-    let fontSize = 14;
-    let columns = 0;
-    let drops = [];
-
-    // Use fixed container dimensions - no more jarring resizes between images
-    function initFixedContainer() {
-        if (!container) return;
-        // Fixed aspect ratio (4:5 works well for portraits and landscapes)
-        const maxWidth = Math.min(500, window.innerWidth * 0.85);
-        container.style.width = `${maxWidth}px`;
-        container.style.aspectRatio = '4 / 5';
-        if (shell) {
-            shell.style.width = `${maxWidth}px`;
-        }
-    }
-
-    // No-op function to maintain compatibility with existing calls
-    function setContainerRatio(image) {
-        // Container size is now fixed - images use object-fit: contain
-    }
-
-    function initializeRain() {
-        matrixRain.width = container.clientWidth;
-        matrixRain.height = container.clientHeight;
-        columns = matrixRain.width / fontSize;
-        drops = [];
-        for (let i = 0; i < columns; i++) {
-            drops[i] = 1;
-        }
-    }
-
-    function drawMatrixRain() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Increased opacity for faster fade
-        ctx.fillRect(0, 0, matrixRain.width, matrixRain.height);
-        ctx.fillStyle = '#0f0';
-        ctx.font = fontSize + 'px monospace';
-
-        for (let i = 0; i < drops.length; i++) {
-            const text = String.fromCharCode(Math.random() * 128);
-            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-            if (drops[i] * fontSize > matrixRain.height && Math.random() > 0.95) { // Increased probability of resetting
-                drops[i] = 0;
-            }
-            drops[i] += 2; // Increased speed
-        }
-    }
-
-    function setHudFading(isFading) {
-        [titleEl, locationEl, dateEl].forEach((el) => {
-            if (!el) return;
-            el.classList.toggle('is-fading', isFading);
-        });
-    }
-
-    function setLoaderVisible(isVisible) {
-        if (!loader) return;
-        loader.classList.toggle('is-visible', isVisible);
-    }
-
-    function waitForImage(image) {
-        if (!image) return Promise.resolve();
-        if (image.complete && image.naturalWidth > 0) return Promise.resolve();
-        return new Promise((resolve) => {
-            const onLoad = () => resolve();
-            const onError = () => resolve();
-            image.addEventListener('load', onLoad, { once: true });
-            image.addEventListener('error', onError, { once: true });
-        });
-    }
-
-    function preloadImages() {
-        images.forEach((image) => {
-            if (image.complete) return;
-            const preloader = new Image();
-            preloader.src = image.src;
-        });
-    }
-
-    function setHudText(image) {
-        if (!image) return;
-        const title = image.dataset.title || image.alt || '';
-        const location = image.dataset.location || 'Unknown';
-        const date = image.dataset.date || '----';
-        if (titleEl) titleEl.textContent = title;
-        if (locationEl) locationEl.textContent = location;
-        if (dateEl) dateEl.textContent = date;
-        setContainerRatio(image);
-    }
-
-    async function transitionImages() {
-        setHudFading(true);
-        if (container) {
-            container.classList.add('is-transitioning');
-        }
-        images[currentIndex].classList.remove('active');
-        currentIndex = (currentIndex + 1) % images.length;
-        const nextImage = images[currentIndex];
-
-        if (nextImage && (!nextImage.complete || nextImage.naturalWidth === 0)) {
-            setLoaderVisible(true);
-            await waitForImage(nextImage);
-        }
-
-        // Start matrix rain animation
-        matrixRain.style.opacity = '1';
-        let frames = 0;
-        const maxFrames = 60; // Adjust this value to control the duration of the animation
-        
-        return new Promise((resolve) => {
-            const rainAnimation = setInterval(() => {
-                drawMatrixRain();
-                frames++;
-                if (frames >= maxFrames) {
-                    clearInterval(rainAnimation);
-                    matrixRain.style.opacity = '0';
-                    images[currentIndex].classList.add('active');
-                    setHudText(images[currentIndex]);
-                    setHudFading(false);
-                    setLoaderVisible(false);
-                    if (container) {
-                        setTimeout(() => {
-                            container.classList.remove('is-transitioning');
-                        }, 350);
-                    }
-                    resolve();
-                }
-            }, 16); // Run at approximately 60 FPS
-        });
-    }
-
-    // Resize canvas when window is resized
-    function resizeCanvas() {
-        initFixedContainer();
-        initializeRain();
-    }
-
-    window.addEventListener('resize', debounce(resizeCanvas, 150));
-    initFixedContainer(); // Set fixed container size
-    initializeRain(); // Initialize on load
-    setLoaderVisible(true);
-    waitForImage(images[currentIndex]).then(() => {
-        setHudText(images[currentIndex]);
-        setHudFading(false);
-        setLoaderVisible(false);
-    });
-    preloadImages();
-
-    // Start the image transition loop
-    async function transitionLoop() {
-        while (true) {
-            await transitionImages();
-            await new Promise(resolve => setTimeout(resolve, 8000)); // Wait 8 seconds between transitions
-        }
-    }
-
-    transitionLoop();
-}
-
-
-function showTab(tabName) {
-    const blurb = document.getElementById('blurb');
-    const moreAboutMe = document.getElementById('more-about-me');
-    const blurbContent = {
-        // work: '<br><p>Hey there! I\'m Ezequiel, a passionate software engineer with a knack for creating innovative solutions. From full-stack web applications to generative AI models, I love diving into projects that challenge me to think outside the box. Why hire me? Because I bring a blend of technical expertise and creative problem-solving to the table, ensuring that every project I work on is both efficient and exciting!</p>',
-        // projects: '<br><p>Hey there! I\'m Ezequiel, a passionate software engineer with a knack for creating innovative solutions. From full-stack web applications to generative AI models, I love diving into projects that challenge me to think outside the box. Why hire me? Because I bring a blend of technical expertise and creative problem-solving to the table, ensuring that every project I work on is both efficient and exciting!</p>',
-        work: '',
-        projects: '',
-        music: '<p class="music-description">From a young age, I was immersed in a rich tapestry of sounds, with my parents often playing The Beatles\' album "1." This early exposure sparked a deep-seated love for music, driving me to learn the guitar and eventually delve into the world of electronic music production. To me, music is more than just melodies and rhythms; it is a profound language that transcends boundaries and speaks to the soul. Through EDM, I find a unique avenue to express my innermost emotions and thoughts, creating connections that I hope resonate deeply with listeners. I am making it my mission to combine the technology of computer science with music to further advance the field and push the boundaries of what is possible.</p>'
-    };
-
-    if (moreAboutMe) {
-        moreAboutMe.style.opacity = '0';
-        setTimeout(() => {
-            moreAboutMe.style.display = 'none';
-        }, 500);
-    }
-
-    blurb.classList.add('fade-out');
-    setTimeout(() => {
-        blurb.innerHTML = blurbContent[tabName];
-        blurb.classList.remove('fade-out');
-        blurb.classList.add('fade-in');
-        setTimeout(() => {
-            blurb.classList.remove('fade-in');
-        }, 250);
-    }, 250);
-
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    event.target.classList.add('active');
-
-    currentTab = tabName;
-
-    
-    setTimeout(() => {
-        document.querySelectorAll('.content').forEach(content => {
-            content.classList.remove('active');
-        });
-        const selectedContent = document.getElementById(tabName);
-        selectedContent.classList.add('active');
-        const entries = selectedContent.querySelectorAll('.entry');
-        entries.forEach((entry, index) => {
-            entry.classList.remove('fade-in');
-            void entry.offsetWidth; // Trigger reflow
-            setTimeout(() => {
-                entry.classList.add('fade-in');
-            }, index * 100);
-        });
-        
-        // Note: 3D tilt uses event delegation, no re-init needed
-
-        // Notify visualizer after tab is actually active
-        document.dispatchEvent(new CustomEvent('visualizer-tab-change', { detail: tabName }));
-
-    }, 250);
-
-}
-
-function toggleDropdown(element) {
-    const dropdown = element.querySelector('.dropdown');
-    const isOpen = dropdown.style.display === 'block';
-    
-    if (isOpen) {
-        gsap.to(dropdown, { height: 0, opacity: 0, duration: 0.5, onComplete: () => {
-            dropdown.style.display = 'none';
-        }});
-    } else {
-        dropdown.style.display = 'block';
-        dropdown.style.height = 'auto';
-        const height = dropdown.clientHeight + 'px';
-        dropdown.style.height = 0;
-        gsap.to(dropdown, { height: height, opacity: 1, duration: 0.5, onComplete: () => {
-            dropdown.style.height = 'auto';
-        }});
-    }
-    synchronizeBlinking();
-}
-
-function synchronizeBlinking() {
-    const blinkers = document.querySelectorAll('.blinking-cursor');
-    blinkers.forEach(blinker => {
-        blinker.style.animation = 'none';
-        setTimeout(() => {
-            blinker.style.animation = '';
-        }, 0);
-    });
-}
-
-// Prevents dropdown from closing when clicking videos/links inside
-function preventDropdown(event) {
-    event.stopPropagation();
-}
-
-// Alias for consistency
-function preventClose(event) {
-    event.stopPropagation();
-}
-
-function createBlinkingLights() {
-    const body = document.body;
-    const lightCount = 60;
-    const lights = [];
-    let animationId = null;
-
-    // Create all light elements once
-    for (let i = 0; i < lightCount; i++) {
-        const light = document.createElement('div');
-        light.className = 'blink';
-        light.style.cssText = `
-            position: absolute;
-            left: ${5 + Math.random() * 90}%;
-            top: ${5 + Math.random() * 90}%;
-            width: ${1.5 + Math.random() * 1.5}px;
-            height: ${1.5 + Math.random() * 1.5}px;
-            background-color: #00ff00;
-            border-radius: 50%;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease, box-shadow 0.3s ease;
-        `;
-        body.appendChild(light);
-
-        // Store light with its animation state
-        lights.push({
-            element: light,
-            phase: Math.random() * Math.PI * 2,  // Random starting phase
-            speed: 0.3 + Math.random() * 0.7,    // Varied animation speeds
-            brightness: 0.5 + Math.random() * 0.5, // Varied max brightness
-            pulseMode: Math.random() > 0.7,      // 30% pulse smoothly, 70% blink
-            nextToggle: performance.now() + Math.random() * 3000, // For blink mode
-            isOn: false
-        });
-    }
-
-    let lastTime = performance.now();
-
-    // Single rAF loop for all lights
-    function animateLights(currentTime) {
-        const deltaTime = (currentTime - lastTime) / 1000;
-        lastTime = currentTime;
-
-        const isSecretMode = document.body.classList.contains('secret-mode');
-        const baseColor = isSecretMode ? '255, 0, 255' : '0, 255, 0';
-
-        for (let i = 0; i < lights.length; i++) {
-            const light = lights[i];
-
-            if (light.pulseMode) {
-                // Smooth pulsing lights (sine wave)
-                light.phase += deltaTime * light.speed * 2;
-                const pulse = (Math.sin(light.phase) + 1) / 2;
-                const opacity = pulse * light.brightness;
-                light.element.style.opacity = opacity.toFixed(3);
-
-                // Add glow on bright pulses
-                if (opacity > 0.6) {
-                    light.element.style.boxShadow = `0 0 ${4 + opacity * 4}px rgba(${baseColor}, ${opacity})`;
-                } else {
-                    light.element.style.boxShadow = 'none';
-                }
-            } else {
-                // Blinking lights (random toggle)
-                if (currentTime > light.nextToggle) {
-                    light.isOn = !light.isOn;
-                    light.element.style.opacity = light.isOn ? light.brightness.toFixed(3) : '0';
-                    light.element.style.boxShadow = light.isOn
-                        ? `0 0 6px rgba(${baseColor}, 0.8)`
-                        : 'none';
-                    // Random interval between 500-3500ms
-                    light.nextToggle = currentTime + 500 + Math.random() * 3000;
-                }
-            }
-        }
-
-        animationId = requestAnimationFrame(animateLights);
-    }
-
-    // Start animation
-    animationId = requestAnimationFrame(animateLights);
-
-    // Cleanup on page unload
-    window.addEventListener('beforeunload', () => {
-        if (animationId) {
-            cancelAnimationFrame(animationId);
-        }
-    });
-
-    // Pause when tab is hidden (rAF does this automatically, but for cleanup)
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden && animationId) {
-            cancelAnimationFrame(animationId);
-            animationId = null;
-        } else if (!document.hidden && !animationId) {
-            lastTime = performance.now();
-            animationId = requestAnimationFrame(animateLights);
-        }
-    });
-}
-
-
-function initCarousel(carouselContainer) {
-    let slideIndex = 1;
-
-    function plusSlides(n) {
-        showSlides(slideIndex += n);
-    }
-
-    function showSlides(n) {
-        const slides = carouselContainer.querySelectorAll(".carousel-slide img");
-        if (n > slides.length) { 
-            slideIndex = 1;
-        }
-        if (n < 1) { 
-            slideIndex = slides.length;
-        }
-        for (let i = 0; i < slides.length; i++) {
-            slides[i].classList.remove('fade-in', 'fade-out');
-            slides[i].style.display = "none";
-        }
-        slides[slideIndex - 1].style.display = "block";
-        slides[slideIndex - 1].classList.add('fade-in');
-    }
-
-    showSlides(slideIndex);
-
-    carouselContainer.querySelector('.prev').addEventListener('click', function(event) {
-        event.stopPropagation();
-        plusSlides(-1);
-    });
-
-    carouselContainer.querySelector('.next').addEventListener('click', function(event) {
-        event.stopPropagation();
-        plusSlides(1);
-    });
-}
-
-
-function createCursor() {
-    if (isMobileOrTablet()) {
-        return; // Don't create cursor effect for mobile or tablet devices
-    }
-    
-    // Create container for falling characters
-    const cursorContainer = document.createElement('div');
-    cursorContainer.className = 'cursor-rain-container';
-    document.body.appendChild(cursorContainer);
-
-    const chars = '01アイウエオカキクケコサシスセソタチツテト10';
-    const particles = [];
-    const maxParticles = 25;
-    let mouseX = 0;
-    let mouseY = 0;
-    let lastX = 0;
-    let lastY = 0;
-    let isOverInteractive = false;
-
-    function createParticle(x, y) {
-        if (particles.length >= maxParticles) {
-            const oldParticle = particles.shift();
-            if (oldParticle.element.parentNode) {
-                oldParticle.element.remove();
-            }
-        }
-
-        const particle = document.createElement('span');
-        particle.className = 'cursor-rain-char';
-        particle.textContent = chars[Math.floor(Math.random() * chars.length)];
-        particle.style.left = `${x + (Math.random() - 0.5) * 20}px`;
-        particle.style.top = `${y}px`;
-        
-        // Vary the animation slightly
-        const duration = 0.8 + Math.random() * 0.4;
-        const drift = (Math.random() - 0.5) * 30;
-        particle.style.setProperty('--fall-duration', `${duration}s`);
-        particle.style.setProperty('--drift', `${drift}px`);
-        
-        if (isOverInteractive) {
-            particle.classList.add('interactive');
-        }
-        
-        cursorContainer.appendChild(particle);
-        particles.push({ element: particle, created: Date.now() });
-
-        // Remove after animation
-        setTimeout(() => {
-            if (particle.parentNode) {
-                particle.remove();
-            }
-            const index = particles.findIndex(p => p.element === particle);
-            if (index > -1) particles.splice(index, 1);
-        }, duration * 1000);
-    }
-
-    let frameCount = 0;
-    document.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-        
-        // Calculate movement distance
-        const distance = Math.sqrt((mouseX - lastX) ** 2 + (mouseY - lastY) ** 2);
-        
-        frameCount++;
-        // Spawn particles based on movement (more movement = more particles)
-        if (frameCount % 2 === 0 && distance > 5) {
-            createParticle(mouseX, mouseY);
-        }
-        
-        lastX = mouseX;
-        lastY = mouseY;
-    });
-
-    // Track interactive elements
-    const interactiveElements = 'a, button, .entry, video, .plyr__controls *, .plyr__progress *, .plyr__menu *, .soundcloud-block';
-
-    document.querySelectorAll(interactiveElements).forEach((el) => {
-        el.addEventListener('mouseenter', () => {
-            isOverInteractive = true;
-        });
-        el.addEventListener('mouseleave', () => {
-            isOverInteractive = false;
-        });
-    });
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize boot sequence first
-    initBootSequence();
-    
-    // Initialize new features
-    initKonamiCode();
-    init3DTilt();
-    initAudioVisualizer();
-    
-    // Original initializations
-    createCursor();
-    createBlinkingLights();
-    initCyberpunkGallery();
-
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('mouseenter', function(e) {
-            gsap.to(tab, {
-                duration: 0.5,
-                backgroundColor: "rgba(0, 255, 0, 0.2)",
-                ease: "power2.out",
-                borderRadius: "10px"
-            });
-        });
-
-        tab.addEventListener('mouseleave', function(e) {
-            if (!tab.classList.contains('active')) {
-                gsap.to(tab, {
-                    duration: 0.5,
-                    backgroundColor: "transparent",
-                    ease: "power2.out",
-                    borderRadius: "0px"
-                });
-            }
-        });
-
-        tab.addEventListener('click', function(e) {
-            document.querySelectorAll('.tab').forEach(t => {
-                t.classList.remove('active');
-                gsap.to(t, {
-                    duration: 0.5,
-                    backgroundColor: "transparent",
-                    ease: "power2.out",
-                    borderRadius: "0px"
-                });
-            });
-            tab.classList.add('active');
-            gsap.to(tab, {
-                duration: 0.5,
-                backgroundColor: "rgba(0, 255, 0, 0.2)",
-                ease: "power2.out",
-                borderRadius: "10px"
-            });
-        });
-    });
-
-    
-
-    document.querySelectorAll('.carousel-container').forEach(initCarousel);
-});
-
-function isMobileOrTablet() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-}
-
-// Easter Egg 1: Reactive Glitch Header (visual only)
-function initReactiveGlitchHeader() {
-    const glitchHeader = document.querySelector('.glitch');
-    if (!glitchHeader) return;
-    
-    let isHovering = false;
-    let glitchInterval = null;
-    let coolDownTimeout = null;
-
-    glitchHeader.addEventListener('mouseenter', () => {
-        isHovering = true;
-        if (coolDownTimeout) {
-            clearTimeout(coolDownTimeout);
-            coolDownTimeout = null;
-        }
-        intensifyGlitch();
-    });
-    
-    glitchHeader.addEventListener('mouseleave', () => {
-        isHovering = false;
-        resetGlitch();
-    });
-    
-    function intensifyGlitch() {
-        glitchHeader.textContent = glitchHeader.getAttribute('data-text') || 'Ezequiel Cutin v33.3';
-        glitchHeader.classList.add('intense-glitch');
-        
-        const originalText = glitchHeader.textContent;
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
-        
-        if (glitchInterval) clearInterval(glitchInterval);
-
-        glitchInterval = setInterval(() => {
-            if (!isHovering) {
-                clearInterval(glitchInterval);
-                glitchInterval = null;
-                return;
-            };
-            
-            let newText = originalText;
-            for (let i = 0; i < 3; i++) {
-                const randomIndex = Math.floor(Math.random() * originalText.length);
-                const randomChar = chars[Math.floor(Math.random() * chars.length)];
-                newText = newText.substring(0, randomIndex) + randomChar + newText.substring(randomIndex + 1);
-            }
-            glitchHeader.textContent = newText;
-            
-            setTimeout(() => {
-                if (isHovering) {
-                    glitchHeader.textContent = originalText;
-                }
-            }, 100);
-        }, 200);
-    }
-    
-    function resetGlitch() {
-        glitchHeader.classList.remove('intense-glitch');
-        if (glitchInterval) {
-            clearInterval(glitchInterval);
-            glitchInterval = null;
-        }
-        const originalText = glitchHeader.getAttribute('data-text') || 'Ezequiel Cutin v33.3';
-        const replaceAt = (str, index, replacement) => {
-            return str.substring(0, index) + replacement + str.substring(index + 1);
-        };
-        coolDownTimeout = setTimeout(() => {
-            if (!isHovering) {
-                glitchHeader.textContent = replaceAt(originalText, Math.floor(Math.random() * originalText.length), '_');
-            }
-        }, 50);
-        setTimeout(() => {
-            glitchHeader.textContent = originalText;
-        }, 150);
-        setTimeout(() => {
-            if (!isHovering) {
-                glitchHeader.textContent = replaceAt(originalText, Math.floor(Math.random() * originalText.length), '█');
-            }
-        }, 250);
-        setTimeout(() => {
-            glitchHeader.textContent = originalText;
-        }, 350);
-    }
-}
-
-// Easter Egg 2: Developer Console Greeting
+// ===== 11. CONSOLE EASTER EGGS =====
 function initConsoleEasterEgg() {
-    // ASCII Art for the console
     const asciiArt = `
     ╔══════════════════════════════════════════════════════════════╗
     ║                                                              ║
     ║                    ╔══════════════════════════════════════╗  ║
-    ║                    ║  Ezequiel Cutin v33.3                ║  ║
+    ║                    ║  Ezequiel Cutin                      ║  ║
     ║                    ║  Software Engineer | Data Analyst    ║  ║
     ║                    ║  Sales Engineer | Music Producer     ║  ║
     ║                    ╚══════════════════════════════════════╝  ║
@@ -1000,104 +589,94 @@ function initConsoleEasterEgg() {
     ║                                                              ║
     ╚══════════════════════════════════════════════════════════════╝
     `;
-    
-    // Console greeting
-    console.log('%c' + asciiArt, 'color: #00ff00; font-family: monospace; font-size: 8px;');
-    console.log('%cWelcome to the secret terminal! Type help() for commands.', 'color: #00ff00; font-size: 14px; font-weight: bold;');
-    
-    // Define interactive functions
+
+    console.log('%c' + asciiArt, 'color: #4488ff; font-family: monospace; font-size: 8px;');
+    console.log('%cWelcome to the secret terminal! Type help() for commands.', 'color: #4488ff; font-size: 14px; font-weight: bold;');
+
     window.help = function() {
-        console.log('%cAvailable commands:', 'color: #00ffff; font-weight: bold;');
-        console.log('%c  contact() - Get contact information', 'color: #00ff00;');
-        console.log('%c  projects() - View project links', 'color: #00ff00;');
-        console.log('%c  skills() - Show technical skills', 'color: #00ff00;');
-        console.log('%c  secret() - Reveal a secret message', 'color: #00ff00;');
-        console.log('%c  about() - Learn more about Ezequiel', 'color: #00ff00;');
+        console.log('%cAvailable commands:', 'color: #44ccff; font-weight: bold;');
+        console.log('%c  contact() - Get contact information', 'color: #4488ff;');
+        console.log('%c  projects() - View project links', 'color: #4488ff;');
+        console.log('%c  skills() - Show technical skills', 'color: #4488ff;');
+        console.log('%c  secret() - Reveal a secret message', 'color: #4488ff;');
+        console.log('%c  about() - Learn more about Ezequiel', 'color: #4488ff;');
     };
-    
+
     window.contact = function() {
-        console.log('%c📧 Contact Information:', 'color: #00ffff; font-weight: bold;');
-        console.log('%c  Email: ezequielcutin@gmail.com', 'color: #00ff00;');
-        console.log('%c  LinkedIn: linkedin.com/in/ezequiel-cutin', 'color: #00ff00;');
-        console.log('%c  GitHub: github.com/ezequielcutin', 'color: #00ff00;');
-        console.log('%c  Twitter: @ezecutin', 'color: #00ff00;');
+        console.log('%c📧 Contact Information:', 'color: #44ccff; font-weight: bold;');
+        console.log('%c  Email: ezequielcutin@gmail.com', 'color: #4488ff;');
+        console.log('%c  LinkedIn: linkedin.com/in/ezequiel-cutin', 'color: #4488ff;');
+        console.log('%c  GitHub: github.com/ezequielcutin', 'color: #4488ff;');
+        console.log('%c  Twitter: @ezecutin', 'color: #4488ff;');
     };
-    
+
     window.projects = function() {
-        console.log('%c🚀 Featured Projects:', 'color: #00ffff; font-weight: bold;');
-        console.log('%c  • Job Application Tracker: job-application-tracker-nu.vercel.app', 'color: #00ff00;');
-        console.log('%c  • GoBank: github.com/ezequielcutin/gobank', 'color: #00ff00;');
-        console.log('%c  • Spotify Track Downloader: github.com/ezequielcutin/spotify-to-mp3', 'color: #00ff00;');
-        console.log('%c  • Fractal Mountain: ezequielcutin.github.io/fractal-mountain', 'color: #00ff00;');
-        console.log('%c  • Architecture Style Detection: github.com/ezequielcutin/architecture-style-detection', 'color: #00ff00;');
+        console.log('%c🚀 Featured Projects:', 'color: #44ccff; font-weight: bold;');
+        console.log('%c  • Job Application Tracker: job-application-tracker-nu.vercel.app', 'color: #4488ff;');
+        console.log('%c  • GoBank: github.com/ezequielcutin/gobank', 'color: #4488ff;');
+        console.log('%c  • Spotify Track Downloader: github.com/ezequielcutin/spotify-to-mp3', 'color: #4488ff;');
+        console.log('%c  • Fractal Mountain: ezequielcutin.github.io/fractal-mountain', 'color: #4488ff;');
+        console.log('%c  • Architecture Style Detection: github.com/ezequielcutin/architecture-style-detection', 'color: #4488ff;');
     };
-    
+
     window.skills = function() {
-        console.log('%c💻 Technical Skills:', 'color: #00ffff; font-weight: bold;');
-        console.log('%c  Languages: JavaScript, Python, C#, Java, Go, SQL', 'color: #00ff00;');
-        console.log('%c  Frontend: React, TypeScript, HTML/CSS, WebGL', 'color: #00ff00;');
-        console.log('%c  Backend: Node.js, Express, Flask, .NET Core', 'color: #00ff00;');
-        console.log('%c  Databases: PostgreSQL, MongoDB, SQLite', 'color: #00ff00;');
-        console.log('%c  Tools: Git, Docker, AWS, Heroku, Vercel', 'color: #00ff00;');
-        console.log('%c  AI/ML: PyTorch, TensorFlow, Computer Vision', 'color: #00ff00;');
+        console.log('%c💻 Technical Skills:', 'color: #44ccff; font-weight: bold;');
+        console.log('%c  Languages: JavaScript, Python, C#, Java, Go, SQL', 'color: #4488ff;');
+        console.log('%c  Frontend: React, TypeScript, HTML/CSS, WebGL', 'color: #4488ff;');
+        console.log('%c  Backend: Node.js, Express, Flask, .NET Core', 'color: #4488ff;');
+        console.log('%c  Databases: PostgreSQL, MongoDB, SQLite', 'color: #4488ff;');
+        console.log('%c  Tools: Git, Docker, AWS, Heroku, Vercel', 'color: #4488ff;');
+        console.log('%c  AI/ML: PyTorch, TensorFlow, Computer Vision', 'color: #4488ff;');
     };
-    
+
     window.secret = function() {
-        console.log('%c🤫 Secret Message:', 'color: #ff00ff; font-weight: bold;');
-        console.log('%c  "The best code is the code that makes you smile."', 'color: #ff00ff;');
-        console.log('%c  - Ezequiel Cutin', 'color: #ff00ff;');
-        console.log('%c  P.S. You found the easter egg! 🎉', 'color: #ff00ff;');
+        console.log('%c🤫 Secret Message:', 'color: #6644ff; font-weight: bold;');
+        console.log('%c  "The best code is the code that makes you smile."', 'color: #6644ff;');
+        console.log('%c  - Ezequiel Cutin', 'color: #6644ff;');
+        console.log('%c  P.S. You found the easter egg! 🎉', 'color: #6644ff;');
     };
-    
+
     window.about = function() {
-        console.log('%c👨‍💻 About Ezequiel:', 'color: #00ffff; font-weight: bold;');
-        console.log('%c  First-generation American with Argentinian roots', 'color: #00ff00;');
-        console.log('%c  University of Michigan CS Graduate', 'color: #00ff00;');
-        console.log('%c  Passionate about fútbol, hiking, and electronic music', 'color: #00ff00;');
-        console.log('%c  Currently working at United Wholesale Mortgage', 'color: #00ff00;');
-        console.log('%c  Building the future, one line of code at a time!', 'color: #00ff00;');
+        console.log('%c👨‍💻 About Ezequiel:', 'color: #44ccff; font-weight: bold;');
+        console.log('%c  First-generation American with Argentinian roots', 'color: #4488ff;');
+        console.log('%c  University of Michigan CS Graduate', 'color: #4488ff;');
+        console.log('%c  Passionate about fútbol, hiking, and electronic music', 'color: #4488ff;');
+        console.log('%c  Currently working at United Wholesale Mortgage', 'color: #4488ff;');
+        console.log('%c  Building the future, one line of code at a time!', 'color: #4488ff;');
     };
-    
-    // Auto-run help if console is opened
+
     setTimeout(() => {
         if (window.help) {
-            console.log('%c💡 Tip: Type help() to see available commands', 'color: #ffff00; font-style: italic;');
+            console.log('%c💡 Tip: Type help() to see available commands', 'color: #44ccff; font-style: italic;');
         }
     }, 1000);
 }
 
-// ===== AUDIO VISUALIZER =====
-let audioVisualizerInitialized = false; // Guard to prevent multiple initializations
+// ===== 12. AUDIO VISUALIZER =====
+let audioVisualizerInitialized = false;
 
 function initAudioVisualizer() {
-    // Prevent multiple initializations
-    if (audioVisualizerInitialized) {
-        return;
-    }
-    
+    if (audioVisualizerInitialized) return;
+
     const canvas = document.getElementById('audio-visualizer');
     const toggle = document.getElementById('visualizer-toggle');
-    
-    if (!canvas || !toggle) {
-        return;
-    }
-    
-    // Mark as initialized
+
+    if (!canvas || !toggle) return;
+
     audioVisualizerInitialized = true;
-    
+
     const ctx = canvas.getContext('2d');
-    if (!ctx) {
-        return;
-    }
+    if (!ctx) return;
+
     let audioContext = null;
     let analyser = null;
     let microphone = null;
     let animationFrame = null;
     let isActive = false;
     let currentMode = 0; // 0: bars, 1: waveform, 2: circular, 3: ambient
-    let pendingMode = null; // Target mode while waiting for mic (keeps ambient running)
-    let isStartingVisualizer = false; // Guard to prevent concurrent startVisualizer calls
-    
+    let pendingMode = null;
+    let isStartingVisualizer = false;
+
     const modes = ['bars', 'waveform', 'circular', 'ambient'];
     let timeData = new Uint8Array(0);
     let freqData = new Float32Array(0);
@@ -1107,7 +686,7 @@ function initAudioVisualizer() {
     const exitToggle = document.getElementById('visualizer-exit');
 
     function isMusicTabActive() {
-        const musicSection = document.getElementById('music');
+        const musicSection = document.getElementById('panel-music');
         return !!musicSection && musicSection.classList.contains('active');
     }
 
@@ -1141,7 +720,6 @@ function initAudioVisualizer() {
         const nextMode = (currentMode + 1) % modes.length;
 
         if (nextMode === 3) {
-            // Going TO ambient mode - clean up mic resources if they exist
             pendingMode = null;
             currentMode = 3;
             applyModeLabel();
@@ -1165,12 +743,8 @@ function initAudioVisualizer() {
         }
 
         if (!analyser) {
-            // Going FROM ambient TO mic-based mode
-            // DON'T change currentMode yet - keep ambient running while we wait for mic
-            // Store the target mode and apply it after mic is acquired
-            if (isStartingVisualizer) return; // Prevent concurrent calls
+            if (isStartingVisualizer) return;
             pendingMode = nextMode;
-            // Update label to show what we're switching to
             const textSpan = toggle.querySelector('.visualizer-toggle-text');
             if (textSpan) {
                 textSpan.textContent = modes[nextMode].toUpperCase();
@@ -1179,7 +753,6 @@ function initAudioVisualizer() {
             return;
         }
 
-        // Switching between mic-based modes (analyser already exists)
         pendingMode = null;
         currentMode = nextMode;
         applyModeLabel();
@@ -1189,39 +762,36 @@ function initAudioVisualizer() {
         }
         drawVisualizer();
     }
-    
+
     // Get theme colors (adapts to secret mode)
     function getThemeColors() {
         const isSecretMode = document.body.classList.contains('secret-mode');
         if (isSecretMode) {
             return {
-                primary: '#ff00ff',
-                secondary: '#ffff00',
-                glow: '#ff00ff',
-                shadow: 'rgba(255, 0, 255, 0.8)'
+                primary: '#ff4488',
+                secondary: '#ff6644',
+                glow: '#ff4488',
+                shadow: 'rgba(255, 68, 136, 0.8)'
             };
         }
         return {
-            primary: '#00ff88',
-            secondary: '#00ffb4',
-            glow: '#00ff88',
-            shadow: 'rgba(0, 255, 136, 0.8)'
+            primary: '#4488ff',
+            secondary: '#6644ff',
+            glow: '#4488ff',
+            shadow: 'rgba(68, 136, 255, 0.8)'
         };
     }
-    
+
     // Set canvas size
     function resizeCanvas() {
-        // Ensure minimum dimensions to prevent 0-size canvas errors
         const width = Math.max(window.innerWidth || 1, 1);
         const height = Math.max(window.innerHeight || 1, 1);
         canvas.width = width;
         canvas.height = height;
     }
-    
-    // Initialize canvas dimensions - use requestAnimationFrame to ensure DOM is ready
+
     requestAnimationFrame(() => {
         resizeCanvas();
-        // Verify dimensions were set correctly
         if (canvas.width === 0 || canvas.height === 0) {
             setTimeout(() => resizeCanvas(), 100);
         }
@@ -1230,81 +800,67 @@ function initAudioVisualizer() {
 
     // Request microphone access and initialize audio
     async function startVisualizer() {
-        // Prevent concurrent calls
         if (isStartingVisualizer) return;
         isStartingVisualizer = true;
-        
+
         try {
-            // Request microphone permission
-            const stream = await navigator.mediaDevices.getUserMedia({ 
+            const stream = await navigator.mediaDevices.getUserMedia({
                 audio: {
                     echoCancellation: false,
                     noiseSuppression: false,
                     autoGainControl: false
-                } 
+                }
             });
-            
-            // Cancel any lingering animation frame (e.g., ambient still running)
+
             if (animationFrame) {
                 cancelAnimationFrame(animationFrame);
                 animationFrame = null;
             }
-            
-            // Apply pending mode now that mic is ready
+
             if (pendingMode !== null) {
                 currentMode = pendingMode;
                 pendingMode = null;
             }
-            
-            // Create audio context
+
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
             analyser = audioContext.createAnalyser();
             analyser.fftSize = 256;
             analyser.smoothingTimeConstant = 0.5;
-            // Increase sensitivity to pick up quieter sounds
             analyser.minDecibels = -90;
             analyser.maxDecibels = -10;
-            
+
             microphone = audioContext.createMediaStreamSource(stream);
             microphone.connect(analyser);
 
-            // Create analysis buffers aligned to analyser settings
             timeData = new Uint8Array(analyser.fftSize);
             freqData = new Float32Array(analyser.frequencyBinCount);
-            
+
             isActive = true;
             canvas.classList.add('active');
             toggle.classList.add('active');
-            
-            // Show current mode on button
+
             applyModeLabel();
             updateVisualizerUI();
-            
-            resizeCanvas(); // Ensure canvas is sized before drawing
-            // Double-check dimensions after resize
+
+            resizeCanvas();
             if (canvas.width === 0 || canvas.height === 0) {
                 isStartingVisualizer = false;
                 return;
             }
-            
+
             drawVisualizer();
         } catch (error) {
             console.error('Error accessing microphone:', error);
-            // Mic failed - clear pending mode and stay in/return to ambient
             pendingMode = null;
-            // Don't cancel animation frame - ambient might still be running and that's fine
-            // Just make sure we're in ambient mode
             currentMode = 3;
             isActive = true;
             canvas.classList.add('active');
             toggle.classList.add('active');
-            
-            // Show mode on button
+
             applyModeLabel();
             updateVisualizerUI();
-            
-            resizeCanvas(); // Ensure canvas is sized before drawing
-            // Only restart ambient if it's not already running
+
+            resizeCanvas();
             if (!animationFrame) {
                 drawAmbientVisualizer();
             }
@@ -1312,97 +868,86 @@ function initAudioVisualizer() {
             isStartingVisualizer = false;
         }
     }
-    
+
     // Stop visualizer and clean up
     function stopVisualizer() {
         isActive = false;
         canvas.classList.remove('active');
         toggle.classList.remove('active');
-        
-        // Reset button text
+
         const textSpan = toggle.querySelector('.visualizer-toggle-text');
         if (textSpan) {
             textSpan.textContent = 'AUDIO VISUALIZER (EXPERIMENTAL)';
         }
-        
+
         if (animationFrame) {
             cancelAnimationFrame(animationFrame);
             animationFrame = null;
         }
-        
+
         if (microphone) {
             microphone.disconnect();
             microphone = null;
         }
-        
+
         if (audioContext) {
             audioContext.close();
             audioContext = null;
         }
-        
+
         analyser = null;
-        
-        // Clear canvas
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         updateVisualizerUI();
     }
-    
-    // Draw frequency bars - FULL WIDTH SPECTRUM ANALYZER (ENGINEERED)
+
+    // Draw frequency bars - FULL WIDTH SPECTRUM ANALYZER
     function drawBars() {
         if (canvas.width === 0 || canvas.height === 0) {
             resizeCanvas();
-            if (canvas.width === 0 || canvas.height === 0) {
-                return;
-            }
+            if (canvas.width === 0 || canvas.height === 0) return;
         }
         analyser.getFloatFrequencyData(freqData);
         const colors = getThemeColors();
         const primaryRgb = hexToRgb(colors.primary);
         const minDb = analyser.minDecibels;
         const maxDb = analyser.maxDecibels;
-        
-        // Clear with fade for trail effect
+
         ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        const barCount = 96; // Full width bars
+
+        const barCount = 96;
         const barWidth = canvas.width / barCount;
         const barSpacing = 1;
         const freqBins = freqData.length;
-        if (freqBins === 0) {
-            return;
-        }
-        
-        // Process frequency data with logarithmic scaling across FULL width
+        if (freqBins === 0) return;
+
         const processedData = [];
         let energySum = 0;
-        
+
         for (let i = 0; i < barCount; i++) {
             const normalizedPos = i / (barCount - 1);
             const logIndex = Math.pow(normalizedPos, 2.2) * (freqBins - 1);
             const dataIndex = Math.floor(logIndex);
             const nextIndex = Math.min(dataIndex + 1, freqBins - 1);
             const fraction = logIndex - dataIndex;
-            
+
             const dbValue = freqData[dataIndex] * (1 - fraction) + freqData[nextIndex] * fraction;
             let norm = (dbValue - minDb) / (maxDb - minDb);
             norm = Math.max(0, Math.min(1, norm));
-            
-            // Gentle compression and frequency tilt to lift highs
+
             norm = Math.pow(norm, 0.7);
-            if (norm < 0.03) norm = 0; // Noise gate
+            if (norm < 0.03) norm = 0;
             const tilt = 0.8 + Math.pow(normalizedPos, 0.5) * 2.0;
             const value = Math.min(1, norm * tilt);
-            
+
             processedData.push(value);
             energySum += value;
         }
-        
-        // Normalize overall energy to reduce "left-heavy" bias
+
         const avgEnergy = energySum / barCount;
         const gain = avgEnergy > 0 ? Math.min(2.5, 0.6 / avgEnergy) : 1;
-        
-        // Smooth the data (moving average) for cleaner visualization
+
         const smoothedData = [];
         const smoothWindow = 2;
         for (let i = 0; i < barCount; i++) {
@@ -1417,31 +962,26 @@ function initAudioVisualizer() {
             }
             smoothedData.push(Math.min(1, sum / count));
         }
-        
-        // Calculate average for reactive effects
+
         const avgValue = smoothedData.reduce((a, b) => a + b, 0) / barCount;
-        
-        // Draw bars across full width
+
         for (let i = 0; i < barCount; i++) {
             const intensity = smoothedData[i];
             const normalizedPos = i / (barCount - 1);
-            
-            // Dynamic minimum height based on position (taller in center)
+
             const centerDistance = Math.abs(normalizedPos - 0.5) * 2;
             const minHeight = 4 + (1 - centerDistance) * 12;
-        const maxHeight = canvas.height - 4;
-        const barHeight = Math.min(maxHeight, minHeight + intensity * (canvas.height * 0.8));
-            
-            // Color gradient across spectrum: green -> cyan -> blue
+            const maxHeight = canvas.height - 4;
+            const barHeight = Math.min(maxHeight, minHeight + intensity * (canvas.height * 0.8));
+
             const hueProgress = normalizedPos;
             const r = Math.floor(primaryRgb.r * (1 - hueProgress * 0.3));
             const g = primaryRgb.g;
             const b = Math.floor(primaryRgb.b + hueProgress * 80);
-            
+
             const x = i * barWidth;
             const y = Math.max(0, canvas.height - barHeight);
-            
-            // Create vertical gradient for each bar
+
             let gradient;
             try {
                 gradient = ctx.createLinearGradient(0, canvas.height, 0, y);
@@ -1451,21 +991,19 @@ function initAudioVisualizer() {
             } catch (e) {
                 continue;
             }
-            
+
             ctx.fillStyle = gradient;
-            
-            // Glow only on high-intensity bars (performance optimization)
+
             if (intensity > 0.5) {
                 ctx.shadowBlur = 8 + intensity * 12;
                 ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${intensity * 0.7})`;
             } else {
                 ctx.shadowBlur = 0;
             }
-            
+
             ctx.fillRect(x + barSpacing, y, barWidth - barSpacing * 2, barHeight);
         }
-        
-        // Draw subtle reflection
+
         ctx.shadowBlur = 0;
         const reflectionGradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 50);
         reflectionGradient.addColorStop(0, `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${0.05 + avgValue * 0.12})`);
@@ -1473,7 +1011,7 @@ function initAudioVisualizer() {
         ctx.fillStyle = reflectionGradient;
         ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
     }
-    
+
     // Helper function to convert hex to RGB
     function hexToRgb(hex) {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -1481,71 +1019,66 @@ function initAudioVisualizer() {
             r: parseInt(result[1], 16),
             g: parseInt(result[2], 16),
             b: parseInt(result[3], 16)
-        } : { r: 0, g: 255, b: 136 };
+        } : { r: 68, g: 136, b: 255 };
     }
-    
-    // Draw waveform - OPTIMIZED MULTI-LAYERED VERSION
+
+    // Draw waveform - MULTI-LAYERED VERSION
     function drawWaveform() {
         if (canvas.width === 0 || canvas.height === 0) {
             resizeCanvas();
-            if (canvas.width === 0 || canvas.height === 0) {
-                return;
-            }
+            if (canvas.width === 0 || canvas.height === 0) return;
         }
         analyser.getByteTimeDomainData(timeData);
         const colors = getThemeColors();
         const primaryRgb = hexToRgb(colors.primary);
-        
+
         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
+
         const centerY = canvas.height / 2;
-        
-        // Calculate average amplitude for reactive effects
+
         let totalAmplitude = 0;
         for (let i = 0; i < timeData.length; i++) {
             totalAmplitude += Math.abs(timeData[i] - 128);
         }
         const avgAmplitude = totalAmplitude / timeData.length;
         const amplitudeNormalized = avgAmplitude / 128;
-        
-        // Draw main waveform (only 2 layers for performance)
+
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
         const layers = [
             { offset: 0, alpha: 1, width: 3, scale: 1 },
             { offset: 0.2, alpha: 0.4, width: 2, scale: 0.6 }
         ];
-        
+
         layers.forEach((layer, layerIndex) => {
             ctx.beginPath();
             ctx.lineWidth = layer.width + amplitudeNormalized * 2;
-            
+
             const hueShift = layerIndex * 30;
             ctx.strokeStyle = `rgba(${Math.min(255, primaryRgb.r + hueShift)}, ${primaryRgb.g}, ${Math.min(255, primaryRgb.b + hueShift)}, ${layer.alpha})`;
-            
-            // Only use shadow on main layer when there's significant audio
+
             if (layerIndex === 0 && amplitudeNormalized > 0.3) {
                 ctx.shadowBlur = 15;
                 ctx.shadowColor = colors.glow;
             } else {
                 ctx.shadowBlur = 0;
             }
-            
+
             const sliceWidth = canvas.width / Math.max(timeData.length - 1, 1);
             let x = 0;
             let prevX = 0;
             let prevY = centerY;
-            
+
             for (let i = 0; i < timeData.length; i++) {
                 const left = timeData[i - 1] ?? timeData[i];
                 const right = timeData[i + 1] ?? timeData[i];
                 const smoothed = (left + timeData[i] + right) / 3;
-                
+
                 const v = (smoothed - 128) / 128.0;
                 const heightScale = canvas.height * 0.4 * layer.scale;
                 const y = centerY + v * heightScale;
-                
+
                 if (i === 0) {
                     ctx.moveTo(x, y);
                 } else {
@@ -1553,17 +1086,16 @@ function initAudioVisualizer() {
                     const midY = (prevY + y) / 2;
                     ctx.quadraticCurveTo(prevX, prevY, midX, midY);
                 }
-                
+
                 prevX = x;
                 prevY = y;
                 x += sliceWidth;
             }
-            
+
             ctx.lineTo(prevX, prevY);
             ctx.stroke();
         });
-        
-        // Draw subtle center line
+
         ctx.beginPath();
         ctx.strokeStyle = `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.2)`;
         ctx.lineWidth = 1;
@@ -1572,36 +1104,32 @@ function initAudioVisualizer() {
         ctx.lineTo(canvas.width, centerY);
         ctx.stroke();
     }
-    
-    // Draw circular visualization - OPTIMIZED SYMMETRIC VERSION
+
+    // Draw circular visualization - SYMMETRIC VERSION
     let circularRotation = 0;
     function drawCircular() {
         if (canvas.width === 0 || canvas.height === 0) {
             resizeCanvas();
-            if (canvas.width === 0 || canvas.height === 0) {
-                return;
-            }
+            if (canvas.width === 0 || canvas.height === 0) return;
         }
         analyser.getFloatFrequencyData(freqData);
         const colors = getThemeColors();
         const primaryRgb = hexToRgb(colors.primary);
         const minDb = analyser.minDecibels;
         const maxDb = analyser.maxDecibels;
-        
+
         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
+
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         const baseRadius = Math.min(canvas.width, canvas.height) * 0.1;
         const maxRadius = Math.min(canvas.width, canvas.height) * 0.42;
-        
-        // Process frequency data with logarithmic scaling
-        const numBars = 48; // Reduced for performance
+
+        const numBars = 48;
         const freqBins = freqData.length;
-        if (freqBins === 0) {
-            return;
-        }
+        if (freqBins === 0) return;
+
         const processedData = [];
         for (let i = 0; i < numBars; i++) {
             const normalizedPos = i / (numBars - 1);
@@ -1609,71 +1137,60 @@ function initAudioVisualizer() {
             const dataIndex = Math.floor(logIndex);
             const nextIndex = Math.min(dataIndex + 1, freqBins - 1);
             const fraction = logIndex - dataIndex;
-            
+
             const dbValue = freqData[dataIndex] * (1 - fraction) + freqData[nextIndex] * fraction;
             let norm = (dbValue - minDb) / (maxDb - minDb);
             norm = Math.max(0, Math.min(1, norm));
-            
-            // Compression and tilt for higher frequencies
+
             norm = Math.pow(norm, 0.7);
             if (norm < 0.04) norm = 0;
             const tilt = 0.9 + Math.pow(normalizedPos, 0.6) * 1.8;
             processedData.push(Math.min(1, norm * tilt));
         }
-        
-        // Calculate average for effects
+
         const avgValue = processedData.reduce((a, b) => a + b, 0) / processedData.length;
         const avgNormalized = avgValue;
         const isQuiet = avgNormalized < 0.05;
         const pulseScale = 0.85 + avgNormalized * 0.3;
-        
+
         circularRotation += 0.008 + avgNormalized * 0.012;
-        
-        // Draw center glow (no shadowBlur - use gradient instead)
+
         const centerGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, baseRadius * pulseScale * 1.5);
         centerGradient.addColorStop(0, `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${0.2 + avgNormalized * 0.2})`);
         centerGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.fillStyle = centerGradient;
         ctx.fillRect(centerX - baseRadius * 2, centerY - baseRadius * 2, baseRadius * 4, baseRadius * 4);
-        
-        // Batch draw all bars (single path per color group for performance)
+
         const innerRadius = baseRadius * pulseScale;
-        
-        // Draw mirrored bars
+
         for (let i = 0; i < numBars; i++) {
             const value = processedData[i];
             const intensity = value;
-            
-            // Map to half circle, then mirror
+
             const halfAngle = (i / numBars) * Math.PI;
             const angle1 = halfAngle + circularRotation;
             const angle2 = -halfAngle + circularRotation + Math.PI;
-            
-            if (isQuiet && intensity === 0) {
-                continue;
-            }
+
+            if (isQuiet && intensity === 0) continue;
             const minLength = isQuiet ? 0 : 2 + avgNormalized * 8;
             const energyScale = 0.25 + avgNormalized * 0.75;
             const barLength = minLength + intensity * (maxRadius - baseRadius) * energyScale;
-            
-            // Color varies with frequency
+
             const hueShift = (i / numBars) * 50;
             const r = Math.min(255, primaryRgb.r + hueShift);
             const g = primaryRgb.g;
             const b = Math.min(255, primaryRgb.b - hueShift * 0.4);
-            
+
             ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.5 + intensity * 0.5})`;
             ctx.lineWidth = 2 + intensity * 2;
-            
-            // Only apply shadow to high-intensity bars
+
             if (intensity > 0.6) {
                 ctx.shadowBlur = 10;
                 ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
             } else {
                 ctx.shadowBlur = 0;
             }
-            
-            // Draw both mirrored bars
+
             ctx.beginPath();
             ctx.moveTo(centerX + Math.cos(angle1) * innerRadius, centerY + Math.sin(angle1) * innerRadius);
             ctx.lineTo(centerX + Math.cos(angle1) * (innerRadius + barLength), centerY + Math.sin(angle1) * (innerRadius + barLength));
@@ -1681,8 +1198,7 @@ function initAudioVisualizer() {
             ctx.lineTo(centerX + Math.cos(angle2) * (innerRadius + barLength), centerY + Math.sin(angle2) * (innerRadius + barLength));
             ctx.stroke();
         }
-        
-        // Draw outer ring
+
         ctx.beginPath();
         ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2);
         ctx.strokeStyle = `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.3)`;
@@ -1690,153 +1206,131 @@ function initAudioVisualizer() {
         ctx.shadowBlur = 0;
         ctx.stroke();
     }
-    
-    // Draw ambient animation (no audio input) - OPTIMIZED VERSION
+
+    // Draw ambient animation (no audio input)
     let ambientTime = 0;
     function drawAmbientVisualizer() {
         if (canvas.width === 0 || canvas.height === 0) {
             resizeCanvas();
-            if (canvas.width === 0 || canvas.height === 0) {
-                return;
-            }
+            if (canvas.width === 0 || canvas.height === 0) return;
         }
         ambientTime += 0.02;
         const colors = getThemeColors();
         const primaryRgb = hexToRgb(colors.primary);
-        
-        // Faster fade for performance
+
         ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
+
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         const maxRadius = Math.min(canvas.width, canvas.height) * 0.38;
-        
-        // Simplified: 2 rings only, fewer bars, NO shadowBlur (major performance gain)
+
         const rings = [
             { radius: 0.4, bars: 40, speed: 0.8, direction: 1 },
             { radius: 0.85, bars: 56, speed: 0.4, direction: -1 }
         ];
-        
-        // Pre-calculate common values
+
         const time2 = ambientTime * 2;
         const time1_5 = ambientTime * 1.5;
-        
+
         rings.forEach((ring, ringIndex) => {
             const baseRadius = maxRadius * ring.radius;
             const barCount = ring.bars;
             const rotationOffset = ambientTime * ring.speed * ring.direction;
-            
-            // Batch drawing with single style per ring for performance
+
             const hueShift = ringIndex * 20;
             const r = Math.min(255, primaryRgb.r + hueShift);
             const g = primaryRgb.g;
             const b = Math.min(255, primaryRgb.b - hueShift * 0.3);
-            
+
             ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.7)`;
             ctx.lineWidth = 3;
-            
+
             ctx.beginPath();
-            
+
             for (let i = 0; i < barCount; i++) {
                 const angle = (i / barCount) * Math.PI * 2 + rotationOffset;
-                
-                // Simplified wave calculation
-                const wave = Math.sin(time2 + i * 0.25) * 0.5 + 
+
+                const wave = Math.sin(time2 + i * 0.25) * 0.5 +
                             Math.sin(time1_5 + i * 0.15 + ringIndex * 2) * 0.5;
                 const pulse = (wave + 1) / 2;
-                
+
                 const minLength = 15 + ringIndex * 10;
                 const barLength = minLength + pulse * (30 + ringIndex * 25);
-                
+
                 const x1 = centerX + Math.cos(angle) * baseRadius;
                 const y1 = centerY + Math.sin(angle) * baseRadius;
                 const x2 = centerX + Math.cos(angle) * (baseRadius + barLength);
                 const y2 = centerY + Math.sin(angle) * (baseRadius + barLength);
-                
+
                 ctx.moveTo(x1, y1);
                 ctx.lineTo(x2, y2);
             }
-            
+
             ctx.stroke();
         });
-        
-        // Simple center glow (no shadowBlur)
+
         const centerPulse = (Math.sin(ambientTime * 2) + 1) / 2;
         const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 50 + centerPulse * 20);
         gradient.addColorStop(0, `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${0.2 + centerPulse * 0.15})`);
         gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        
+
         ctx.fillStyle = gradient;
         ctx.fillRect(centerX - 80, centerY - 80, 160, 160);
-        
+
         if (isActive && currentMode === 3) {
             animationFrame = requestAnimationFrame(drawAmbientVisualizer);
         }
     }
-    
+
     // Main draw loop
     function drawVisualizer() {
         if (!isActive) return;
-        
-        // Guard: ensure canvas has valid dimensions before drawing
+
         if (canvas.width === 0 || canvas.height === 0) {
             resizeCanvas();
-            if (canvas.width === 0 || canvas.height === 0) {
-                return;
-            }
+            if (canvas.width === 0 || canvas.height === 0) return;
         }
-        
+
         if (analyser && currentMode !== 3) {
             switch (currentMode) {
-                case 0:
-                    drawBars();
-                    break;
-                case 1:
-                    drawWaveform();
-                    break;
-                case 2:
-                    drawCircular();
-                    break;
+                case 0: drawBars(); break;
+                case 1: drawWaveform(); break;
+                case 2: drawCircular(); break;
             }
         } else if (currentMode === 3) {
             drawAmbientVisualizer();
-            return; // drawAmbientVisualizer handles its own animation frame
+            return;
         }
-        
+
         animationFrame = requestAnimationFrame(drawVisualizer);
     }
-    
+
     // Click handling with delay to detect double-click
     let clickTimeout = null;
     let clickCount = 0;
-    
+
     toggle.addEventListener('click', (e) => {
-        // Prevent clicks while initializing
         if (isStartingVisualizer) return;
-        
+
         clickCount++;
-        
+
         if (clickCount === 1) {
-            // Wait to see if it's a double-click
             clickTimeout = setTimeout(() => {
-                // Single click - toggle on/off
                 if (!isActive) {
                     startVisualizer();
                 } else {
                     stopVisualizer();
                 }
                 clickCount = 0;
-            }, 250); // 250ms to detect double-click
+            }, 250);
         } else if (clickCount === 2) {
-            // Double-click - cycle modes
             clearTimeout(clickTimeout);
             clickCount = 0;
-            
+
             if (isActive) {
                 cycleMode();
             } else {
-                // If not active, start in next mode
                 cycleMode();
             }
         }
@@ -1844,7 +1338,7 @@ function initAudioVisualizer() {
 
     if (modeToggle) {
         modeToggle.addEventListener('click', () => {
-            if (isStartingVisualizer) return; // Prevent clicks while initializing
+            if (isStartingVisualizer) return;
             if (!isActive) {
                 startVisualizer();
                 return;
@@ -1868,13 +1362,1112 @@ function initAudioVisualizer() {
         updateVisualizerUI();
     });
 
-    // Initialize visibility on load
     updateVisualizerUI();
 }
 
-// Initialize easter eggs when DOM is loaded
+// ===== 12b. SOUNDCLOUD CUSTOM CARDS (oEmbed + Widget API) =====
+function escapeHtml(text) {
+    if (text == null) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+}
+
+function formatScTime(ms) {
+    if (ms == null || !isFinite(ms) || ms < 0) return '0:00';
+    const s = Math.floor(ms / 1000);
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return m + ':' + (r < 10 ? '0' : '') + r;
+}
+
+/** Duration in ms for scrub preview (widget metadata or parsed total label) */
+function getScTrackDurationMs(card) {
+    var d = parseInt(card.dataset.scDuration, 10);
+    if (d > 0) return d;
+    var totalEl = card.querySelector('.sc-track-card__total');
+    if (!totalEl) return 0;
+    var parts = String(totalEl.textContent || '')
+        .trim()
+        .split(':')
+        .map(function (x) {
+            return parseInt(x, 10) || 0;
+        });
+    if (parts.length === 2) return (parts[0] * 60 + parts[1]) * 1000;
+    if (parts.length === 3) return (parts[0] * 3600 + parts[1] * 60 + parts[2]) * 1000;
+    return 0;
+}
+
+function buildScTrackCardMarkup(card, { title, artist, thumb, openUrl, trackNum }) {
+    const art = thumb
+        ? `<img class="sc-track-card__img" src="${escapeHtml(thumb)}" alt="" width="96" height="96" loading="lazy" decoding="async">`
+        : '<div class="sc-track-card__art-fallback" aria-hidden="true"></div>';
+    const open = openUrl
+        ? `<a class="sc-track-card__open" href="${escapeHtml(openUrl)}" target="_blank" rel="noopener noreferrer">Open in SoundCloud <i class="fas fa-external-link-alt" aria-hidden="true"></i></a>`
+        : '';
+    const num = trackNum != null ? String(trackNum).padStart(2, '0') : '01';
+    card.innerHTML =
+        '<div class="sc-track-card__num">' +
+        '<span class="sc-track-card__num-text">' + num + '</span>' +
+        '<div class="sc-track-card__eq" aria-hidden="true">' +
+        '<div class="sc-track-card__eq-bar"></div><div class="sc-track-card__eq-bar"></div>' +
+        '<div class="sc-track-card__eq-bar"></div><div class="sc-track-card__eq-bar"></div></div></div>' +
+        '<div class="sc-track-card__art">' + art + '</div>' +
+        '<div class="sc-track-card__body">' +
+        '<h3 class="sc-track-card__title">' + escapeHtml(title) + '</h3>' +
+        '<p class="sc-track-card__artist">' + escapeHtml(artist) + '</p>' +
+        '<div class="sc-track-card__progress-wrap" role="slider" tabindex="0" ' +
+        'aria-label="Seek in track" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0:00">' +
+        '<div class="sc-track-card__progress-scrub">' +
+        '<span class="sc-track-card__scrub-hint" aria-hidden="true"></span>' +
+        '<div class="sc-track-card__progress-track"><div class="sc-track-card__progress-fill"></div></div></div>' +
+        '<div class="sc-track-card__times">' +
+        '<span class="sc-track-card__elapsed">0:00</span>' +
+        '<span class="sc-track-card__total">0:00</span></div></div>' +
+        (open ? '<div class="sc-track-card__meta">' + open + '</div>' : '<div class="sc-track-card__meta sc-track-card__meta--dynamic"></div>') +
+        '</div>' +
+        '<button type="button" class="sc-track-card__play" aria-label="Play track"><i class="fas fa-play" aria-hidden="true"></i></button>';
+}
+
+/** True if widget sound object belongs to this card's track URL (avoids stale metadata after track switch). */
+function scSoundMatchesCard(sound, trackUrl) {
+    if (!sound || !trackUrl) return false;
+    var idM = trackUrl.match(/tracks\/(\d+)/i);
+    if (idM && sound.id != null && String(sound.id) === idM[1]) return true;
+    var perm = (sound.permalink_url || '').toLowerCase().replace(/\/$/, '').split('?')[0];
+    var cardU = trackUrl.toLowerCase().replace(/\/$/, '').split('?')[0];
+    if (cardU.indexOf('api.soundcloud') !== -1) return !!idM && sound.id != null && String(sound.id) === idM[1];
+    if (!perm || cardU.indexOf('soundcloud.com') === -1) return false;
+    var pathSound = perm.split('soundcloud.com')[1] || '';
+    var pathCard = cardU.split('soundcloud.com')[1] || '';
+    pathSound = pathSound.replace(/^\//, '');
+    pathCard = pathCard.replace(/^\//, '');
+    return pathSound.length > 0 && pathCard.length > 0 && pathSound === pathCard;
+}
+
+function applySoundMetadata(card, sound) {
+    if (!sound) return;
+    const titleEl = card.querySelector('.sc-track-card__title');
+    const artistEl = card.querySelector('.sc-track-card__artist');
+    const artWrap = card.querySelector('.sc-track-card__art');
+    if (titleEl && sound.title) titleEl.textContent = sound.title;
+    if (artistEl && sound.user && sound.user.username) artistEl.textContent = sound.user.username;
+    if (artWrap && sound.artwork_url && !artWrap.querySelector('.sc-track-card__img')) {
+        const u = sound.artwork_url.replace('-large', '-t300x300');
+        artWrap.innerHTML = '<img class="sc-track-card__img" src="' + escapeHtml(u) + '" alt="" width="96" height="96" loading="lazy" decoding="async">';
+    }
+    if (sound.duration) card.dataset.scDuration = String(sound.duration);
+    if (sound.permalink_url && !card.dataset.scOpen) {
+        const meta = card.querySelector('.sc-track-card__meta--dynamic');
+        if (meta) {
+            meta.classList.remove('sc-track-card__meta--dynamic');
+            meta.innerHTML =
+                '<a class="sc-track-card__open" href="' + escapeHtml(sound.permalink_url) +
+                '" target="_blank" rel="noopener noreferrer">Open in SoundCloud <i class="fas fa-external-link-alt" aria-hidden="true"></i></a>';
+        }
+    }
+}
+
+let scInitialized = false;
+function initSoundCloudCardsOnFirstVisit() {
+    // Init immediately if music tab is active from URL hash
+    if (window.location.hash === '#music') {
+        scInitialized = true;
+        initSoundCloudCards();
+    }
+}
+
+function initSoundCloudCards() {
+    const iframe = document.getElementById('sc-widget-iframe');
+    const cards = Array.prototype.slice.call(document.querySelectorAll('.sc-track-card'));
+    if (!iframe || !cards.length) return;
+
+    if (typeof SC === 'undefined' || !SC.Widget) {
+        cards.forEach(function (c) {
+            c.classList.remove('sc-track-card--loading');
+            c.innerHTML = '<p class="sc-track-card__error">SoundCloud player could not load. <a href="' +
+                escapeHtml(c.dataset.scUrl) + '" target="_blank" rel="noopener">Open track</a></p>';
+        });
+        return;
+    }
+
+    const widgetParams =
+        'color=4488ff&auto_play=false&hide_related=true&show_comments=false&sharing=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&buying=false&download=false';
+    const firstUrl = cards[0].dataset.scUrl;
+    iframe.src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(firstUrl) + '&' + widgetParams;
+
+    const widget = SC.Widget(iframe);
+    let playingCard = null;
+    /** URL currently buffered in the widget (initial iframe + prefetch + last load) */
+    let lastLoadedUrl = firstUrl;
+    let readyNonce = 0;
+    let prefetchGen = 0;
+    let metadataSyncId = 0;
+    const prefetchEnabled =
+        typeof navigator === 'undefined' ||
+        !navigator.connection ||
+        !navigator.connection.saveData;
+    const allowPrefetch = function () {
+        return prefetchEnabled && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    };
+    /** After seek, widget can report old position briefly; hold UI at target until playback catches up */
+    let seekHoldMs = null;
+    let seekHoldStarted = 0;
+
+    function resetProgressUi(card) {
+        if (!card) return;
+        const fill = card.querySelector('.sc-track-card__progress-fill');
+        const elapsed = card.querySelector('.sc-track-card__elapsed');
+        const total = card.querySelector('.sc-track-card__total');
+        const wrap = card.querySelector('.sc-track-card__progress-wrap');
+        if (fill) fill.style.width = '0%';
+        if (elapsed) elapsed.textContent = '0:00';
+        if (total) total.textContent = formatScTime(parseInt(card.dataset.scDuration, 10) || 0);
+        if (wrap) {
+            wrap.setAttribute('aria-valuenow', '0');
+            wrap.setAttribute('aria-valuetext', '0:00');
+        }
+    }
+
+    function syncMetadataWhenReady(card, expectedUrl) {
+        var sid = ++metadataSyncId;
+        function tryApply() {
+            if (metadataSyncId !== sid || playingCard !== card) return;
+            widget.getCurrentSound(function (sound) {
+                if (metadataSyncId !== sid || playingCard !== card) return;
+                if (!scSoundMatchesCard(sound, expectedUrl)) return;
+                applySoundMetadata(card, sound);
+                var tEl = card.querySelector('.sc-track-card__total');
+                if (tEl && sound.duration) tEl.textContent = formatScTime(sound.duration);
+            });
+        }
+        [60, 200, 450, 800].forEach(function (ms) {
+            setTimeout(tryApply, ms);
+        });
+    }
+
+    function syncPlayIcons() {
+        document.querySelectorAll('.sc-track-card__play').forEach(function (btn) {
+            const icon = btn.querySelector('i');
+            if (icon) icon.className = 'fas fa-play';
+        });
+        widget.isPaused(function (paused) {
+            if (!paused && playingCard) {
+                const icon = playingCard.querySelector('.sc-track-card__play i');
+                if (icon) icon.className = 'fas fa-pause';
+                playingCard.classList.add('sc-track-card--playing');
+            } else {
+                document.querySelectorAll('.sc-track-card').forEach(function (c) {
+                    c.classList.remove('sc-track-card--playing');
+                });
+            }
+        });
+    }
+
+    function applyProgressUi(card, currentMs, durationMs) {
+        const d = durationMs || parseInt(card.dataset.scDuration, 10) || 0;
+        if (d <= 0) return;
+        const rel = Math.min(1, Math.max(0, currentMs / d));
+        const fill = card.querySelector('.sc-track-card__progress-fill');
+        const elapsed = card.querySelector('.sc-track-card__elapsed');
+        const total = card.querySelector('.sc-track-card__total');
+        const wrap = card.querySelector('.sc-track-card__progress-wrap');
+        if (fill) fill.style.width = rel * 100 + '%';
+        if (elapsed) elapsed.textContent = formatScTime(currentMs);
+        if (total) total.textContent = formatScTime(d);
+        if (wrap) {
+            wrap.setAttribute('aria-valuenow', String(Math.round(rel * 100)));
+            wrap.setAttribute('aria-valuetext', formatScTime(currentMs) + ' of ' + formatScTime(d));
+        }
+    }
+
+    widget.bind(SC.Widget.Events.PLAY_PROGRESS, function (e) {
+        if (!playingCard || !e) return;
+        var card = playingCard;
+        if (e.duration && e.duration > 0) {
+            card.dataset.scDuration = String(e.duration);
+        }
+        var d = e.duration || parseInt(card.dataset.scDuration, 10) || 0;
+        if (
+            d <= 0 &&
+            typeof e.relativePosition === 'number' &&
+            e.relativePosition >= 0.04 &&
+            e.currentPosition > 0
+        ) {
+            var est = Math.round(e.currentPosition / e.relativePosition);
+            if (est > 2000 && est < 7200000) {
+                d = est;
+                card.dataset.scDuration = String(d);
+            }
+        }
+
+        var fill = card.querySelector('.sc-track-card__progress-fill');
+        if (fill && typeof e.relativePosition === 'number') {
+            fill.style.width = Math.min(100, Math.max(0, e.relativePosition * 100)) + '%';
+        }
+
+        if (seekHoldMs != null && d > 0) {
+            var drift = Math.abs(e.currentPosition - seekHoldMs);
+            var timedOut = Date.now() - seekHoldStarted > 3500;
+            if (drift < 1200 || timedOut) {
+                seekHoldMs = null;
+            } else {
+                applyProgressUi(card, seekHoldMs, d);
+                return;
+            }
+        }
+        if (typeof e.relativePosition === 'number' && d > 0) {
+            applyProgressUi(card, e.currentPosition, d);
+        } else if (d <= 0 && typeof e.currentPosition === 'number' && e.currentPosition >= 0) {
+            var elapsed = card.querySelector('.sc-track-card__elapsed');
+            if (elapsed) elapsed.textContent = formatScTime(e.currentPosition);
+        }
+    });
+
+    widget.bind(SC.Widget.Events.PAUSE, syncPlayIcons);
+    widget.bind(SC.Widget.Events.PLAY, function () {
+        syncPlayIcons();
+        var c = playingCard;
+        if (!c) return;
+        var u = c.dataset.scUrl;
+        widget.getCurrentSound(function (sound) {
+            if (playingCard !== c || !sound) return;
+            if (!scSoundMatchesCard(sound, u)) return;
+            if (sound.duration) {
+                c.dataset.scDuration = String(sound.duration);
+                var tEl = c.querySelector('.sc-track-card__total');
+                if (tEl) tEl.textContent = formatScTime(sound.duration);
+            }
+            widget.getPosition(function (pos) {
+                if (playingCard !== c) return;
+                var dur = sound.duration || parseInt(c.dataset.scDuration, 10) || 0;
+                if (dur > 0) applyProgressUi(c, pos, dur);
+            });
+        });
+    });
+    widget.bind(SC.Widget.Events.FINISH, function () {
+        seekHoldMs = null;
+        if (playingCard) {
+            playingCard.classList.remove('sc-track-card--playing');
+            resetProgressUi(playingCard);
+        }
+        playingCard = null;
+        syncPlayIcons();
+    });
+
+    function wireCard(card) {
+        const playBtn = card.querySelector('.sc-track-card__play');
+        const progressWrap = card.querySelector('.sc-track-card__progress-wrap');
+        const url = card.dataset.scUrl;
+        if (!playBtn || !url) return;
+
+        var loadOpts = {
+            hide_related: true,
+            show_comments: false,
+            sharing: false,
+            show_user: false,
+            show_reposts: false,
+            show_teaser: false,
+            visual: false,
+            buying: false,
+            download: false,
+            color: '4488ff'
+        };
+
+        playBtn.addEventListener('click', function () {
+            if (playingCard === card) {
+                widget.toggle();
+                return;
+            }
+            document.querySelectorAll('.sc-track-card').forEach(function (c) {
+                if (c !== card) resetProgressUi(c);
+            });
+            seekHoldMs = null;
+            playingCard = card;
+
+            /* Buffered: iframe initial URL or hover prefetch */
+            if (lastLoadedUrl === url) {
+                widget.getCurrentSound(function (sound) {
+                    var dur =
+                        sound && sound.duration
+                            ? sound.duration
+                            : parseInt(card.dataset.scDuration, 10) || 0;
+                    widget.getPosition(function (pos) {
+                        if (dur > 0 && pos >= dur - 1000) widget.seekTo(0);
+                        widget.play();
+                        syncPlayIcons();
+                        syncMetadataWhenReady(card, url);
+                    });
+                });
+                return;
+            }
+
+            const nonce = ++readyNonce;
+            const onReady = function () {
+                widget.unbind(SC.Widget.Events.READY, onReady);
+                if (nonce !== readyNonce || playingCard !== card) return;
+                lastLoadedUrl = url;
+                syncPlayIcons();
+                syncMetadataWhenReady(card, url);
+            };
+            widget.bind(SC.Widget.Events.READY, onReady);
+            widget.load(url, Object.assign({ auto_play: true }, loadOpts));
+            /* Same URL as initial iframe may not re-fire READY — force play + metadata */
+            setTimeout(function () {
+                if (nonce !== readyNonce || playingCard !== card) return;
+                widget.isPaused(function (paused) {
+                    if (!paused) return;
+                    widget.play();
+                    lastLoadedUrl = url;
+                    syncPlayIcons();
+                    syncMetadataWhenReady(card, url);
+                });
+            }, 700);
+        });
+
+        var prefetchTimer = null;
+        card.addEventListener('mouseenter', function () {
+            if (!allowPrefetch() || playingCard !== null) return;
+            var u = card.dataset.scUrl;
+            if (!u || u === lastLoadedUrl) return;
+            prefetchTimer = setTimeout(function () {
+                prefetchTimer = null;
+                if (playingCard !== null || u === lastLoadedUrl) return;
+                var gen = ++prefetchGen;
+                widget.load(u, Object.assign({ auto_play: false }, loadOpts));
+                var onPrefetchReady = function () {
+                    widget.unbind(SC.Widget.Events.READY, onPrefetchReady);
+                    if (gen === prefetchGen) lastLoadedUrl = u;
+                };
+                widget.bind(SC.Widget.Events.READY, onPrefetchReady);
+            }, 380);
+        });
+        card.addEventListener('mouseleave', function () {
+            if (prefetchTimer) {
+                clearTimeout(prefetchTimer);
+                prefetchTimer = null;
+            }
+        });
+
+        function seekFromClientX(clientX) {
+            if (playingCard !== card) return;
+            const track = card.querySelector('.sc-track-card__progress-track');
+            if (!track) return;
+            const rect = track.getBoundingClientRect();
+            const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+            const dur = parseInt(card.dataset.scDuration, 10);
+            if (dur <= 0) return;
+            var targetMs = pct * dur;
+            seekHoldMs = targetMs;
+            seekHoldStarted = Date.now();
+            applyProgressUi(card, targetMs, dur);
+            widget.seekTo(targetMs);
+        }
+
+        var scrubZone = card.querySelector('.sc-track-card__progress-scrub');
+        var scrubHint = card.querySelector('.sc-track-card__scrub-hint');
+        var progressTrack = card.querySelector('.sc-track-card__progress-track');
+        if (scrubZone && scrubHint && progressTrack) {
+            scrubZone.addEventListener('mousemove', function (ev) {
+                var dur = getScTrackDurationMs(card);
+                if (dur <= 0) return;
+                var tr = progressTrack.getBoundingClientRect();
+                var pct = Math.max(0, Math.min(1, (ev.clientX - tr.left) / tr.width));
+                scrubHint.textContent = formatScTime(pct * dur);
+                scrubHint.style.left = Math.max(6, Math.min(94, pct * 100)) + '%';
+                scrubHint.classList.add('is-visible');
+            });
+            scrubZone.addEventListener('mouseleave', function () {
+                scrubHint.classList.remove('is-visible');
+            });
+        }
+
+        if (progressWrap) {
+            progressWrap.addEventListener('click', function (ev) {
+                seekFromClientX(ev.clientX);
+            });
+            progressWrap.addEventListener('keydown', function (ev) {
+                if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
+                ev.preventDefault();
+                const dur = parseInt(card.dataset.scDuration, 10);
+                if (dur <= 0 || playingCard !== card) return;
+                widget.getPosition(function (pos) {
+                    const delta = ev.key === 'ArrowRight' ? 5000 : -5000;
+                    var targetMs = Math.max(0, Math.min(dur, pos + delta));
+                    seekHoldMs = targetMs;
+                    seekHoldStarted = Date.now();
+                    applyProgressUi(card, targetMs, dur);
+                    widget.seekTo(targetMs);
+                });
+            });
+        }
+    }
+
+    cards.forEach(function (card, idx) {
+        const trackUrl = card.dataset.scUrl;
+        const openUrl = card.dataset.scOpen || '';
+        const trackNum = idx + 1;
+        fetch('https://soundcloud.com/oembed?format=json&url=' + encodeURIComponent(trackUrl))
+            .then(function (r) {
+                return r.ok ? r.json() : null;
+            })
+            .then(function (data) {
+                var title = 'Track';
+                var artist = 'SoundCloud';
+                var thumb = '';
+                if (data && data.title) {
+                    var by = data.title.lastIndexOf(' by ');
+                    if (by > 0) {
+                        title = data.title.slice(0, by);
+                        artist = data.title.slice(by + 4);
+                    } else {
+                        title = data.title;
+                    }
+                }
+                if (data && data.thumbnail_url) {
+                    thumb = data.thumbnail_url.replace('-large', '-t300x300');
+                }
+                buildScTrackCardMarkup(card, { title: title, artist: artist, thumb: thumb, openUrl: openUrl, trackNum: trackNum });
+                card.classList.remove('sc-track-card--loading');
+                wireCard(card);
+                // Staggered entrance with anime.js
+                anime({
+                    targets: card,
+                    opacity: [0, 1],
+                    translateY: [12, 0],
+                    duration: 450,
+                    delay: idx * 80,
+                    easing: 'easeOutCubic',
+                    complete: function() { card.classList.add('sc-track-card--entered'); }
+                });
+            })
+            .catch(function () {
+                buildScTrackCardMarkup(card, { title: 'Track', artist: 'SoundCloud', thumb: '', openUrl: openUrl, trackNum: trackNum });
+                card.classList.remove('sc-track-card--loading');
+                wireCard(card);
+                anime({
+                    targets: card,
+                    opacity: [0, 1],
+                    translateY: [12, 0],
+                    duration: 450,
+                    delay: idx * 80,
+                    easing: 'easeOutCubic',
+                    complete: function() { card.classList.add('sc-track-card--entered'); }
+                });
+            });
+    });
+}
+
+// ===== 13. HEADER AMBIENCE =====
+function initHeaderAmbience() {
+    const canvas = document.getElementById('header-ambience');
+    if (!canvas) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const ctx = canvas.getContext('2d');
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    // Accent color from CSS
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4488ff';
+
+    // Parse accent into r,g,b
+    function hexToRgb(hex) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return { r, g, b };
+    }
+    const col = hexToRgb(accent);
+
+    // Feature flags
+    const dragDropPhysics = true;
+
+    // Particle config
+    const PARTICLE_COUNT = 80;
+    const CONNECTION_DIST = 120;
+    const MOUSE_RADIUS = 180;
+    const BASE_SPEED = 0.18;
+
+    // Physics constants (drag-drop mode)
+    const SPRING_STIFFNESS = 0.003;
+    const SPRING_DAMPING = 0.92;
+    const ANCHOR_SIZE = 5;
+    const ANCHOR_GLOW = 18;
+    const GRAB_RADIUS = 24;
+    const MAX_SPRING_HOPS = 3;
+    const SPRING_FALLOFF = 0.35; // force multiplier per hop
+
+    let W, H;
+    let mouseX = -9999, mouseY = -9999;
+    let particles = [];
+    let animId;
+
+    // Drag state
+    let draggedParticle = null;
+    let isDragging = false;
+
+    function resize() {
+        W = window.innerWidth;
+        H = 260;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        canvas.style.width = W + 'px';
+        canvas.style.height = H + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    class Particle {
+        constructor() {
+            this.reset();
+        }
+        reset() {
+            this.x = Math.random() * W;
+            this.y = Math.random() * H;
+            this.vx = (Math.random() - 0.5) * BASE_SPEED * 2;
+            this.vy = (Math.random() - 0.5) * BASE_SPEED * 2;
+            this.size = Math.random() * 1.8 + 0.6;
+            this.baseAlpha = Math.random() * 0.4 + 0.15;
+            this.alpha = this.baseAlpha;
+            // Some particles are ASCII characters
+            this.isChar = Math.random() < 0.2;
+            this.char = ['0', '1', '/', '\\', '{', '}', '<', '>', '.', ':', ';', '~', '#'][Math.floor(Math.random() * 13)];
+            this.charSize = Math.random() * 5 + 8;
+            // Pulse phase for gentle breathing
+            this.pulsePhase = Math.random() * Math.PI * 2;
+            this.pulseSpeed = Math.random() * 0.008 + 0.004;
+            // Drag-drop state
+            this.pinned = false;
+            this.anchorX = this.x;
+            this.anchorY = this.y;
+        }
+        update() {
+            // If this particle is being dragged, snap to mouse
+            if (dragDropPhysics && this.pinned) {
+                this.x = mouseX;
+                this.y = mouseY;
+                this.vx = 0;
+                this.vy = 0;
+                this.anchorX = this.x;
+                this.anchorY = this.y;
+                return;
+            }
+
+            this.x += this.vx;
+            this.y += this.vy;
+
+            // Wrap around (skip if being pulled by spring — let it stretch)
+            if (!dragDropPhysics || !isDragging) {
+                if (this.x < -10) this.x = W + 10;
+                if (this.x > W + 10) this.x = -10;
+                if (this.y < -10) this.y = H + 10;
+                if (this.y > H + 10) this.y = -10;
+            } else {
+                // Soft clamp during drag so particles don't vanish
+                this.x = Math.max(-50, Math.min(W + 50, this.x));
+                this.y = Math.max(-50, Math.min(H + 50, this.y));
+            }
+
+            // Mouse proximity glow
+            const dx = this.x - mouseX;
+            const dy = this.y - mouseY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dragDropPhysics && isDragging) {
+                // In drag mode: no repulsion, just glow near mouse
+                if (dist < MOUSE_RADIUS) {
+                    const influence = 1 - dist / MOUSE_RADIUS;
+                    this.alpha = this.baseAlpha + influence * 0.4;
+                } else {
+                    this.alpha += (this.baseAlpha - this.alpha) * 0.05;
+                }
+            } else if (dist < MOUSE_RADIUS) {
+                const influence = 1 - dist / MOUSE_RADIUS;
+                this.alpha = this.baseAlpha + influence * 0.5;
+                // Gentle repulsion
+                const angle = Math.atan2(dy, dx);
+                this.vx += Math.cos(angle) * influence * 0.02;
+                this.vy += Math.sin(angle) * influence * 0.02;
+            } else {
+                this.alpha += (this.baseAlpha - this.alpha) * 0.05;
+            }
+
+            // Pulse breathing
+            this.pulsePhase += this.pulseSpeed;
+            const pulse = Math.sin(this.pulsePhase) * 0.12;
+            this.alpha = Math.max(0, this.alpha + pulse * 0.1);
+
+            // Dampen velocity — spring damping only for particles that have been disturbed
+            const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+            if (dragDropPhysics && isDragging && speed > BASE_SPEED * 2) {
+                this.vx *= SPRING_DAMPING;
+                this.vy *= SPRING_DAMPING;
+            } else {
+                this.vx *= 0.999;
+                this.vy *= 0.999;
+            }
+
+            // Keep minimum drift (only when not being dragged around)
+            if (!isDragging) {
+                const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                if (speed < BASE_SPEED * 0.3) {
+                    this.vx += (Math.random() - 0.5) * 0.05;
+                    this.vy += (Math.random() - 0.5) * 0.05;
+                }
+            }
+        }
+        draw() {
+            if (this.isChar) {
+                ctx.font = this.charSize + 'px monospace';
+                ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},${this.alpha * 0.6})`;
+                ctx.fillText(this.char, this.x, this.y);
+            } else {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},${this.alpha})`;
+                ctx.fill();
+            }
+
+            // Draw anchor highlight when draggable and hovered
+            if (dragDropPhysics && this === draggedParticle && isDragging) {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, ANCHOR_SIZE, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},0.9)`;
+                ctx.shadowColor = `rgba(${col.r},${col.g},${col.b},0.8)`;
+                ctx.shadowBlur = ANCHOR_GLOW;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+    }
+
+    function initParticles() {
+        particles = [];
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            particles.push(new Particle());
+        }
+    }
+
+    // Build adjacency list for connected particles
+    function getNeighborMap() {
+        const neighbors = new Map();
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < CONNECTION_DIST) {
+                    if (!neighbors.has(i)) neighbors.set(i, []);
+                    if (!neighbors.has(j)) neighbors.set(j, []);
+                    neighbors.get(i).push(j);
+                    neighbors.get(j).push(i);
+                }
+            }
+        }
+        return neighbors;
+    }
+
+    // BFS from dragged particle — returns Map<particleIndex, hopCount>
+    function getSpringCluster(neighborMap) {
+        if (!draggedParticle) return new Map();
+        const dragIdx = particles.indexOf(draggedParticle);
+        if (dragIdx === -1) return new Map();
+
+        const visited = new Map(); // index -> hop count
+        const queue = [[dragIdx, 0]];
+        visited.set(dragIdx, 0);
+
+        while (queue.length > 0) {
+            const [idx, hops] = queue.shift();
+            if (hops >= MAX_SPRING_HOPS) continue;
+            const nbrs = neighborMap.get(idx);
+            if (!nbrs) continue;
+            for (const n of nbrs) {
+                if (!visited.has(n)) {
+                    visited.set(n, hops + 1);
+                    queue.push([n, hops + 1]);
+                }
+            }
+        }
+        return visited;
+    }
+
+    function applySpringPhysics(neighborMap) {
+        if (!dragDropPhysics || !isDragging || !draggedParticle) return;
+
+        const cluster = getSpringCluster(neighborMap);
+
+        // Apply spring forces only within the cluster
+        for (const [idx, hops] of cluster) {
+            if (hops === 0) continue; // skip the pinned particle itself
+            const p = particles[idx];
+            const forceMult = Math.pow(SPRING_FALLOFF, hops - 1);
+
+            // Find the closest neighbor with fewer hops to pull toward
+            const nbrs = neighborMap.get(idx);
+            if (!nbrs) continue;
+
+            for (const nIdx of nbrs) {
+                const nHops = cluster.get(nIdx);
+                if (nHops === undefined || nHops >= hops) continue; // only pull toward closer-to-source
+
+                const target = particles[nIdx];
+                const dx = target.x - p.x;
+                const dy = target.y - p.y;
+                const fx = dx * SPRING_STIFFNESS * forceMult;
+                const fy = dy * SPRING_STIFFNESS * forceMult;
+                p.vx += fx;
+                p.vy += fy;
+            }
+        }
+    }
+
+    function drawConnections() {
+        const neighborMap = getNeighborMap();
+        const cluster = (dragDropPhysics && isDragging) ? getSpringCluster(neighborMap) : null;
+
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < CONNECTION_DIST) {
+                    // Highlight lines within the dragged cluster
+                    let alpha = (1 - dist / CONNECTION_DIST) * 0.15;
+                    let lineWidth = 0.5;
+                    if (cluster && cluster.has(i) && cluster.has(j)) {
+                        const maxHop = Math.max(cluster.get(i), cluster.get(j));
+                        const glow = 1 - (maxHop / (MAX_SPRING_HOPS + 1));
+                        alpha = (1 - dist / CONNECTION_DIST) * (0.15 + glow * 0.25);
+                        lineWidth = 0.5 + glow * 1.5;
+                    }
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = `rgba(${col.r},${col.g},${col.b},${alpha})`;
+                    ctx.lineWidth = lineWidth;
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Apply spring forces after drawing
+        applySpringPhysics(neighborMap);
+    }
+
+    // Ambient glow blobs
+    let time = 0;
+    function drawAmbientGlow() {
+        time += 0.003;
+        // Two slow-drifting glow orbs
+        const x1 = W * 0.15 + Math.sin(time * 0.7) * W * 0.08;
+        const y1 = H * 0.4 + Math.cos(time * 0.5) * H * 0.15;
+        const grad1 = ctx.createRadialGradient(x1, y1, 0, x1, y1, 140);
+        grad1.addColorStop(0, `rgba(${col.r},${col.g},${col.b},0.06)`);
+        grad1.addColorStop(1, `rgba(${col.r},${col.g},${col.b},0)`);
+        ctx.fillStyle = grad1;
+        ctx.fillRect(0, 0, W, H);
+
+        const x2 = W * 0.55 + Math.cos(time * 0.4) * W * 0.1;
+        const y2 = H * 0.3 + Math.sin(time * 0.6) * H * 0.12;
+        const grad2 = ctx.createRadialGradient(x2, y2, 0, x2, y2, 100);
+        grad2.addColorStop(0, `rgba(${col.r},${col.g},${col.b},0.035)`);
+        grad2.addColorStop(1, `rgba(${col.r},${col.g},${col.b},0)`);
+        ctx.fillStyle = grad2;
+        ctx.fillRect(0, 0, W, H);
+    }
+
+    function drawHoverIndicator() {
+        if (!dragDropPhysics || isDragging || mouseX < 0) return;
+        const hit = findParticleAt(mouseX, mouseY);
+        if (hit) {
+            ctx.beginPath();
+            ctx.arc(hit.x, hit.y, GRAB_RADIUS * 0.5, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(${col.r},${col.g},${col.b},0.25)`;
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, W, H);
+        drawAmbientGlow();
+        particles.forEach(p => { p.update(); p.draw(); });
+        drawConnections();
+        drawHoverIndicator();
+        animId = requestAnimationFrame(animate);
+    }
+
+    // Mouse tracking
+    function getCanvasMouse(e) {
+        const rect = canvas.getBoundingClientRect();
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
+
+    function onMouseMove(e) {
+        const pos = getCanvasMouse(e);
+        mouseX = pos.x;
+        mouseY = pos.y;
+
+        // Update cursor when hovering over a particle (drag mode)
+        if (dragDropPhysics && !isDragging) {
+            const hit = findParticleAt(pos.x, pos.y);
+            canvas.style.cursor = hit ? 'grab' : '';
+        }
+    }
+    function onMouseLeave() {
+        mouseX = -9999;
+        mouseY = -9999;
+        if (dragDropPhysics) releaseDrag();
+    }
+
+    // Find the closest particle within grab radius
+    function findParticleAt(x, y) {
+        let closest = null;
+        let closestDist = GRAB_RADIUS;
+        for (const p of particles) {
+            const dx = p.x - x;
+            const dy = p.y - y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < closestDist) {
+                closestDist = dist;
+                closest = p;
+            }
+        }
+        return closest;
+    }
+
+    function releaseDrag() {
+        if (draggedParticle) {
+            draggedParticle.pinned = false;
+            draggedParticle = null;
+        }
+        isDragging = false;
+        canvas.style.cursor = '';
+    }
+
+    // Drag-and-drop handlers
+    if (dragDropPhysics) {
+        canvas.style.pointerEvents = 'auto';
+
+        canvas.addEventListener('mousedown', (e) => {
+            const pos = getCanvasMouse(e);
+            const hit = findParticleAt(pos.x, pos.y);
+            if (hit) {
+                draggedParticle = hit;
+                draggedParticle.pinned = true;
+                isDragging = true;
+                canvas.style.cursor = 'grabbing';
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) releaseDrag();
+        });
+
+        // Touch support
+        canvas.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            const pos = getCanvasMouse(touch);
+            mouseX = pos.x;
+            mouseY = pos.y;
+            const hit = findParticleAt(pos.x, pos.y);
+            if (hit) {
+                draggedParticle = hit;
+                draggedParticle.pinned = true;
+                isDragging = true;
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                const touch = e.touches[0];
+                const pos = getCanvasMouse(touch);
+                mouseX = pos.x;
+                mouseY = pos.y;
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', () => {
+            releaseDrag();
+            mouseX = -9999;
+            mouseY = -9999;
+        });
+    }
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseleave', onMouseLeave);
+
+    window.addEventListener('resize', debounce(() => {
+        resize();
+        // Re-scatter particles that fell outside bounds
+        particles.forEach(p => {
+            if (p.x > W || p.y > H) { p.x = Math.random() * W; p.y = Math.random() * H; }
+        });
+    }, 200));
+
+    resize();
+    initParticles();
+    animate();
+
+    // Fade in after a beat
+    setTimeout(() => canvas.classList.add('active'), 300);
+}
+
+// ===== 14. DOMCONTENTLOADED INIT =====
+// ===== CUSTOM VIDEO PLAYER =====
+function initCustomVideoPlayers() {
+    document.querySelectorAll('.cvp').forEach(container => {
+        const video = container.querySelector('video');
+        if (!video) return;
+
+        const bigPlay = container.querySelector('.cvp-big-play');
+        const viewport = container.querySelector('.cvp-viewport');
+        const playBtn = container.querySelector('.cvp-btn--play');
+        const speedBtn = container.querySelector('.cvp-btn--speed');
+        const fsBtn = container.querySelector('.cvp-btn--fs');
+        const progressBar = container.querySelector('.cvp-progress');
+        const progressFill = container.querySelector('.cvp-progress__fill');
+        const timeDisplay = container.querySelector('.cvp-time');
+
+        const speeds = [1, 1.25, 1.5, 2, 0.5, 0.75];
+        let speedIdx = 0;
+
+        function fmtTime(s) {
+            if (!isFinite(s)) return '0:00';
+            const m = Math.floor(s / 60);
+            const sec = Math.floor(s % 60);
+            return m + ':' + String(sec).padStart(2, '0');
+        }
+
+        function updateTime() {
+            timeDisplay.textContent = fmtTime(video.currentTime) + ' / ' + fmtTime(video.duration);
+            progressFill.style.width = (video.duration ? (video.currentTime / video.duration) * 100 : 0) + '%';
+        }
+
+        function togglePlay() {
+            if (video.paused) {
+                video.play();
+            } else {
+                video.pause();
+            }
+        }
+
+        video.addEventListener('play', () => container.classList.add('is-playing'));
+        video.addEventListener('pause', () => container.classList.remove('is-playing'));
+        video.addEventListener('ended', () => container.classList.remove('is-playing'));
+        video.addEventListener('timeupdate', updateTime);
+        video.addEventListener('loadedmetadata', updateTime);
+
+        // Play/pause controls
+        viewport.addEventListener('click', (e) => {
+            if (e.target.closest('.cvp-big-play')) { togglePlay(); return; }
+            togglePlay();
+        });
+        playBtn.addEventListener('click', togglePlay);
+
+        // Progress scrubbing
+        let scrubbing = false;
+        function scrub(e) {
+            const rect = progressBar.getBoundingClientRect();
+            const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            if (video.duration) video.currentTime = pct * video.duration;
+            updateTime();
+        }
+        progressBar.addEventListener('mousedown', (e) => { scrubbing = true; scrub(e); });
+        document.addEventListener('mousemove', (e) => { if (scrubbing) scrub(e); });
+        document.addEventListener('mouseup', () => { scrubbing = false; });
+
+        // Touch scrubbing
+        progressBar.addEventListener('touchstart', (e) => {
+            scrubbing = true;
+            scrub(e.touches[0]);
+        }, { passive: true });
+        document.addEventListener('touchmove', (e) => {
+            if (scrubbing) scrub(e.touches[0]);
+        }, { passive: true });
+        document.addEventListener('touchend', () => { scrubbing = false; });
+
+        // Speed toggle
+        speedBtn.addEventListener('click', () => {
+            speedIdx = (speedIdx + 1) % speeds.length;
+            video.playbackRate = speeds[speedIdx];
+            speedBtn.textContent = speeds[speedIdx] + 'x';
+        });
+
+        // Fullscreen
+        fsBtn.addEventListener('click', () => {
+            if (document.fullscreenElement === container) {
+                document.exitFullscreen();
+            } else if (container.requestFullscreen) {
+                container.requestFullscreen();
+            } else if (container.webkitRequestFullscreen) {
+                container.webkitRequestFullscreen();
+            }
+        });
+
+        // Keyboard controls when focused
+        container.addEventListener('keydown', (e) => {
+            if (e.key === ' ' || e.key === 'k') { e.preventDefault(); togglePlay(); }
+            else if (e.key === 'ArrowRight') { video.currentTime = Math.min(video.duration, video.currentTime + 5); }
+            else if (e.key === 'ArrowLeft') { video.currentTime = Math.max(0, video.currentTime - 5); }
+            else if (e.key === 'f') { fsBtn.click(); }
+        });
+
+        container.setAttribute('tabindex', '0');
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    initReactiveGlitchHeader();
+    initBootSequence();
+    initTabKeyboard();
+    initRouting();
+    initCursorTrail();
+    initKonamiCode();
     initConsoleEasterEgg();
     initAudioVisualizer();
+    initCarousels();
+    initSoundCloudCardsOnFirstVisit();
+    initEntryHoverAnimations();
+    initCustomVideoPlayers();
+    initHeaderAmbience();
+
+    // Wire up tab buttons
+    document.querySelectorAll('.tab[data-tab]').forEach(tab => {
+        tab.addEventListener('click', () => showTab(tab.dataset.tab));
+    });
+
+    // Wire up NOW item deep-links
+    document.querySelectorAll('.now-item[data-open-entry]').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            openEntry(item.dataset.openTab, item.dataset.openEntry);
+        });
+    });
+
+    // Wire up accordion entry headers
+    document.querySelectorAll('.entry-header').forEach(header => {
+        header.addEventListener('click', function() { toggleDropdown(this); });
+        header.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(this); }
+        });
+    });
+
+    // Make site title clickable to go home
+    const siteTitle = document.querySelector('.site-title');
+    if (siteTitle) {
+        siteTitle.style.cursor = 'pointer';
+        siteTitle.addEventListener('click', () => showTab('home'));
+    }
+
+    // Show initial content based on URL hash (or home by default)
+    const initialTab = getInitialTab();
+    showTab(initialTab, false);
+
+    // Init scroll reveals after a short delay (after entrance animation)
+    setTimeout(initScrollReveals, 1500);
 });
