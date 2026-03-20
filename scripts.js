@@ -1669,7 +1669,7 @@ function initSoundCloudCards() {
 
     function wireCard(card) {
         const playBtn = card.querySelector('.sc-track-card__play');
-        const progressWrap = card.querySelector('.sc-track-card__progress-wrap');
+        const waveformWrap = card.querySelector('.sc-track-card__waveform');
         const url = card.dataset.scUrl;
         if (!playBtn || !url) return;
 
@@ -1763,7 +1763,7 @@ function initSoundCloudCards() {
 
         function seekFromClientX(clientX) {
             if (playingCard !== card) return;
-            const track = card.querySelector('.sc-track-card__progress-track');
+            const track = card.querySelector('.sc-track-card__waveform');
             if (!track) return;
             const rect = track.getBoundingClientRect();
             const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
@@ -1776,29 +1776,27 @@ function initSoundCloudCards() {
             widget.seekTo(targetMs);
         }
 
-        var scrubZone = card.querySelector('.sc-track-card__progress-scrub');
         var scrubHint = card.querySelector('.sc-track-card__scrub-hint');
-        var progressTrack = card.querySelector('.sc-track-card__progress-track');
-        if (scrubZone && scrubHint && progressTrack) {
-            scrubZone.addEventListener('mousemove', function (ev) {
+        if (waveformWrap && scrubHint) {
+            waveformWrap.addEventListener('mousemove', function (ev) {
                 var dur = getScTrackDurationMs(card);
                 if (dur <= 0) return;
-                var tr = progressTrack.getBoundingClientRect();
-                var pct = Math.max(0, Math.min(1, (ev.clientX - tr.left) / tr.width));
+                var rect = waveformWrap.getBoundingClientRect();
+                var pct = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
                 scrubHint.textContent = formatScTime(pct * dur);
                 scrubHint.style.left = Math.max(6, Math.min(94, pct * 100)) + '%';
                 scrubHint.classList.add('is-visible');
             });
-            scrubZone.addEventListener('mouseleave', function () {
+            waveformWrap.addEventListener('mouseleave', function () {
                 scrubHint.classList.remove('is-visible');
             });
         }
 
-        if (progressWrap) {
-            progressWrap.addEventListener('click', function (ev) {
+        if (waveformWrap) {
+            waveformWrap.addEventListener('click', function (ev) {
                 seekFromClientX(ev.clientX);
             });
-            progressWrap.addEventListener('keydown', function (ev) {
+            waveformWrap.addEventListener('keydown', function (ev) {
                 if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
                 ev.preventDefault();
                 const dur = parseInt(card.dataset.scDuration, 10);
