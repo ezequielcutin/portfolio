@@ -503,8 +503,8 @@ main {
     );
     box-shadow: var(--entry-shadow);
     transform-origin: center;
-    will-change: transform, box-shadow;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.35s ease, transform 0.2s ease;
+    will-change: transform;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .entry:hover {
@@ -748,19 +748,26 @@ main {
 .dropdown-content {
     overflow: hidden;
     padding: 0 20px;
+    border-top: 1px solid transparent;
     opacity: 0;
     transform: translateY(-4px);
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    transition: opacity 0.15s ease, transform 0.15s ease,
+        padding 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        margin 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        border-color 0.2s ease;
 }
 
 .dropdown.open .dropdown-content {
     padding: 0 20px 20px;
-    opacity: 1;
-    transform: translateY(0);
-    transition: opacity 0.25s ease 0.1s, transform 0.25s ease 0.1s;
-    border-top: 1px solid var(--border);
     margin-top: 4px;
     padding-top: 16px;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.25s ease 0.1s, transform 0.25s ease 0.1s,
+        padding 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        margin 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        border-color 0.2s ease;
+    border-top-color: var(--border);
     background: linear-gradient(
         180deg,
         rgba(255, 255, 255, 0.015) 0%,
