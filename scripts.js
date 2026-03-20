@@ -1517,16 +1517,16 @@ function initSoundCloudCards() {
 
     function resetProgressUi(card) {
         if (!card) return;
-        const fill = card.querySelector('.sc-track-card__progress-fill');
+        const bars = card.querySelectorAll('.waveform-bar');
+        bars.forEach(function (b) { b.classList.remove('waveform-bar--active'); });
         const elapsed = card.querySelector('.sc-track-card__elapsed');
         const total = card.querySelector('.sc-track-card__total');
-        const wrap = card.querySelector('.sc-track-card__progress-wrap');
-        if (fill) fill.style.width = '0%';
+        const waveform = card.querySelector('.sc-track-card__waveform');
         if (elapsed) elapsed.textContent = '0:00';
         if (total) total.textContent = formatScTime(parseInt(card.dataset.scDuration, 10) || 0);
-        if (wrap) {
-            wrap.setAttribute('aria-valuenow', '0');
-            wrap.setAttribute('aria-valuetext', '0:00');
+        if (waveform) {
+            waveform.setAttribute('aria-valuenow', '0');
+            waveform.setAttribute('aria-valuetext', '0:00');
         }
     }
 
@@ -1569,16 +1569,23 @@ function initSoundCloudCards() {
         const d = durationMs || parseInt(card.dataset.scDuration, 10) || 0;
         if (d <= 0) return;
         const rel = Math.min(1, Math.max(0, currentMs / d));
-        const fill = card.querySelector('.sc-track-card__progress-fill');
+        const bars = card.querySelectorAll('.waveform-bar');
+        const activeCount = Math.round(rel * bars.length);
+        bars.forEach(function (b, i) {
+            if (i < activeCount) {
+                b.classList.add('waveform-bar--active');
+            } else {
+                b.classList.remove('waveform-bar--active');
+            }
+        });
         const elapsed = card.querySelector('.sc-track-card__elapsed');
         const total = card.querySelector('.sc-track-card__total');
-        const wrap = card.querySelector('.sc-track-card__progress-wrap');
-        if (fill) fill.style.width = rel * 100 + '%';
+        const waveform = card.querySelector('.sc-track-card__waveform');
         if (elapsed) elapsed.textContent = formatScTime(currentMs);
         if (total) total.textContent = formatScTime(d);
-        if (wrap) {
-            wrap.setAttribute('aria-valuenow', String(Math.round(rel * 100)));
-            wrap.setAttribute('aria-valuetext', formatScTime(currentMs) + ' of ' + formatScTime(d));
+        if (waveform) {
+            waveform.setAttribute('aria-valuenow', String(Math.round(rel * 100)));
+            waveform.setAttribute('aria-valuetext', formatScTime(currentMs) + ' of ' + formatScTime(d));
         }
     }
 
@@ -1602,9 +1609,13 @@ function initSoundCloudCards() {
             }
         }
 
-        var fill = card.querySelector('.sc-track-card__progress-fill');
-        if (fill && typeof e.relativePosition === 'number') {
-            fill.style.width = Math.min(100, Math.max(0, e.relativePosition * 100)) + '%';
+        if (typeof e.relativePosition === 'number') {
+            var bars = card.querySelectorAll('.waveform-bar');
+            var activeCount = Math.round(e.relativePosition * bars.length);
+            bars.forEach(function (b, i) {
+                if (i < activeCount) b.classList.add('waveform-bar--active');
+                else b.classList.remove('waveform-bar--active');
+            });
         }
 
         if (seekHoldMs != null && d > 0) {
