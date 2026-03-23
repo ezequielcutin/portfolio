@@ -20,9 +20,6 @@ body.secret-mode {
     --accent: #ff4488;
     --accent-subtle: rgba(255, 68, 136, 0.08);
     --border-active: rgba(255, 68, 136, 0.15);
-    background-image:
-        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255, 68, 136, 0.03) 0%, transparent 70%),
-        radial-gradient(ellipse 60% 50% at 80% 100%, rgba(255, 68, 136, 0.02) 0%, transparent 60%);
 }
 
 /* ===== RESET & BASE ===== */
@@ -42,9 +39,6 @@ html {
 body {
     min-height: 100%;
     background-color: var(--bg);
-    background-image:
-        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(68, 136, 255, 0.03) 0%, transparent 70%),
-        radial-gradient(ellipse 60% 50% at 80% 100%, rgba(68, 136, 255, 0.02) 0%, transparent 60%);
     color: var(--text-primary);
     font-family: var(--font-mono);
     font-size: 15px;
@@ -361,11 +355,7 @@ header::after {
     padding: 12px 16px;
     border-radius: var(--radius);
     border: 1px solid var(--border);
-    background: linear-gradient(
-        160deg,
-        color-mix(in srgb, var(--accent-subtle) 100%, transparent) 0%,
-        rgba(255, 255, 255, 0.02) 50%
-    );
+    background: rgba(255, 255, 255, 0.02);
     flex: 1;
     min-width: 200px;
     text-decoration: none;
@@ -496,23 +486,21 @@ main {
     border-radius: var(--radius);
     position: relative;
     background: linear-gradient(
-        160deg,
-        color-mix(in srgb, var(--accent-subtle) 100%, transparent) 0%,
-        rgba(255, 255, 255, 0.02) 40%,
-        color-mix(in srgb, var(--accent-subtle) 85%, #000) 100%
+        180deg,
+        rgba(255, 255, 255, 0.035) 0%,
+        rgba(255, 255, 255, 0.012) 100%
     );
     box-shadow: var(--entry-shadow);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .entry:hover {
     border-color: var(--border-active);
     box-shadow: var(--entry-shadow), 0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent);
     background: linear-gradient(
-        160deg,
-        color-mix(in srgb, var(--accent-subtle) 160%, transparent) 0%,
-        rgba(255, 255, 255, 0.035) 40%,
-        color-mix(in srgb, var(--accent-subtle) 120%, #000) 100%
+        180deg,
+        rgba(255, 255, 255, 0.05) 0%,
+        rgba(255, 255, 255, 0.02) 100%
     );
 }
 
@@ -547,10 +535,9 @@ main {
     border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
     box-shadow: var(--entry-shadow), 0 0 32px -8px color-mix(in srgb, var(--accent) 18%, transparent);
     background: linear-gradient(
-        160deg,
-        color-mix(in srgb, var(--accent-subtle) 140%, transparent) 0%,
-        rgba(255, 255, 255, 0.03) 40%,
-        color-mix(in srgb, var(--accent-subtle) 100%, #000) 100%
+        180deg,
+        rgba(255, 255, 255, 0.045) 0%,
+        rgba(255, 255, 255, 0.015) 100%
     );
 }
 
