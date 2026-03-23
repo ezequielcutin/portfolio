@@ -293,47 +293,6 @@ function initScrollReveals() {
     });
 }
 
-// ===== 7b. ENTRY HOVER ANIMATIONS (WORK & PROJECT CARDS) =====
-function initEntryHoverAnimations() {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    if (typeof anime === 'undefined') return;
-
-    const cards = document.querySelectorAll('#panel-work .entry, #panel-projects .entry');
-    if (!cards.length) return;
-
-    cards.forEach((card) => {
-        let hoverAnimation = null;
-        let leaveAnimation = null;
-
-        card.addEventListener('mouseenter', () => {
-            if (leaveAnimation) {
-                leaveAnimation.pause();
-                leaveAnimation = null;
-            }
-            hoverAnimation = anime({
-                targets: card,
-                translateY: -4,
-                scale: 1.015,
-                duration: 220,
-                easing: 'easeOutCubic'
-            });
-        });
-
-        card.addEventListener('mouseleave', () => {
-            if (hoverAnimation) {
-                hoverAnimation.pause();
-                hoverAnimation = null;
-            }
-            leaveAnimation = anime({
-                targets: card,
-                translateY: 0,
-                scale: 1,
-                duration: 200,
-                easing: 'easeOutQuad'
-            });
-        });
-    });
-}
 
 // ===== 8. CURSOR TRAIL =====
 function initCursorTrail() {
@@ -2441,7 +2400,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initAudioVisualizer();
     initCarousels();
     initSoundCloudCardsOnFirstVisit();
-    initEntryHoverAnimations();
     initCustomVideoPlayers();
     initHeaderAmbience();
 

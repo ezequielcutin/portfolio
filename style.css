@@ -502,26 +502,18 @@ main {
         color-mix(in srgb, var(--accent-subtle) 85%, #000) 100%
     );
     box-shadow: var(--entry-shadow);
-    transform-origin: center;
-    will-change: transform;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .entry:hover {
     border-color: var(--border-active);
     box-shadow: var(--entry-shadow), 0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent);
-    transform: translateY(-1px);
     background: linear-gradient(
         160deg,
         color-mix(in srgb, var(--accent-subtle) 160%, transparent) 0%,
         rgba(255, 255, 255, 0.035) 40%,
         color-mix(in srgb, var(--accent-subtle) 120%, #000) 100%
     );
-}
-
-.entry:active {
-    transform: translateY(0);
-    transition-duration: 0.08s;
 }
 
 /* After .entry:hover so hover keeps the inset hairline */
@@ -695,7 +687,7 @@ main {
 
 .entry:hover .entry-header::after {
     border-color: var(--accent);
-    transform: rotate(-45deg) translateY(-1px);
+    transform: rotate(-45deg);
 }
 
 .entry:has(.dropdown.open) .entry-header::after {
