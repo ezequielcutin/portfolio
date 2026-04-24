@@ -122,6 +122,29 @@
                         </div>
                     </div>
                 </div>
+                <!-- Add more slides here as you collect shots; width/height = intrinsic pixels. -->
+                <div class="home-gallery">
+                    <div class="carousel carousel--exhibit" data-autoplay="8000" role="region" aria-roledescription="carousel" aria-label="Photo gallery">
+                        <div class="carousel__progress" aria-hidden="true">
+                            <div class="carousel__progress-fill"></div>
+                        </div>
+                        <div class="carousel__viewport">
+                            <div class="carousel__track">
+                                <div class="carousel__slide"><img src="umich%20grad.jpg" alt="Graduation at the University of Michigan" width="3180" height="4403" loading="lazy" decoding="async"></div>
+                                <div class="carousel__slide"><img src="headshot_budapest.png" alt="Ezequiel Cutin in Budapest" width="1536" height="2304" loading="lazy" decoding="async"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Invisible click areas for previous/next -->
+                        <button type="button" class="carousel__btn carousel__btn--prev carousel__btn--invisible" aria-label="Previous photo" title="Previous"></button>
+                        <button type="button" class="carousel__btn carousel__btn--next carousel__btn--invisible" aria-label="Next photo" title="Next"></button>
+
+                        <div class="carousel__exhibit-footer">
+                            <div class="carousel__dots"></div>
+                        </div>
+                        <span class="carousel__counter visually-hidden" aria-live="polite"></span>
+                    </div>
+                </div>
             </section>
 
             <section id="panel-work" class="content" role="tabpanel" aria-labelledby="tab-work">
