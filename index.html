@@ -315,6 +315,46 @@
                 <p class="panel-eyebrow">PROJECTS</p>
                 <p class="panel-sub">Builds from full-stack apps to systems &amp; ML.</p>
                 <div class="entry">
+                    <button class="entry-header" aria-expanded="false" aria-controls="entry-secrets-cli">
+                        <div class="title">secrets-cli: Developer-Friendly Secret Management CLI</div>
+                        <div class="date-location">Apr 2026–Present</div>
+                    </button>
+                    <div class="dropdown" aria-hidden="true" id="entry-secrets-cli" role="region">
+                        <div class="dropdown-content project-description">
+                            <p>
+                                A local-first, no-vendor-lock-in CLI for syncing encrypted secrets across environments. Built for developers who got tired of manually managing .env files across staging/prod and wondering if their secrets were actually encrypted. Because "cloud-based secret manager" shouldn't require a second mortgage and a prayer.
+                            </p>
+                            <p class="dropdown-label">Key Features (Planned)</p>
+                            <ul>
+                                <li>AES-256-GCM encryption with per-secret IVs — authenticated encryption that prevents tampering, stored as portable vault YAML</li>
+                                <li>Local-first design: key file generation + vault stored in git (key stays in ~/.secrets), zero friction after init</li>
+                                <li>secrets pull/push — sync vault ↔ .env in one command, with conflict detection and interactive prompts</li>
+                                <li>Multi-environment support — manage default/staging/prod secrets in a single vault, with secrets diff to catch drift</li>
+                                <li>Integration scaffolding — sync to Vercel, GitHub Actions, and beyond without vendor lock-in</li>
+                                <li>Audit trail — append-only JSONL log of who changed what, when</li>
+                                <li>Zero external dependencies for crypto (Node.js built-in crypto module only)</li>
+                            </ul>
+                            <p><strong>Current Phase:</strong> Project scaffolding (Phase 0). Nailing the encryption design, CLI architecture, and vault format first. Shipping npm package by week 8.</p>
+                            <p><strong>Why this exists:</strong> Every team I know has a Notion doc with prod secrets, or uses a free tier SaaS that got hacked, or just... doesn't rotate keys. This is the CLI I'd want to use.</p>
+                            <p><strong>Skills:</strong> Cryptography · CLI Design · TypeScript Systems · Developer Experience · Secret Management · Encryption Architecture</p>
+                            <div class="tech-used" aria-label="Technology stack">
+                                <span class="tech-chip">TypeScript</span>
+                                <span class="tech-chip">Node.js</span>
+                                <span class="tech-chip">Commander.js</span>
+                                <span class="tech-chip">AES-256-GCM</span>
+                                <span class="tech-chip">Zod</span>
+                                <span class="tech-chip">js-yaml</span>
+                                <span class="tech-chip">vitest</span>
+                                <span class="tech-chip">Vercel API</span>
+                                <span class="tech-chip">GitHub API</span>
+                            </div>
+                            <div class="project-links">
+                                <a href="https://github.com/ezequielcutin/secrets-cli" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i>GitHub</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="entry">
                     <button class="entry-header" aria-expanded="false" aria-controls="entry-quietly-build">
                         <div class="title">Quietly Build: Ritual-Based Productivity PWA</div>
                         <div class="date-location">Feb 2026–Present</div>
