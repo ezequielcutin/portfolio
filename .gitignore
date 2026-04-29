@@ -15,7 +15,7 @@ node_modules/
 dist/
 
 # Design specs
-interface-design/
+.interface-design/
 
 # React/Vite scaffold (lives on react_refactor, not main)
 package.json
