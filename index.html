@@ -122,27 +122,27 @@
                         </div>
                     </div>
                 </div>
-                <!-- Add more slides here as you collect shots; width/height = intrinsic pixels. -->
+                <!-- Add more slides in .deck__sources — each li needs data-src, data-alt, data-place, data-width, data-height -->
                 <div class="home-gallery">
-                    <div class="carousel carousel--exhibit" data-autoplay="8000" role="region" aria-roledescription="carousel" aria-label="Photo gallery">
-                        <div class="carousel__progress" aria-hidden="true">
-                            <div class="carousel__progress-fill"></div>
-                        </div>
-                        <div class="carousel__viewport">
-                            <div class="carousel__track">
-                                <div class="carousel__slide"><img src="umich%20grad.jpg" alt="Graduation at the University of Michigan" width="3180" height="4403" loading="lazy" decoding="async"></div>
-                                <div class="carousel__slide"><img src="headshot_budapest.png" alt="Ezequiel Cutin in Budapest" width="1536" height="2304" loading="lazy" decoding="async"></div>
+                    <div class="deck" data-autoplay="8000" role="region" aria-roledescription="carousel" aria-label="Photo gallery" tabindex="0">
+                        <ul class="deck__sources" hidden aria-hidden="true">
+                            <li data-src="umich%20grad.jpg" data-alt="Graduation at the University of Michigan" data-place="Ann Arbor, MI" data-width="3180" data-height="4403"></li>
+                            <li data-src="headshot_budapest.png" data-alt="Ezequiel Cutin in Budapest" data-place="Budapest, HU" data-width="1536" data-height="2304"></li>
+                        </ul>
+                        <div class="deck__stage"></div>
+                        <aside class="deck__caption" aria-live="polite">
+                            <span class="deck__index" aria-hidden="true">01<i>.</i></span>
+                            <h3 class="deck__headline"></h3>
+                            <dl class="deck__meta">
+                                <div><dt>place</dt><dd class="deck__meta-place"></dd></div>
+                                <div><dt>frame</dt><dd class="deck__meta-frame"></dd></div>
+                            </dl>
+                            <div class="deck__controls">
+                                <button type="button" class="deck__btn deck__btn--prev" aria-label="Previous photo">← prev</button>
+                                <button type="button" class="deck__btn deck__btn--accent deck__btn--next" aria-label="Next photo">throw next →</button>
                             </div>
-                        </div>
-                        
-                        <!-- Invisible click areas for previous/next -->
-                        <button type="button" class="carousel__btn carousel__btn--prev carousel__btn--invisible" aria-label="Previous photo" title="Previous"></button>
-                        <button type="button" class="carousel__btn carousel__btn--next carousel__btn--invisible" aria-label="Next photo" title="Next"></button>
-
-                        <div class="carousel__exhibit-footer">
-                            <div class="carousel__dots"></div>
-                        </div>
-                        <span class="carousel__counter visually-hidden" aria-live="polite"></span>
+                            <div class="deck__dots" role="tablist" aria-label="Slides"></div>
+                        </aside>
                     </div>
                 </div>
             </section>

@@ -639,7 +639,316 @@ function initCarousels() {
     document.querySelectorAll('.carousel').forEach(initCarousel);
 }
 
-// ===== 10. KONAMI CODE =====
+// ===== 10. EXHIBIT DECK =====
+function initDeck(deck) {
+    const sourceItems = [...deck.querySelectorAll('.deck__sources > li')];
+    if (!sourceItems.length) return;
+
+    const slides = sourceItems.map(li => ({
+        src: li.dataset.src,
+        alt: li.dataset.alt || '',
+        place: li.dataset.place || '',
+        width: parseInt(li.dataset.width, 10) || 800,
+        height: parseInt(li.dataset.height, 10) || 600,
+    }));
+
+    const stage       = deck.querySelector('.deck__stage');
+    const elIndex     = deck.querySelector('.deck__index');
+    const elHeadline  = deck.querySelector('.deck__headline');
+    const elPlace     = deck.querySelector('.deck__meta-place');
+    const elFrame     = deck.querySelector('.deck__meta-frame');
+    const dotsRoot    = deck.querySelector('.deck__dots');
+    const prevBtn     = deck.querySelector('.deck__btn--prev');
+    const nextBtn     = deck.querySelector('.deck__btn--next');
+
+    const total       = slides.length;
+    const reduced     = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const AUTOPLAY_MS = parseInt(deck.dataset.autoplay, 10) || 8000;
+    const MAX_VISIBLE = Math.min(total, 3);
+
+    let current      = 0;
+    let autoplayTimer = null;
+    let hoverPaused  = false;
+
+    // Build card DOM
+    const cards = slides.map((slide, i) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'deck__card';
+        wrapper.setAttribute('aria-hidden', 'true');
+
+        const inner = document.createElement('div');
+        inner.className = 'deck__card-inner';
+
+        const img = document.createElement('img');
+        img.src       = slide.src;
+        img.alt       = '';
+        img.width     = slide.width;
+        img.height    = slide.height;
+        img.loading   = i === 0 ? 'eager' : 'lazy';
+        img.decoding  = 'async';
+        img.draggable = false;
+
+        inner.appendChild(img);
+        wrapper.appendChild(inner);
+        stage.appendChild(wrapper);
+        return { wrapper, inner, img };
+    });
+
+    // LIVE corner badge (shared element moved to active front card)
+    const corner = document.createElement('span');
+    corner.className = 'deck__corner';
+    corner.setAttribute('aria-hidden', 'true');
+    corner.innerHTML = '<i></i><b>LIVE / 01</b>';
+
+    // Build dots
+    if (dotsRoot && total > 1) {
+        dotsRoot.innerHTML = '';
+        for (let i = 0; i < total; i++) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'deck__dot';
+            btn.setAttribute('role', 'tab');
+            btn.setAttribute('aria-selected', String(i === 0));
+            btn.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+            btn.addEventListener('click', () => goTo(i));
+            dotsRoot.appendChild(btn);
+        }
+    }
+
+    function getPos(idx) {
+        return (idx - current + total) % total;
+    }
+
+    function applyPositions() {
+        cards.forEach(({ wrapper, inner, img }, idx) => {
+            const pos     = getPos(idx);
+            const visible = pos < MAX_VISIBLE;
+            const isFront = pos === 0;
+
+            wrapper.hidden    = !visible;
+            wrapper.className = 'deck__card' + (visible ? ' deck__card--pos-' + pos : '');
+            wrapper.setAttribute('aria-hidden', String(!isFront));
+
+            if (isFront) {
+                img.alt            = slides[idx].alt;
+                inner.style.cursor = 'grab';
+                inner.appendChild(corner);
+                corner.querySelector('b').textContent =
+                    'LIVE / ' + String(current + 1).padStart(2, '0');
+            } else {
+                img.alt            = '';
+                inner.style.cursor = '';
+            }
+        });
+    }
+
+    function syncCaption() {
+        const slide = slides[current];
+        if (elIndex)    elIndex.innerHTML   = String(current + 1).padStart(2, '0') + '<i>.</i>';
+        if (elHeadline) elHeadline.textContent = slide.alt;
+        if (elPlace)    elPlace.textContent  = slide.place;
+        if (elFrame)    elFrame.textContent  =
+            String(current + 1).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+
+        if (dotsRoot) {
+            dotsRoot.querySelectorAll('.deck__dot').forEach((dot, i) => {
+                const active = i === current;
+                dot.classList.toggle('is-active', active);
+                dot.setAttribute('aria-selected', String(active));
+            });
+        }
+    }
+
+    function goTo(idx) {
+        const next = ((idx % total) + total) % total;
+        if (next === current) return;
+
+        // Reset drag/spring on old front card before repositioning
+        dragX      = 0;
+        springVel  = 0;
+        isSnapping = false;
+        const oldFront = cards.find((_, i) => getPos(i) === 0);
+        if (oldFront) oldFront.inner.style.transform = '';
+
+        current = next;
+        applyPositions();
+        syncCaption();
+        scheduleAutoplay();
+    }
+
+    function scheduleAutoplay() {
+        clearAutoplay();
+        if (reduced || hoverPaused || total < 2) return;
+        autoplayTimer = setTimeout(() => goTo(current + 1), AUTOPLAY_MS);
+    }
+    function clearAutoplay() {
+        if (autoplayTimer) { clearTimeout(autoplayTimer); autoplayTimer = null; }
+    }
+
+    // ── Animation loop ──────────────────────────────────────────────
+    // All runtime motion values for the front card
+    let tiltX = 0, tiltY = 0, targetTiltX = 0, targetTiltY = 0;
+    let dragX     = 0;
+    let springVel = 0;
+    let isSnapping   = false;
+    let springTarget = 0;
+    let loopRaf      = null;
+    let dragging     = false;
+
+    function getFrontInner() {
+        const entry = cards.find((_, i) => getPos(i) === 0);
+        return entry ? entry.inner : null;
+    }
+
+    function applyFrontTransform() {
+        const inner = getFrontInner();
+        if (!inner) return;
+        if (reduced) {
+            inner.style.transform = dragX ? 'translateX(' + dragX.toFixed(1) + 'px)' : '';
+        } else {
+            inner.style.transform =
+                'translateX(' + dragX.toFixed(2) + 'px)' +
+                ' rotateX(' + tiltX.toFixed(2) + 'deg)' +
+                ' rotateY(' + tiltY.toFixed(2) + 'deg)';
+        }
+    }
+
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    function startLoop() {
+        if (!loopRaf) tick();
+    }
+
+    function tick() {
+        // Tilt lerp (smooth towards target)
+        tiltX = lerp(tiltX, targetTiltX, 0.08);
+        tiltY = lerp(tiltY, targetTiltY, 0.08);
+
+        // Spring snap-back
+        if (isSnapping) {
+            const force = 280 * (springTarget - dragX) - 28 * springVel;
+            springVel += force / 60;
+            dragX     += springVel / 60;
+            if (Math.abs(springTarget - dragX) < 0.5 && Math.abs(springVel) < 0.5) {
+                dragX      = springTarget;
+                springVel  = 0;
+                isSnapping = false;
+            }
+        }
+
+        applyFrontTransform();
+
+        // Stop when fully settled and not interacting
+        const settled =
+            !isSnapping && !dragging &&
+            Math.abs(tiltX) < 0.01 && Math.abs(tiltY) < 0.01 &&
+            Math.abs(dragX) < 0.01;
+
+        loopRaf = settled ? null : requestAnimationFrame(tick);
+    }
+
+    // ── Parallax ────────────────────────────────────────────────────
+    stage.addEventListener('mousemove', (e) => {
+        if (dragging || reduced) return;
+        const rect = stage.getBoundingClientRect();
+        targetTiltX = ((e.clientY - rect.top)    / rect.height - 0.5) * -12;
+        targetTiltY = ((e.clientX - rect.left)   / rect.width  - 0.5) *  18;
+        startLoop();
+    });
+
+    // ── Drag ────────────────────────────────────────────────────────
+    let pointerStartX = 0, lastPointerX = 0, pointerVel = 0;
+
+    stage.addEventListener('pointerdown', (e) => {
+        const inner = getFrontInner();
+        if (!inner || !e.composedPath().includes(inner)) return;
+
+        dragging      = true;
+        pointerStartX = e.clientX;
+        lastPointerX  = e.clientX;
+        pointerVel    = 0;
+        dragX         = 0;
+        isSnapping    = false;
+        springVel     = 0;
+        inner.setPointerCapture(e.pointerId);
+        inner.style.cursor = 'grabbing';
+        startLoop();
+    });
+
+    stage.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        pointerVel   = e.clientX - lastPointerX;
+        lastPointerX = e.clientX;
+        dragX        = e.clientX - pointerStartX;
+        applyFrontTransform();
+    });
+
+    function onPointerUp() {
+        if (!dragging) return;
+        dragging = false;
+        const inner = getFrontInner();
+        if (inner) inner.style.cursor = 'grab';
+
+        if (dragX < -90 || pointerVel < -450) {
+            goTo(current + 1);
+        } else if (dragX > 90 || pointerVel > 450) {
+            goTo(current - 1);
+        } else {
+            // Spring back to origin
+            isSnapping   = true;
+            springTarget = 0;
+            springVel    = pointerVel * 0.3;
+            startLoop();
+        }
+    }
+
+    stage.addEventListener('pointerup',     onPointerUp);
+    stage.addEventListener('pointercancel', onPointerUp);
+
+    // ── Hover ────────────────────────────────────────────────────────
+    stage.addEventListener('mouseenter', () => {
+        hoverPaused = true;
+        clearAutoplay();
+    });
+    stage.addEventListener('mouseleave', () => {
+        hoverPaused  = false;
+        targetTiltX  = 0;
+        targetTiltY  = 0;
+        startLoop(); // let tilt lerp back to 0
+        scheduleAutoplay();
+    });
+
+    // ── Touch swipe ──────────────────────────────────────────────────
+    let touchStartX = 0;
+    stage.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+    stage.addEventListener('touchend', (e) => {
+        const delta = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(delta) > 60) goTo(delta < 0 ? current + 1 : current - 1);
+    }, { passive: true });
+
+    // ── Keyboard ─────────────────────────────────────────────────────
+    deck.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); goTo(current - 1); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); goTo(current + 1); }
+    });
+
+    // ── Buttons ──────────────────────────────────────────────────────
+    if (prevBtn) prevBtn.addEventListener('click', () => goTo(current - 1));
+    if (nextBtn) nextBtn.addEventListener('click', () => goTo(current + 1));
+
+    // ── Init ─────────────────────────────────────────────────────────
+    applyPositions();
+    syncCaption();
+    scheduleAutoplay();
+}
+
+function initDecks() {
+    document.querySelectorAll('.deck').forEach(initDeck);
+}
+
+// ===== 11. KONAMI CODE =====
 function initKonamiCode() {
     const konamiCode = [
         'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
@@ -2565,6 +2874,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initConsoleEasterEgg();
     initAudioVisualizer();
     initCarousels();
+    initDecks();
     initSoundCloudCardsOnFirstVisit();
     initCustomVideoPlayers();
     initHeaderAmbience();
