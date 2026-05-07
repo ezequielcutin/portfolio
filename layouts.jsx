@@ -356,10 +356,21 @@ function LayoutStacked({ data, density }) {
 
       <section className="pf-block pf-block--music" id="block-music">
         <div className="pf-block__inner">
-          <header className="pf-blockHead">
-            <span className="pf-mono pf-eyebrow">03</span>
-            <h2 className="pf-blockHead__title">Music</h2>
-            <p className="pf-blockHead__sub">Techno, house, ambient — produced under my own name.</p>
+          <header className="pf-blockHead pf-blockHead--music">
+            <div>
+              <span className="pf-mono pf-eyebrow">03</span>
+              <h2 className="pf-blockHead__title">Music</h2>
+              <p className="pf-blockHead__sub">Techno, house, ambient — produced under my own name.</p>
+            </div>
+            <button
+              id="visualizer-toggle"
+              className="visualizer-toggle"
+              aria-label="Toggle audio visualizer"
+              type="button"
+            >
+              <span className="visualizer-toggle__dot" aria-hidden="true" />
+              <span className="visualizer-toggle-text">AUDIO VISUALIZER (EXPERIMENTAL)</span>
+            </button>
           </header>
           <NowPlayingHero data={data.music} />
         </div>
@@ -371,6 +382,16 @@ function LayoutStacked({ data, density }) {
           <span className="pf-mono pf-muted">All bugs were harmed in the making of this site.</span>
         </div>
       </footer>
+
+      <canvas id="audio-visualizer" className="audio-visualizer" aria-hidden="true"></canvas>
+      <div id="visualizer-controls" className="visualizer-controls" aria-hidden="true">
+        <button id="visualizer-mode-toggle" className="visualizer-control" type="button" aria-label="Toggle visualizer mode">
+          TOGGLE MODE
+        </button>
+        <button id="visualizer-exit" className="visualizer-control visualizer-exit" type="button" aria-label="Exit visualizer">
+          EXIT
+        </button>
+      </div>
     </div>);
 
 }
