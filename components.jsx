@@ -281,6 +281,12 @@ function _fmtTime(sec) {
   return `${m}:${s}`;
 }
 
+/** SoundCloud CDN artwork: prefer ~500px for the hero. */
+function _scArtworkHiRes(url) {
+  if (!url || typeof url !== "string") return null;
+  return url.replace(/-large\.(jpg|jpeg|png|webp)/i, "-t500x500.$1");
+}
+
 let _scWidgetPromise = null;
 function ensureSCWidget() {
   if (window.SC?.Widget) return Promise.resolve(window.SC.Widget);
@@ -309,10 +315,47 @@ function NowPlayingHero({ data }) {
   const [active, setActive] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState({ played: 0, cur: 0, dur: 0 });
+  const [widgetReady, setWidgetReady] = useState(false);
   const iframeRef = useRef(null);
   const widgetRef = useRef(null);
+  const tracksRef = useRef(tracks);
+  tracksRef.current = tracks;
 
-  // Hydrate titles + artwork from oEmbed in parallel.
+  // Pull title + artwork from the loaded widget (oEmbed often omits thumbnail_url for some tracks).
+  function syncTrackFromWidget(indexWhenLoaded, urlWhenLoaded) {
+    const w = widgetRef.current;
+    if (!w) return;
+    const apply = () => {
+      w.getCurrentSound((sound) => {
+        if (!sound) return;
+        const rawArt = sound.artwork_url || sound.user?.avatar_url;
+        const art = _scArtworkHiRes(rawArt);
+        const scTitle =
+          typeof sound.title === "string"
+            ? sound.title.replace(/\s+by\s+.+$/i, "").trim()
+            : "";
+        setTracks((prev) => {
+          if (indexWhenLoaded < 0 || indexWhenLoaded >= prev.length) return prev;
+          const row = prev[indexWhenLoaded];
+          if (row.url !== urlWhenLoaded) return prev;
+          const next = { ...row };
+          if (art) next.artwork = art;
+          if (scTitle && !row.titleLocked) next.title = scTitle;
+          if (next.artwork === row.artwork && next.title === row.title) return prev;
+          return prev.map((t, i) => (i === indexWhenLoaded ? next : t));
+        });
+      });
+    };
+    apply();
+    const t = setTimeout(apply, 450);
+    const t2 = setTimeout(apply, 1400);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(t2);
+    };
+  }
+
+  // Hydrate titles + artwork from oEmbed; never drop artwork/title we already got from the widget.
   useEffect(() => {
     let cancelled = false;
     Promise.all(
@@ -323,24 +366,37 @@ function NowPlayingHero({ data }) {
       )
     ).then((results) => {
       if (cancelled) return;
-      setTracks(
-        data.tracks.map((t, i) => {
+      setTracks((prev) =>
+        prev.map((t, i) => {
           const o = results[i];
           if (!o) return t;
-          // oEmbed returns "Title by Artist" — strip the suffix.
-          const cleanTitle = (o.title || t.title).replace(/\s+by\s+.+$/i, "");
-          return { ...t, title: cleanTitle, artwork: o.thumbnail_url || null };
+          const cleanTitle = t.titleLocked
+            ? t.title
+            : (o.title || t.title).replace(/\s+by\s+.+$/i, "").trim();
+          const artwork = o.thumbnail_url || t.artwork || null;
+          return { ...t, title: cleanTitle, artwork };
         })
       );
     });
     return () => { cancelled = true; };
   }, [data]);
 
+  // Warm the browser image cache so track switches paint artwork instantly.
+  useEffect(() => {
+    tracks.forEach((tr) => {
+      if (!tr.artwork) return;
+      const img = new Image();
+      img.src = tr.artwork;
+    });
+  }, [tracks]);
+
   // Initialize the widget once the iframe mounts.
   useEffect(() => {
     if (!iframeRef.current) return;
-    let unbinds = [];
+    const unbindsRef = { current: [] };
+    let cancelled = false;
     ensureSCWidget().then((Widget) => {
+      if (cancelled || !iframeRef.current) return;
       const w = Widget(iframeRef.current);
       widgetRef.current = w;
       const E = window.SC.Widget.Events;
@@ -357,28 +413,39 @@ function NowPlayingHero({ data }) {
       };
       const onPlay = () => setPlaying(true);
       const onPause = () => setPlaying(false);
-      const onFinish = () => setActive((i) => (i + 1) % tracks.length);
+      const onFinish = () =>
+        setActive((i) => (i + 1) % Math.max(1, tracksRef.current.length));
 
       w.bind(E.PLAY_PROGRESS, onProgress);
       w.bind(E.PLAY, onPlay);
       w.bind(E.PAUSE, onPause);
       w.bind(E.FINISH, onFinish);
-      unbinds = [
+      unbindsRef.current = [
         () => w.unbind(E.PLAY_PROGRESS),
         () => w.unbind(E.PLAY),
         () => w.unbind(E.PAUSE),
         () => w.unbind(E.FINISH),
       ];
+      setWidgetReady(true);
     });
-    return () => unbinds.forEach((fn) => fn());
+    return () => {
+      cancelled = true;
+      unbindsRef.current.forEach((fn) => fn());
+      unbindsRef.current = [];
+      setWidgetReady(false);
+    };
   }, []);
 
-  // Load the new track when the user changes it.
+  // Load the current track after the widget API is ready.
+  // Do not depend on `tracks`: oEmbed/widget metadata updates must not call load() again.
   useEffect(() => {
+    if (!widgetReady) return;
     const w = widgetRef.current;
     if (!w) return;
-    const url = tracks[active]?.url;
+    const row = tracksRef.current[active];
+    const url = row?.url;
     if (!url) return;
+    const idx = active;
     w.load(url, {
       auto_play: playing,
       hide_related: true,
@@ -388,7 +455,8 @@ function NowPlayingHero({ data }) {
       visual: false,
     });
     setProgress({ played: 0, cur: 0, dur: 0 });
-  }, [active]);
+    return syncTrackFromWidget(idx, url);
+  }, [active, widgetReady]);
 
   const togglePlay = () => {
     const w = widgetRef.current;
@@ -418,7 +486,7 @@ function NowPlayingHero({ data }) {
           <div className="pf-mh__artNoise" />
           <div className="pf-mh__artScrim" />
           <div className="pf-mh__artLabel">
-            {(t.title || "").toUpperCase()}
+            {t.title || ""}
             <small>{String(active + 1).padStart(2, "0")}</small>
           </div>
         </div>
@@ -442,7 +510,7 @@ function NowPlayingHero({ data }) {
         </div>
       </div>
 
-      <div className="pf-mh__strip" role="tablist" aria-label="Track list">
+      <div className="pf-mh__strip" role="tablist" aria-label="Track list" style={{ "--pf-strip-cols": tracks.length }}>
         {tracks.map((tr, i) => (
           <button
             key={i}

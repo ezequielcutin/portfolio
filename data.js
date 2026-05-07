@@ -245,9 +245,10 @@ window.PORTFOLIO_DATA = {
   music: {
     intro: "Techno, house, and ambient — produced under my own name. Iteration and patience translate well to engineering.",
     soundcloud: "https://soundcloud.com/ezequiel-cutin-187993918",
-    // Real titles/artwork are pulled from SoundCloud's oEmbed on mount.
-    // The strings below are best-guess fallbacks shown only until oEmbed resolves.
+    // Real titles/artwork usually come from oEmbed + the hidden SC widget on mount.
+    // titleLocked: keep exact spelling when oEmbed/SC use different casing (or "Title by X" strips badly).
     tracks: [
+      { url: "https://soundcloud.com/goblin-lore/ezedusit", title: "EzeDusIt", kind: "Techno", titleLocked: true },
       { url: "https://soundcloud.com/ezequiel-cutin-187993918/hardcore-mf",          title: "Hardcore MF",         kind: "Techno"  },
       { url: "https://soundcloud.com/ezequiel-cutin-187993918/solace",               title: "Solace",              kind: "Ambient" },
       { url: "https://soundcloud.com/ezequiel-cutin-187993918/alien-transmissions",  title: "Alien Transmissions", kind: "Techno"  },

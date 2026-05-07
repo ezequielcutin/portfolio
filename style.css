@@ -1394,7 +1394,7 @@ img { display: block; max-width: 100%; height: auto; }
 
 .pf-mh__strip {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(var(--pf-strip-cols, 8), 1fr);
   border: 1px solid var(--rule);
 }
 @media (max-width: 900px) {
