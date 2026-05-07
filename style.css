@@ -911,6 +911,9 @@ img { display: block; max-width: 100%; height: auto; }
 }
 
 /* ═══════════ Reduced motion ═══════════ */
+/* ═══════════ Rust period — recurring system mark ═══════════ */
+.pf-mark { color: var(--accent); }
+
 /* ═══════════ Hero name reveal — staggered letter-in ═══════════ */
 .pf-stacked__char {
   display: inline-block;
