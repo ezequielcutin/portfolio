@@ -442,7 +442,7 @@ function NowPlayingHero({ data }) {
         </div>
       </div>
 
-      <div className="pf-mh__strip" role="tablist">
+      <div className="pf-mh__strip" role="tablist" aria-label="Track list">
         {tracks.map((tr, i) => (
           <button
             key={i}
@@ -457,14 +457,22 @@ function NowPlayingHero({ data }) {
                 : String(i + 1).padStart(2, "0")}
             </span>
             <span className="pf-mh__cellTitle">{tr.title}</span>
+            <span className="pf-mh__cellChev" aria-hidden>›</span>
           </button>
         ))}
       </div>
 
       <div className="pf-mh__foot">
         <span>↳ Headphones recommended</span>
-        <a href={data.soundcloud} target="_blank" rel="noopener noreferrer">
-          soundcloud.com/ezequiel-cutin ↗
+        <a
+          href={data.soundcloud}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="pf-mh__footLink"
+          aria-label="SoundCloud profile (opens in new tab)"
+        >
+          {window.PFIcons.SoundCloud({ width: 28, height: 22, className: "pf-mh__footSc" })}
+          <span className="pf-link__arrow" aria-hidden="true">↗</span>
         </a>
       </div>
 
