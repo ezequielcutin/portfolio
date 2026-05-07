@@ -310,7 +310,7 @@ function LayoutStacked({ data, density }) {
       <section className="pf-block pf-block--work" id="block-work">
         <div className="pf-block__inner">
           <header className="pf-blockHead">
-            <span className="pf-mono pf-eyebrow">§ 01</span>
+            <span className="pf-mono pf-eyebrow">01</span>
             <h2 className="pf-blockHead__title">Work</h2>
             <p className="pf-blockHead__sub">Seven roles across software, autonomous systems, and entrepreneurship.</p>
           </header>
@@ -334,7 +334,7 @@ function LayoutStacked({ data, density }) {
       <section className="pf-block pf-block--projects pf-block--alt" id="block-projects">
         <div className="pf-block__inner">
           <header className="pf-blockHead">
-            <span className="pf-mono pf-eyebrow">§ 02</span>
+            <span className="pf-mono pf-eyebrow">02</span>
             <h2 className="pf-blockHead__title">Projects</h2>
             <p className="pf-blockHead__sub">Builds spanning full-stack apps, distributed systems, and graphics.</p>
           </header>
@@ -357,7 +357,7 @@ function LayoutStacked({ data, density }) {
       <section className="pf-block pf-block--music" id="block-music">
         <div className="pf-block__inner">
           <header className="pf-blockHead">
-            <span className="pf-mono pf-eyebrow">§ 03</span>
+            <span className="pf-mono pf-eyebrow">03</span>
             <h2 className="pf-blockHead__title">Music</h2>
             <p className="pf-blockHead__sub">Techno, house, ambient — produced under my own name.</p>
           </header>
@@ -365,9 +365,11 @@ function LayoutStacked({ data, density }) {
         </div>
       </section>
 
-      <footer className="pf-foot">
-        <span className="pf-mono pf-muted">© {new Date().getFullYear()} {data.identity.name}</span>
-        <span className="pf-mono pf-muted">Built quietly</span>
+      <footer className="pf-foot pf-foot--stacked">
+        <div className="pf-foot__inner">
+          <span className="pf-mono pf-muted">© {new Date().getFullYear()} {data.identity.name}</span>
+          <span className="pf-mono pf-muted">All bugs were harmed in the making of this site.</span>
+        </div>
       </footer>
     </div>);
 

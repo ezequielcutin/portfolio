@@ -353,6 +353,13 @@ img { display: block; max-width: 100%; height: auto; }
 .pf-entry__at { color: var(--fg-soft); font-weight: 400; }
 .pf-entry.is-current .pf-entry__role { color: var(--fg); }
 
+/* Subtle, distinct hover for active positions: a small lateral nudge
+   and a rust tint on the date/meta — keeps the role text steady so the
+   "currently here" reading isn't lost. */
+.pf-entry.is-current:hover .pf-entry__header { padding-left: 6px; color: var(--fg); }
+.pf-entry.is-current:hover .pf-entry__metaText { color: var(--accent); }
+.pf-entry.is-current:hover .pf-live::before { opacity: 0.45; }
+
 .pf-entry__meta {
   display: flex;
   align-items: baseline;
@@ -624,6 +631,24 @@ img { display: block; max-width: 100%; height: auto; }
   border-top: 1px solid var(--rule);
   flex-wrap: wrap;
   gap: 12px;
+}
+
+.pf-foot--stacked {
+  margin-top: 0;
+  padding: 0;
+  border-top: none;
+  background: var(--bg);
+}
+.pf-foot--stacked .pf-foot__inner {
+  max-width: var(--max-w-wide);
+  margin: 0 auto;
+  padding: 32px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 /* ═══════════ INDEX LAYOUT (Swiss left rail) ═══════════ */

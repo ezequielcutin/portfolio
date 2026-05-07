@@ -5,7 +5,7 @@ window.PORTFOLIO_DATA = {
     tagline: "Engineer, builder, occasional techno producer.",
     location: "Metro Detroit, MI",
     headshot: "headshot_budapest.png",
-    bio: "Born in Miami, studied and currently living in Michigan. I write software for a living, make techno when I can, and watch way too much football — the real one, not American. Producing music has taught me more about engineering than most classes did: the patience, the iteration, the obsession with getting small details right. I like building things that feel good to use.",
+    bio: "Born in Miami, studied and currently living in Michigan. I write software for a living, make techno when I can, and watch way too much football — the real one, not American. Producing music has taught me more about engineering than most classes did: the patience, the iteration, the obsession with getting small details right. I like building things that feel good to use, and tinkering with things until they do.",
     bioShort: "I write software for a living and make techno when I can. Currently building developer tooling at UWM and trading systems at Glenbrook.",
     links: [
       { label: "GitHub",     href: "https://github.com/ezequielcutin",                  handle: "@ezequielcutin" },
@@ -30,10 +30,10 @@ window.PORTFOLIO_DATA = {
       location: "Metro Detroit, MI",
       current: true,
       bullets: [
-        "Maintain Bolt — UWM's AI platform for mortgage workflows — through data extraction and automation.",
-        "Author unit and integration tests across frontend and backend microservices.",
-        "Support CI/CD pipelines for fast, low-disruption deployments.",
-        "Serve on Bolt's developer council, defining code standards and quality benchmarks.",
+        "Troubleshoot and maintain Bolt, UWM's cutting-edge AI platform for mortgage workflows, ensuring stability through data extraction and automation.",
+        "Develop and run unit/integration tests to ensure seamless performance across the frontend and backend microservices.",
+        "Support CI/CD pipelines, contributing to fast, reliable deployments with minimal disruption.",
+        "Serve on Bolt's developer council, defining and enforcing code standards and quality benchmarks across the product.",
       ],
       stack: ["React", "JavaScript", "C#", ".NET Core", "SQL", "Azure", "Apache Kafka", "Docker", "CI/CD"],
     },
@@ -45,12 +45,13 @@ window.PORTFOLIO_DATA = {
       location: "Remote",
       current: true,
       bullets: [
+        "Architected the entire quant engine end-to-end — from cloud storage and data pipelines to model serving and live monitoring.",
         "Built cloud infrastructure on AWS S3 for backtesting and optimizing trading models.",
         "Developed full-stack tooling (React, C#, Python) to monitor live model performance.",
         "Dockerized and packaged the quant engine for consistent team-wide development.",
         "Designed and trained LSTM and decision tree models for predictive market analytics.",
       ],
-      stack: ["Python", "C#", "React", "TensorFlow", "PyTorch", "AWS", "Docker", "Pandas", "Plotly"],
+      stack: ["Python", "C#", "React", "TensorFlow", "PyTorch", "AWS", "Docker", "Pandas", "Plotly", "Cloud Architecture", "Distributed Systems", "WebSockets"],
     },
     {
       id: "zoox",
