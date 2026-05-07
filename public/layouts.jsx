@@ -274,17 +274,37 @@ function LayoutStacked({ data, density }) {
           <p className="pf-mono pf-eyebrow">
 </p>
           <h1 className="pf-stacked__name">
-            {data.identity.name.split("").map((ch, i) => (
-              <span
-                key={i}
-                className="pf-stacked__char"
-                style={{ animationDelay: `${i * 65}ms` }}
-              >{ch === " " ? " " : ch}</span>
-            ))}
-            <span
-              className="pf-stacked__period pf-stacked__char"
-              style={{ animationDelay: `${data.identity.name.length * 65}ms` }}
-            >.</span>
+            {(() => {
+              const words = data.identity.name.trim().split(/\s+/);
+              let delayIdx = 0;
+              return words.map((word, wi) => (
+                <React.Fragment key={wi}>
+                  {wi > 0 ? " " : null}
+                  <span className="pf-stacked__word">
+                    {word.split("").map((ch, i) => {
+                      const d = delayIdx++;
+                      return (
+                        <span
+                          key={i}
+                          className="pf-stacked__char"
+                          style={{ animationDelay: `${d * 65}ms` }}
+                        >
+                          {ch}
+                        </span>
+                      );
+                    })}
+                    {wi === words.length - 1 ? (
+                      <span
+                        className="pf-stacked__period pf-stacked__char"
+                        style={{ animationDelay: `${delayIdx * 65}ms` }}
+                      >
+                        .
+                      </span>
+                    ) : null}
+                  </span>
+                </React.Fragment>
+              ));
+            })()}
           </h1>
           <p className="pf-stacked__tagline">{data.identity.tagline}</p>
           <div className="pf-stacked__heroGrid">
@@ -295,12 +315,22 @@ function LayoutStacked({ data, density }) {
               <p className="pf-stacked__bio">{data.identity.bio}</p>
               <div className="pf-stacked__now">
                 <p className="pf-mono pf-eyebrow">Currently</p>
-                {data.now.map((n) => <p key={n.entry} className="pf-stacked__nowItem">
-                    <span className="pf-live"><span className="pf-live__core" /></span>
-                    <strong>{n.role}</strong>
-                    <span className="pf-muted">  ·  {n.at}</span>
-                  </p>
-                )}
+                {data.now.map((n) => (
+                  <div key={n.entry} className="pf-stacked__nowItem">
+                    <span className="pf-stacked__nowMarker" aria-hidden="true">
+                      <span className="pf-live">
+                        <span className="pf-live__core" />
+                      </span>
+                    </span>
+                    <div className="pf-stacked__nowBody">
+                      <strong className="pf-stacked__nowRole">{n.role}</strong>
+                      <span className="pf-stacked__nowDash" aria-hidden="true">
+                        ·
+                      </span>
+                      <span className="pf-stacked__nowAt pf-muted">{n.at}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
               <div className="pf-stacked__heroLinks">
                 {data.identity.links.map((l) => {

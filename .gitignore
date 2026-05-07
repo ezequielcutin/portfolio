@@ -25,7 +25,10 @@ eslint.config.js
 tsconfig.json
 tsconfig.app.json
 tsconfig.node.json
-public/
+# Vite public: ignore loose assets, keep tracked JSX entry points
+public/*
+!public/*.jsx
+!public/vite.svg
 
 # Playwright MCP
 .playwright-mcp/
