@@ -296,6 +296,14 @@ function ensureSCWidget() {
   return _scWidgetPromise;
 }
 
+function PlayingBars() {
+  return (
+    <span className="pf-mh__bars" aria-hidden="true">
+      <span /><span /><span />
+    </span>
+  );
+}
+
 function NowPlayingHero({ data }) {
   const [tracks, setTracks] = useState(data.tracks);
   const [active, setActive] = useState(0);
@@ -443,7 +451,11 @@ function NowPlayingHero({ data }) {
             className={`pf-mh__cell ${i === active ? "is-active" : ""}`}
             onClick={() => { setActive(i); setPlaying(true); }}
           >
-            <span className="pf-mh__cellNum">{String(i + 1).padStart(2, "0")}</span>
+            <span className="pf-mh__cellNum">
+              {playing && i === active
+                ? <PlayingBars />
+                : String(i + 1).padStart(2, "0")}
+            </span>
             <span className="pf-mh__cellTitle">{tr.title}</span>
           </button>
         ))}

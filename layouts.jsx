@@ -274,11 +274,23 @@ function LayoutStacked({ data, density }) {
           <p className="pf-mono pf-eyebrow">
 </p>
           <h1 className="pf-stacked__name">
-            {data.identity.name}<span className="pf-stacked__period">.</span>
+            {data.identity.name.split("").map((ch, i) => (
+              <span
+                key={i}
+                className="pf-stacked__char"
+                style={{ animationDelay: `${i * 65}ms` }}
+              >{ch === " " ? " " : ch}</span>
+            ))}
+            <span
+              className="pf-stacked__period pf-stacked__char"
+              style={{ animationDelay: `${data.identity.name.length * 65}ms` }}
+            >.</span>
           </h1>
           <p className="pf-stacked__tagline">{data.identity.tagline}</p>
           <div className="pf-stacked__heroGrid">
-            <img className="pf-stacked__photo" src={data.identity.headshot} alt={data.identity.name} />
+            <div className="pf-stacked__photoFrame">
+              <img className="pf-stacked__photo" src={data.identity.headshot} alt={data.identity.name} />
+            </div>
             <div className="pf-stacked__heroText">
               <p className="pf-stacked__bio">{data.identity.bio}</p>
               <div className="pf-stacked__now">
@@ -379,7 +391,10 @@ function LayoutStacked({ data, density }) {
       <footer className="pf-foot pf-foot--stacked">
         <div className="pf-foot__inner">
           <span className="pf-mono pf-muted">© {new Date().getFullYear()} {data.identity.name}</span>
-          <span className="pf-mono pf-muted">All bugs were harmed in the making of this site.</span>
+          <span className="pf-mono pf-muted">
+            All bugs were harmed in the making of this site.
+            <span className="pf-foot__cursor" aria-hidden="true">█</span>
+          </span>
         </div>
       </footer>
 
