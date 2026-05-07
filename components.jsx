@@ -325,9 +325,17 @@ function NowPlayingHero({ data }) {
   function syncTrackFromWidget(indexWhenLoaded, urlWhenLoaded) {
     const w = widgetRef.current;
     if (!w) return;
+    // Capture the sound the widget is currently showing — that's the OLD
+    // track. We must not apply its metadata to the newly-active row.
+    let priorSoundId = null;
+    w.getCurrentSound((s) => {
+      if (s) priorSoundId = s.id ?? s.permalink_url ?? null;
+    });
     const apply = () => {
       w.getCurrentSound((sound) => {
         if (!sound) return;
+        const soundId = sound.id ?? sound.permalink_url ?? null;
+        if (priorSoundId !== null && soundId === priorSoundId) return;
         const rawArt = sound.artwork_url || sound.user?.avatar_url;
         const art = _scArtworkHiRes(rawArt);
         const scTitle =
