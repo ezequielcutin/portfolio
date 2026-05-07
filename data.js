@@ -245,12 +245,16 @@ window.PORTFOLIO_DATA = {
   music: {
     intro: "Techno, house, and ambient — produced under my own name. Iteration and patience translate well to engineering.",
     soundcloud: "https://soundcloud.com/ezequiel-cutin-187993918",
+    // Real titles/artwork are pulled from SoundCloud's oEmbed on mount.
+    // The strings below are best-guess fallbacks shown only until oEmbed resolves.
     tracks: [
-      { title: "Brisk",        kind: "Techno",   year: "2024", duration: "6:42" },
-      { title: "Slow Burn",    kind: "Ambient",  year: "2024", duration: "8:11" },
-      { title: "Fieldwork",    kind: "House",    year: "2023", duration: "5:58" },
-      { title: "Cassette Loop",kind: "Ambient",  year: "2023", duration: "7:24" },
-      { title: "Detour",       kind: "Techno",   year: "2023", duration: "6:12" },
+      { url: "https://soundcloud.com/ezequiel-cutin-187993918/hardcore-mf",          title: "Hardcore MF",         kind: "Techno"  },
+      { url: "https://soundcloud.com/ezequiel-cutin-187993918/solace",               title: "Solace",              kind: "Ambient" },
+      { url: "https://soundcloud.com/ezequiel-cutin-187993918/alien-transmissions",  title: "Alien Transmissions", kind: "Techno"  },
+      { url: "https://api.soundcloud.com/tracks/1867505247", title: "—", kind: "—" },
+      { url: "https://api.soundcloud.com/tracks/1844941479", title: "—", kind: "—" },
+      { url: "https://api.soundcloud.com/tracks/1838947944", title: "—", kind: "—" },
+      { url: "https://api.soundcloud.com/tracks/1254042886", title: "—", kind: "—" },
     ],
   },
 };

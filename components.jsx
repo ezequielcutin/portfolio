@@ -249,7 +249,226 @@ function MusicBlock({ data }) {
   );
 }
 
+// ───────── Now-Playing Hero (music section) ─────────
+function _seedRand(seed) {
+  let s = seed;
+  return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+}
+function NowPlayingWave({ seed, played = 0, bars = 120, peak = 28 }) {
+  const data = useMemo(() => {
+    const r = _seedRand(seed);
+    return Array.from({ length: bars }, (_, i) => {
+      const env = Math.sin((i / bars) * Math.PI) * 0.55 + 0.45;
+      return Math.max(2, Math.round((r() * 0.75 + 0.25) * env * peak));
+    });
+  }, [seed, bars, peak]);
+  return (
+    <svg className="pf-mh__wave" viewBox={`0 0 ${bars * 4} ${peak * 2}`} preserveAspectRatio="none">
+      {data.map((h, i) => {
+        const isPlayed = i / bars < played;
+        return (
+          <rect key={i} x={i * 4} y={peak - h} width="2.4" height={h * 2} rx="1"
+            fill={isPlayed ? "var(--accent)" : "var(--fg-soft)"} opacity={isPlayed ? 1 : 0.55} />
+        );
+      })}
+    </svg>
+  );
+}
+function _fmtTime(sec) {
+  if (!sec || isNaN(sec)) return "0:00";
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+}
+
+let _scWidgetPromise = null;
+function ensureSCWidget() {
+  if (window.SC?.Widget) return Promise.resolve(window.SC.Widget);
+  if (_scWidgetPromise) return _scWidgetPromise;
+  _scWidgetPromise = new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://w.soundcloud.com/player/api.js";
+    s.async = true;
+    s.onload = () => resolve(window.SC.Widget);
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+  return _scWidgetPromise;
+}
+
+function NowPlayingHero({ data }) {
+  const [tracks, setTracks] = useState(data.tracks);
+  const [active, setActive] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState({ played: 0, cur: 0, dur: 0 });
+  const iframeRef = useRef(null);
+  const widgetRef = useRef(null);
+
+  // Hydrate titles + artwork from oEmbed in parallel.
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(
+      data.tracks.map((t) =>
+        fetch(`https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(t.url)}`)
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null)
+      )
+    ).then((results) => {
+      if (cancelled) return;
+      setTracks(
+        data.tracks.map((t, i) => {
+          const o = results[i];
+          if (!o) return t;
+          // oEmbed returns "Title by Artist" — strip the suffix.
+          const cleanTitle = (o.title || t.title).replace(/\s+by\s+.+$/i, "");
+          return { ...t, title: cleanTitle, artwork: o.thumbnail_url || null };
+        })
+      );
+    });
+    return () => { cancelled = true; };
+  }, [data]);
+
+  // Initialize the widget once the iframe mounts.
+  useEffect(() => {
+    if (!iframeRef.current) return;
+    let unbinds = [];
+    ensureSCWidget().then((Widget) => {
+      const w = Widget(iframeRef.current);
+      widgetRef.current = w;
+      const E = window.SC.Widget.Events;
+
+      const onProgress = (e) => {
+        setProgress((p) => ({
+          ...p,
+          played: e.relativePosition || 0,
+          cur: (e.currentPosition || 0) / 1000,
+        }));
+        widgetRef.current?.getDuration((d) =>
+          setProgress((p) => ({ ...p, dur: d / 1000 }))
+        );
+      };
+      const onPlay = () => setPlaying(true);
+      const onPause = () => setPlaying(false);
+      const onFinish = () => setActive((i) => (i + 1) % tracks.length);
+
+      w.bind(E.PLAY_PROGRESS, onProgress);
+      w.bind(E.PLAY, onPlay);
+      w.bind(E.PAUSE, onPause);
+      w.bind(E.FINISH, onFinish);
+      unbinds = [
+        () => w.unbind(E.PLAY_PROGRESS),
+        () => w.unbind(E.PLAY),
+        () => w.unbind(E.PAUSE),
+        () => w.unbind(E.FINISH),
+      ];
+    });
+    return () => unbinds.forEach((fn) => fn());
+  }, []);
+
+  // Load the new track when the user changes it.
+  useEffect(() => {
+    const w = widgetRef.current;
+    if (!w) return;
+    const url = tracks[active]?.url;
+    if (!url) return;
+    w.load(url, {
+      auto_play: playing,
+      hide_related: true,
+      show_comments: false,
+      show_reposts: false,
+      show_teaser: false,
+      visual: false,
+    });
+    setProgress({ played: 0, cur: 0, dur: 0 });
+  }, [active]);
+
+  const togglePlay = () => {
+    const w = widgetRef.current;
+    if (!w) return;
+    if (playing) w.pause();
+    else w.play();
+  };
+  const prev = () => setActive((i) => (i - 1 + tracks.length) % tracks.length);
+  const next = () => setActive((i) => (i + 1) % tracks.length);
+
+  const t = tracks[active];
+
+  return (
+    <div className="pf-mh">
+      <div className="pf-mh__stage">
+        <div className="pf-mh__art" aria-hidden="true">
+          {t.artwork ? (
+            <img className="pf-mh__artImg" src={t.artwork} alt="" />
+          ) : (
+            <>
+              <div className="pf-mh__artGrad" />
+              <div className="pf-mh__artCrop" />
+              <div className="pf-mh__artRect" />
+              <div className="pf-mh__artRect2" />
+            </>
+          )}
+          <div className="pf-mh__artNoise" />
+          <div className="pf-mh__artScrim" />
+          <div className="pf-mh__artLabel">
+            {(t.title || "").toUpperCase()}
+            <small>{String(active + 1).padStart(2, "0")}</small>
+          </div>
+        </div>
+        <div className="pf-mh__info">
+          <h3 className="pf-mh__title">{t.title}</h3>
+          <p className="pf-mh__meta">{String(active + 1).padStart(2, "0")} / {String(tracks.length).padStart(2, "0")}</p>
+          <NowPlayingWave seed={active * 47 + 13} played={progress.played} />
+          <div className="pf-mh__time">
+            {_fmtTime(progress.cur)} / {_fmtTime(progress.dur)}
+          </div>
+          <div className="pf-mh__trans">
+            <button className="pf-mh__transSm" onClick={prev} aria-label="Previous track">‹‹</button>
+            <button className="pf-mh__transMain" onClick={togglePlay} aria-label={playing ? "Pause" : "Play"}>
+              {playing ? "❚❚" : "▶"}
+            </button>
+            <button className="pf-mh__transSm" onClick={next} aria-label="Next track">››</button>
+          </div>
+          <a href={t.url} target="_blank" rel="noopener noreferrer" className="pf-mh__cta">
+            View on SoundCloud ↗
+          </a>
+        </div>
+      </div>
+
+      <div className="pf-mh__strip" role="tablist">
+        {tracks.map((tr, i) => (
+          <button
+            key={i}
+            role="tab"
+            aria-selected={i === active}
+            className={`pf-mh__cell ${i === active ? "is-active" : ""}`}
+            onClick={() => { setActive(i); setPlaying(true); }}
+          >
+            <span className="pf-mh__cellNum">{String(i + 1).padStart(2, "0")}</span>
+            <span className="pf-mh__cellTitle">{tr.title}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="pf-mh__foot">
+        <span>↳ Headphones recommended</span>
+        <a href={data.soundcloud} target="_blank" rel="noopener noreferrer">
+          soundcloud.com/ezequiel-cutin ↗
+        </a>
+      </div>
+
+      <iframe
+        ref={iframeRef}
+        className="pf-mh__iframe"
+        title="SoundCloud player"
+        allow="autoplay"
+        src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(tracks[0].url)}&visual=false&hide_related=true&show_comments=false&show_reposts=false&show_teaser=false`}
+      />
+    </div>
+  );
+}
+
 // Export to global scope
 Object.assign(window, {
   Entry, Stack, Carousel, VideoPlayer, Tabs, WorkBody, ProjectBody, MusicBlock,
+  NowPlayingHero,
 });

@@ -361,7 +361,7 @@ function LayoutStacked({ data, density }) {
             <h2 className="pf-blockHead__title">Music</h2>
             <p className="pf-blockHead__sub">Techno, house, ambient — produced under my own name.</p>
           </header>
-          <MusicBlock data={data.music} />
+          <NowPlayingHero data={data.music} />
         </div>
       </section>
 
