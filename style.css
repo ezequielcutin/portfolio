@@ -385,7 +385,7 @@ img { display: block; max-width: 100%; height: auto; }
   text-align: left;
   font-family: inherit;
   color: inherit;
-  transition: padding 200ms;
+  transition: transform 200ms;
 }
 .pf-py-3 { padding-top: 12px; padding-bottom: 12px; }
 .pf-py-5 { padding-top: 20px; padding-bottom: 20px; }
@@ -413,7 +413,7 @@ img { display: block; max-width: 100%; height: auto; }
    and a rust tint on the date/meta — keeps the role text steady so the
    "currently here" reading isn't lost. */
 @media (hover: hover) and (pointer: fine) {
-  .pf-entry.is-current:hover .pf-entry__header { padding-left: 6px; color: var(--fg); }
+  .pf-entry.is-current:hover .pf-entry__header { transform: translateX(6px); color: var(--fg); }
   .pf-entry.is-current:hover .pf-entry__metaText { color: var(--accent); }
   .pf-entry.is-current:hover .pf-live::before { opacity: 0.45; }
 }
@@ -644,9 +644,11 @@ img { display: block; max-width: 100%; height: auto; }
 }
 .pf-video__progressFill {
   height: 100%;
+  width: 100%;
+  transform-origin: left center;
   background: var(--accent);
   border-radius: 2px;
-  transition: width 100ms linear;
+  transition: transform 100ms linear;
 }
 .pf-video__row { display: flex; justify-content: space-between; align-items: center; }
 .pf-video__left, .pf-video__right { display: flex; gap: 12px; align-items: center; }
@@ -684,9 +686,9 @@ img { display: block; max-width: 100%; height: auto; }
   padding: 14px 0;
   border-bottom: 1px solid var(--rule);
   cursor: pointer;
-  transition: padding 200ms;
+  transition: transform 200ms;
 }
-.pf-tracklist__row:hover { padding-left: 8px; }
+.pf-tracklist__row:hover { transform: translateX(8px); }
 .pf-tracklist__row:hover .pf-tracklist__title { color: var(--accent); }
 .pf-tracklist__num {
   font-family: var(--font-mono);
@@ -805,10 +807,10 @@ img { display: block; max-width: 100%; height: auto; }
   font-family: inherit;
   font-size: 16px;
   text-align: left;
-  transition: color 200ms, padding 200ms;
+  transition: color 200ms, transform 200ms;
 }
 .pf-rail__navItem:last-child { border-bottom: none; }
-.pf-rail__navItem:hover { color: var(--fg); padding-left: 4px; }
+.pf-rail__navItem:hover { color: var(--fg); transform: translateX(4px); }
 .pf-rail__navItem.is-active { color: var(--fg); font-weight: 500; }
 .pf-rail__navCount { color: var(--muted); font-size: 12px; }
 
@@ -2029,4 +2031,247 @@ img { display: block; max-width: 100%; height: auto; }
       inset 0 1px 0 rgba(255, 255, 255, 0.2),
       0 2px 8px rgba(0, 0, 0, 0.22);
   }
+}
+
+/* ═══════════ WORK TIMELINE (pinned horizontal) ═══════════ */
+.pf-tl__panelTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.pf-tl__index {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+.pf-tl__nowTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.pf-tl__year {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 5vw, 68px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 0.9;
+  color: var(--fg);
+  margin-bottom: 14px;
+}
+.pf-tl__panel.is-current .pf-tl__year { color: var(--accent); }
+.pf-tl__role {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  margin: 0 0 2px;
+}
+.pf-tl__org { font-size: 16px; color: var(--fg-soft); margin-bottom: 8px; }
+.pf-tl__meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+.pf-tl__bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 14px;
+}
+.pf-tl__bullets li {
+  position: relative;
+  padding: 3px 0 3px 18px;
+  color: var(--fg-soft);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.pf-tl__bullets li::before {
+  content: "—";
+  position: absolute;
+  left: 0;
+  color: var(--muted);
+}
+
+/* ---- Pinned (desktop) ---- */
+.pf-tl--pinned {
+  position: relative;
+  height: calc(100vh + (var(--pf-tl-panels) - 1) * 58vh);
+}
+.pf-tl__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-top: 60px; /* clear the sticky nav */
+}
+.pf-tl__viewport {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+.pf-tl__track {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  height: 100%;
+  padding-left: max(32px, calc((100vw - var(--max-w-wide)) / 2 + 32px));
+  padding-right: 32vw;
+  will-change: transform;
+}
+.pf-tl__panel {
+  flex: 0 0 auto;
+  width: min(540px, 74vw);
+  max-height: 100%;
+  overflow: hidden;
+  padding: 28px 30px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--card) 70%, transparent);
+  transition: border-color 320ms ease, opacity 320ms ease, transform 320ms ease;
+  opacity: 0.46;
+  transform: scale(0.975);
+}
+.pf-tl__panel.is-active {
+  opacity: 1;
+  transform: scale(1);
+  border-color: color-mix(in srgb, var(--rule) 60%, var(--fg) 14%);
+}
+.pf-tl__panel.is-current.is-active {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--rule));
+}
+.pf-tl__panel .pf-stack { margin: 12px 0 0; }
+
+/* ---- Rail ---- */
+.pf-tl__rail {
+  flex: 0 0 auto;
+  padding: 18px max(32px, calc((100vw - var(--max-w-wide)) / 2 + 32px)) 26px;
+}
+.pf-tl__railLine {
+  position: relative;
+  height: 1px;
+  background: var(--rule);
+  margin-bottom: 14px;
+}
+.pf-tl__railFill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  background: var(--accent);
+  height: 1px;
+}
+.pf-tl__railTicks {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.pf-tl__tick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  transition: color 220ms ease;
+}
+.pf-tl__tickDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--rule);
+  border: 1px solid var(--muted);
+  transition: background 220ms ease, transform 220ms ease, border-color 220ms ease;
+}
+.pf-tl__tick.is-active { color: var(--fg); }
+.pf-tl__tick.is-active .pf-tl__tickDot {
+  background: var(--fg);
+  border-color: var(--fg);
+  transform: scale(1.25);
+}
+.pf-tl__tick.is-current.is-active { color: var(--accent); }
+.pf-tl__tick.is-current.is-active .pf-tl__tickDot {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+@media (hover: hover) and (pointer: fine) {
+  .pf-tl__tick:hover { color: var(--fg); }
+  .pf-tl__tick:hover .pf-tl__tickDot { border-color: var(--fg); }
+}
+.pf-tl__tick:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* ---- Hint ---- */
+.pf-tl__hint {
+  position: absolute;
+  right: max(32px, calc((100vw - var(--max-w-wide)) / 2 + 32px));
+  bottom: 88px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: opacity 360ms ease, transform 360ms ease;
+}
+.pf-tl__hint.is-hidden { opacity: 0; transform: translateX(8px); pointer-events: none; }
+.pf-tl__hintArrow {
+  animation: pf-tl-nudge 1.6s ease-in-out infinite;
+}
+@keyframes pf-tl-nudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(5px); }
+}
+
+/* ---- Stacked fallback (mobile / reduced-motion / coarse pointer) ---- */
+.pf-tl--stacked { padding: 0 32px; }
+.pf-tl--stacked .pf-tl__panels {
+  max-width: var(--max-w-wide);
+  margin: 0 auto;
+  border-top: 1px solid var(--rule);
+}
+.pf-tl--stacked .pf-tl__panel {
+  width: auto;
+  max-height: none;
+  overflow: visible;
+  opacity: 1;
+  transform: none;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  border-radius: 0;
+  background: transparent;
+  padding: 26px 0;
+}
+.pf-tl--stacked .pf-tl__year { font-size: clamp(32px, 11vw, 48px); }
+
+@media (max-width: 600px) {
+  .pf-tl--stacked { padding: 0 24px; }
+  .pf-tl__role { font-size: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-tl__hintArrow { animation: none; }
 }

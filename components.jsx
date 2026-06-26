@@ -143,7 +143,7 @@ function VideoPlayer({ src }) {
       </div>
       <div className="pf-video__dock">
         <div className="pf-video__progress" onClick={seek}>
-          <div className="pf-video__progressFill" style={{ width: `${progress}%` }} />
+          <div className="pf-video__progressFill" style={{ transform: `scaleX(${progress / 100})` }} />
         </div>
         <div className="pf-video__row">
           <div className="pf-video__left">
@@ -233,6 +233,176 @@ function ProjectBody({ item }) {
         </div>
       )}
     </>
+  );
+}
+
+// ───────── Work timeline (pinned horizontal scroll) ─────────
+const _MONTHS = { jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11 };
+function _startSort(dateStr) {
+  const m = /([A-Za-z]{3})[A-Za-z]*\s+(\d{4})/.exec(dateStr || "");
+  if (!m) return 0;
+  return parseInt(m[2], 10) * 12 + (_MONTHS[m[1].toLowerCase()] ?? 0);
+}
+/** Start year of a role, e.g. "Jan 2025 to Present" -> "2025". Position on the
+ *  timeline is start-based; "current" is signalled by the accent dot, not the label. */
+function _railLabel(dateStr) {
+  const m = /(\d{4})/.exec(dateStr || "");
+  return m ? m[1] : "";
+}
+
+function WorkTimeline({ items }) {
+  const ordered = useMemo(
+    () => [...items].sort((a, b) => _startSort(a.date) - _startSort(b.date)),
+    [items]
+  );
+  const n = ordered.length;
+
+  // Desktop pinned mode only when there's room, a fine pointer, and motion is allowed.
+  const [pinned, setPinned] = useState(false);
+  const [active, setActive] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const sectionRef = useRef(null);
+  const stickyRef = useRef(null);
+  const viewportRef = useRef(null);
+  const trackRef = useRef(null);
+  const maxXRef = useRef(0);
+
+  useEffect(() => {
+    const mq = window.matchMedia(
+      "(min-width: 901px) and (pointer: fine) and (prefers-reduced-motion: no-preference)"
+    );
+    const apply = () => setPinned(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  // Pinned scroll-jack: translate the track from NATIVE scroll position.
+  // We never capture the wheel, so keyboard / trackpad / scrollbar all keep working.
+  useEffect(() => {
+    if (!pinned) return;
+    const section = sectionRef.current;
+    const track = trackRef.current;
+    const viewport = viewportRef.current;
+    if (!section || !track || !viewport) return;
+
+    let raf = 0;
+    const measure = () => {
+      maxXRef.current = Math.max(0, track.scrollWidth - viewport.clientWidth);
+    };
+    const render = () => {
+      raf = 0;
+      const vh = window.innerHeight;
+      const top = section.offsetTop;
+      const dist = section.offsetHeight - vh; // scrollable budget while pinned
+      const p = dist > 0 ? Math.min(1, Math.max(0, (window.scrollY - top) / dist)) : 0;
+      const x = -p * maxXRef.current;
+      track.style.transform = `translate3d(${x}px,0,0)`;
+      setProgress(p);
+      setActive(Math.round(p * (n - 1)));
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(render); };
+
+    measure();
+    render();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    const ro = new ResizeObserver(() => { measure(); render(); });
+    ro.observe(track);
+    ro.observe(viewport);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      ro.disconnect();
+      if (raf) cancelAnimationFrame(raf);
+      track.style.transform = "";
+    };
+  }, [pinned, n]);
+
+  // Jump to a panel by scrolling the page (pinned) — keeps native scroll authoritative.
+  const jumpTo = (i) => {
+    const section = sectionRef.current;
+    if (!section) return;
+    if (pinned && n > 1) {
+      const dist = section.offsetHeight - window.innerHeight;
+      const top = section.offsetTop + (i / (n - 1)) * dist;
+      window.scrollTo({ top, behavior: "smooth" });
+    } else {
+      document
+        .getElementById(`tl-panel-${ordered[i].id}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  const Panels = ordered.map((w, i) => (
+    <article
+      key={w.id}
+      id={`tl-panel-${w.id}`}
+      className={`pf-tl__panel ${w.current ? "is-current" : ""} ${pinned && i === active ? "is-active" : ""}`}
+      aria-current={w.current ? "true" : undefined}
+    >
+      <div className="pf-tl__panelTop">
+        <span className="pf-tl__index">{String(i + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}</span>
+        {w.current ? (
+          <span className="pf-tl__nowTag">
+            <span className="pf-live" aria-hidden="true"><span className="pf-live__core" /></span>
+            current
+          </span>
+        ) : null}
+      </div>
+      <div className="pf-tl__year">{_railLabel(w.date)}</div>
+      <h3 className="pf-tl__role">{w.title}</h3>
+      <div className="pf-tl__org">{w.org}</div>
+      <div className="pf-tl__meta">{w.date} · {w.location}</div>
+      <ul className="pf-tl__bullets">
+        {w.bullets.map((b, bi) => <li key={bi}>{b}</li>)}
+      </ul>
+      <Stack items={w.stack} />
+    </article>
+  ));
+
+  if (!pinned) {
+    return (
+      <div className="pf-tl pf-tl--stacked">
+        <div className="pf-tl__panels">{Panels}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="pf-tl pf-tl--pinned"
+      ref={sectionRef}
+      style={{ "--pf-tl-panels": n }}
+    >
+      <div className="pf-tl__sticky" ref={stickyRef}>
+        <div className="pf-tl__viewport" ref={viewportRef}>
+          <div className="pf-tl__track" ref={trackRef}>
+            {Panels}
+          </div>
+        </div>
+        <div className="pf-tl__rail" role="presentation">
+          <div className="pf-tl__railLine">
+            <div className="pf-tl__railFill" style={{ transform: `scaleX(${progress})` }} />
+          </div>
+          <div className="pf-tl__railTicks">
+            {ordered.map((w, i) => (
+              <button
+                key={w.id}
+                type="button"
+                className={`pf-tl__tick ${i === active ? "is-active" : ""} ${w.current ? "is-current" : ""}`}
+                onClick={() => jumpTo(i)}
+                aria-label={`${w.title} at ${w.org}, ${w.date}`}
+              >
+                <span className="pf-tl__tickDot" aria-hidden="true" />
+                <span className="pf-tl__tickYear">{_railLabel(w.date)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className={`pf-tl__hint ${progress > 0.015 ? "is-hidden" : ""}`} aria-hidden="true">
+          scroll to walk the timeline <span className="pf-tl__hintArrow">→</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -598,5 +768,5 @@ function NowPlayingHero({ data }) {
 // Export to global scope
 Object.assign(window, {
   Entry, Stack, Carousel, VideoPlayer, Tabs, WorkBody, ProjectBody, MusicBlock,
-  NowPlayingHero,
+  NowPlayingHero, WorkTimeline,
 });

@@ -470,25 +470,10 @@ function LayoutStacked({ data, density }) {
         <div className="pf-block__inner">
           <header className="pf-blockHead">
             <h2 className="pf-blockHead__title">Work</h2>
-            <p className="pf-blockHead__sub">Mortgage tooling, quant trading, autonomy ops, and a few detours in between.</p>
+            <p className="pf-blockHead__sub">Mortgage tooling, quant trading, autonomy ops, and a few detours in between. Scroll the timeline from Detroit to now.</p>
           </header>
-          <div className="pf-list">
-            {data.work.map((w) =>
-            <Entry
-              key={w.id}
-              id={`entry-${w.id}`}
-              current={w.current}
-              density={density}
-              summary={`${w.title} at ${w.org}`}
-              preview={w.bullets?.[0]}
-              header={<><span className="pf-entry__role">{w.title}</span><span className="pf-entry__at"> at {w.org}</span></>}
-              meta={`${w.date} · ${w.location}`}>
-              
-                <WorkBody item={w} />
-              </Entry>
-            )}
-          </div>
         </div>
+        <WorkTimeline items={data.work} />
       </section>
 
       <section className="pf-block pf-block--projects pf-block--alt" id="block-projects">
