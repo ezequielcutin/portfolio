@@ -13,6 +13,7 @@ docs/carousel-mockups*.html
 # Dependencies & build output
 node_modules/
 dist/
+.dev-server.pid
 
 # Design specs
 .interface-design/

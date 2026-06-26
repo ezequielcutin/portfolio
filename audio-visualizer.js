@@ -23,6 +23,13 @@ function initAudioVisualizer() {
     let isStartingVisualizer = false;
 
     const modes = ['bars', 'waveform', 'circular', 'ambient'];
+    const modeLabels = {
+        bars: 'Bars',
+        waveform: 'Waveform',
+        circular: 'Circular',
+        ambient: 'Ambient',
+    };
+    const TOGGLE_LABEL = 'Audio visualizer';
     let timeData = new Uint8Array(0);
     let freqData = new Float32Array(0);
 
@@ -30,18 +37,39 @@ function initAudioVisualizer() {
     const modeToggle = document.getElementById('visualizer-mode-toggle');
     const exitToggle = document.getElementById('visualizer-exit');
 
+    function setStatus(message) {
+        const status = document.getElementById('visualizer-status');
+        if (status) status.textContent = message;
+    }
+
+    function syncToggleA11y() {
+        toggle.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        toggle.setAttribute(
+            'aria-label',
+            isActive ? 'Stop audio visualizer' : 'Start audio visualizer'
+        );
+    }
+
     function updateVisualizerUI() {
         if (controls) {
             controls.classList.toggle('active', isActive);
             controls.setAttribute('aria-hidden', isActive ? 'false' : 'true');
         }
+        syncToggleA11y();
+        if (!isActive) setStatus('');
     }
 
     function applyModeLabel() {
         const textSpan = toggle.querySelector('.visualizer-toggle-text');
         if (textSpan) {
-            textSpan.textContent = modes[currentMode].toUpperCase();
+            textSpan.textContent = TOGGLE_LABEL;
         }
+        if (modeToggle) {
+            const modeName = modeLabels[modes[currentMode]] || 'Bars';
+            modeToggle.textContent = `Mode: ${modeName}`;
+            modeToggle.setAttribute('aria-label', `Switch visualizer mode, currently ${modeName}`);
+        }
+        syncToggleA11y();
     }
 
     function cycleMode() {
@@ -73,9 +101,8 @@ function initAudioVisualizer() {
         if (!analyser) {
             if (isStartingVisualizer) return;
             pendingMode = nextMode;
-            const textSpan = toggle.querySelector('.visualizer-toggle-text');
-            if (textSpan) {
-                textSpan.textContent = modes[nextMode].toUpperCase();
+            if (modeToggle) {
+                modeToggle.textContent = `Mode: ${modeLabels[modes[nextMode]] || 'Bars'}`;
             }
             startVisualizer();
             return;
@@ -174,6 +201,7 @@ function initAudioVisualizer() {
             drawVisualizer();
         } catch (error) {
             console.error('Error accessing microphone:', error);
+            setStatus('Microphone access was denied. Ambient mode is running without audio input.');
             pendingMode = null;
             currentMode = 3;
             isActive = true;
@@ -200,7 +228,11 @@ function initAudioVisualizer() {
 
         const textSpan = toggle.querySelector('.visualizer-toggle-text');
         if (textSpan) {
-            textSpan.textContent = 'AUDIO VISUALIZER (EXPERIMENTAL)';
+            textSpan.textContent = TOGGLE_LABEL;
+        }
+        if (modeToggle) {
+            modeToggle.textContent = 'Toggle mode';
+            modeToggle.setAttribute('aria-label', 'Switch visualizer mode');
         }
 
         if (animationFrame) {

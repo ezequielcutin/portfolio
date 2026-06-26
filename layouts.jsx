@@ -4,9 +4,9 @@ const { useState: useStateL, useEffect: useEffectL } = React;
 // ═════════ EDITORIAL — centered, type-led, monospace metadata ═════════
 function LayoutEditorial({ data, tab, setTab, density }) {
   const tabs = [
-  { id: "work", label: "Work", num: "01" },
-  { id: "projects", label: "Projects", num: "02" },
-  { id: "music", label: "Music", num: "03" }];
+  { id: "work", label: "Work" },
+  { id: "projects", label: "Projects" },
+  { id: "music", label: "Music" }];
 
 
   return (
@@ -28,7 +28,6 @@ function LayoutEditorial({ data, tab, setTab, density }) {
         <p className="pf-hero__bio">{data.identity.bio}</p>
 
         <div className="pf-hero__nowRow">
-          <span className="pf-mono pf-eyebrow">Currently</span>
           <div className="pf-now">
             {data.now.map((n) =>
             <button
@@ -69,7 +68,6 @@ function LayoutEditorial({ data, tab, setTab, density }) {
         {tab === "work" &&
         <section className="pf-section">
             <header className="pf-sectionHead">
-              <p className="pf-eyebrow pf-mono">01 — Work</p>
               <h2 className="pf-sectionHead__title">Where I've been spending my hours.</h2>
             </header>
             <div className="pf-list">
@@ -79,6 +77,8 @@ function LayoutEditorial({ data, tab, setTab, density }) {
               id={`entry-${w.id}`}
               current={w.current}
               density={density}
+              summary={`${w.title} at ${w.org}`}
+              preview={w.bullets?.[0]}
               header={
               <>
                       <span className="pf-entry__role">{w.title}</span>
@@ -97,7 +97,6 @@ function LayoutEditorial({ data, tab, setTab, density }) {
         {tab === "projects" &&
         <section className="pf-section">
             <header className="pf-sectionHead">
-              <p className="pf-eyebrow pf-mono">02 — Projects</p>
               <h2 className="pf-sectionHead__title">Builds, experiments, and side quests.</h2>
             </header>
             <div className="pf-list">
@@ -106,6 +105,8 @@ function LayoutEditorial({ data, tab, setTab, density }) {
               key={p.id}
               id={`entry-${p.id}`}
               density={density}
+              summary={`${p.title}, ${p.tagline}`}
+              preview={p.bullets?.[0] ?? p.blurb}
               header={
               <>
                       <span className="pf-entry__role">{p.title}</span>
@@ -124,7 +125,6 @@ function LayoutEditorial({ data, tab, setTab, density }) {
         {tab === "music" &&
         <section className="pf-section">
             <header className="pf-sectionHead">
-              <p className="pf-eyebrow pf-mono">03 — Music</p>
               <h2 className="pf-sectionHead__title">Techno, house, and ambient.</h2>
             </header>
             <MusicBlock data={data.music} />
@@ -143,9 +143,9 @@ function LayoutEditorial({ data, tab, setTab, density }) {
 // ═════════ INDEX — Swiss left rail, content right ═════════
 function LayoutIndex({ data, tab, setTab, density }) {
   const tabs = [
-  { id: "work", label: "Work", num: "01" },
-  { id: "projects", label: "Projects", num: "02" },
-  { id: "music", label: "Music", num: "03" }];
+  { id: "work", label: "Work" },
+  { id: "projects", label: "Projects" },
+  { id: "music", label: "Music" }];
 
 
   return (
@@ -169,7 +169,6 @@ function LayoutIndex({ data, tab, setTab, density }) {
             className={`pf-rail__navItem ${tab === t.id ? "is-active" : ""}`}
             onClick={() => setTab(t.id)}>
             
-              <span className="pf-mono pf-rail__navNum">{t.num}</span>
               <span className="pf-rail__navLabel">{t.label}</span>
               <span className="pf-rail__navCount pf-mono">
                 {t.id === "work" ? data.work.length : t.id === "projects" ? data.projects.length : data.music.tracks.length}
@@ -179,7 +178,6 @@ function LayoutIndex({ data, tab, setTab, density }) {
         </nav>
 
         <div className="pf-rail__now">
-          <p className="pf-mono pf-eyebrow">Currently</p>
           {data.now.map((n) =>
           <div key={n.entry} className="pf-rail__nowItem">
               <span className="pf-live"><span className="pf-live__core" /></span>
@@ -210,7 +208,6 @@ function LayoutIndex({ data, tab, setTab, density }) {
         {tab === "work" &&
         <section className="pf-section">
             <header className="pf-sectionHead pf-sectionHead--rail">
-              <p className="pf-eyebrow pf-mono">Index — Work</p>
               <h2 className="pf-sectionHead__title">Seven roles, four cities.</h2>
             </header>
             <div className="pf-list">
@@ -220,6 +217,8 @@ function LayoutIndex({ data, tab, setTab, density }) {
               id={`entry-${w.id}`}
               current={w.current}
               density={density}
+              summary={`${w.title} at ${w.org}`}
+              preview={w.bullets?.[0]}
               header={<><span className="pf-entry__role">{w.title}</span><span className="pf-entry__at"> at {w.org}</span></>}
               meta={`${w.date} · ${w.location}`}>
               
@@ -232,7 +231,6 @@ function LayoutIndex({ data, tab, setTab, density }) {
         {tab === "projects" &&
         <section className="pf-section">
             <header className="pf-sectionHead pf-sectionHead--rail">
-              <p className="pf-eyebrow pf-mono">Index — Projects</p>
               <h2 className="pf-sectionHead__title">Things I've shipped.</h2>
             </header>
             <div className="pf-list">
@@ -241,6 +239,8 @@ function LayoutIndex({ data, tab, setTab, density }) {
               key={p.id}
               id={`entry-${p.id}`}
               density={density}
+              summary={`${p.title}, ${p.tagline}`}
+              preview={p.bullets?.[0] ?? p.blurb}
               header={<><span className="pf-entry__role">{p.title}</span><span className="pf-entry__at"> — {p.tagline}</span></>}
               meta={p.date}>
               
@@ -253,7 +253,6 @@ function LayoutIndex({ data, tab, setTab, density }) {
         {tab === "music" &&
         <section className="pf-section">
             <header className="pf-sectionHead pf-sectionHead--rail">
-              <p className="pf-eyebrow pf-mono">Index — Music</p>
               <h2 className="pf-sectionHead__title">Late-night studio output.</h2>
             </header>
             <MusicBlock data={data.music} />
@@ -265,15 +264,102 @@ function LayoutIndex({ data, tab, setTab, density }) {
 }
 
 // ═════════ STACKED — bold full-bleed sections, no tabs ═════════
+const STACKED_SECTIONS = [
+  { id: "block-work", label: "Work" },
+  { id: "block-projects", label: "Projects" },
+  { id: "block-music", label: "Music" },
+];
+
+function StickyNav() {
+  const [activeId, setActiveId] = React.useState(null);
+  const [scrolled, setScrolled] = React.useState(false);
+  const navRef = React.useRef(null);
+  const indicatorRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const ids = STACKED_SECTIONS.map((s) => s.id);
+    const els = ids.map((id) => document.getElementById(id)).filter(Boolean);
+    if (!els.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length) setActiveId(visible[0].target.id);
+      },
+      { rootMargin: "-20% 0px -60% 0px", threshold: 0 }
+    );
+    els.forEach((el) => observer.observe(el));
+
+    const onScroll = () => setScrolled(window.scrollY > 200);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    const track = navRef.current?.querySelector(".pf-snav__track");
+    if (!track || !indicatorRef.current || !activeId) return;
+    const activeBtn = track.querySelector(`[data-section="${activeId}"]`);
+    if (!activeBtn) return;
+    const trackRect = track.getBoundingClientRect();
+    const btnRect = activeBtn.getBoundingClientRect();
+    const ind = indicatorRef.current;
+    ind.style.width = `${btnRect.width}px`;
+    ind.style.transform = `translateX(${btnRect.left - trackRect.left - 3}px)`;
+    ind.style.opacity = "1";
+  }, [activeId]);
+
+  const handleClick = (e, id) => {
+    e.preventDefault();
+    const el = document.getElementById(id);
+    if (!el) return;
+    const navH = navRef.current?.offsetHeight || 56;
+    const top = el.getBoundingClientRect().top + window.scrollY - navH - 8;
+    window.scrollTo({ top, behavior: "smooth" });
+  };
+
+  return (
+    <nav
+      ref={navRef}
+      className={`pf-snav ${scrolled ? "is-scrolled" : ""}`}
+      aria-label="Page sections"
+    >
+      <div className="pf-snav__track">
+        <div ref={indicatorRef} className="pf-snav__indicator" />
+        {STACKED_SECTIONS.map((s) => (
+          <a
+            key={s.id}
+            href={`#${s.id}`}
+            data-section={s.id}
+            className={`pf-snav__link ${activeId === s.id ? "is-active" : ""}`}
+            onClick={(e) => handleClick(e, s.id)}
+          >
+            {s.label}
+          </a>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
 function LayoutStacked({ data, density }) {
+  const emailLink = data.identity.links.find((l) => l.label === "Email");
+  const socialLinks = data.identity.links.filter((l) => l.label !== "Email");
+  const EmailIcon = window.PFIcons?.Email;
+
   return (
     <div className="pf-shell pf-shell--stacked">
       <section className="pf-block pf-block--hero">
         <canvas id="header-ambience" className="pf-header-ambience" aria-hidden="true"></canvas>
         <div className="pf-block__inner">
-          <p className="pf-mono pf-eyebrow">
-</p>
-          <h1 className="pf-stacked__name">
+          <h1 className="pf-stacked__name" aria-label={data.identity.name}>
+            <span aria-hidden="true">
             {(() => {
               const words = data.identity.name.trim().split(/\s+/);
               let delayIdx = 0;
@@ -305,6 +391,7 @@ function LayoutStacked({ data, density }) {
                 </React.Fragment>
               ));
             })()}
+            </span>
           </h1>
           <p className="pf-stacked__tagline">{data.identity.tagline}</p>
           <div className="pf-stacked__heroGrid">
@@ -314,7 +401,6 @@ function LayoutStacked({ data, density }) {
             <div className="pf-stacked__heroText">
               <p className="pf-stacked__bio">{data.identity.bio}</p>
               <div className="pf-stacked__now">
-                <p className="pf-mono pf-eyebrow">Currently</p>
                 {data.now.map((n) => (
                   <div key={n.entry} className="pf-stacked__nowItem">
                     <span className="pf-stacked__nowMarker" aria-hidden="true">
@@ -327,16 +413,44 @@ function LayoutStacked({ data, density }) {
                       <span className="pf-stacked__nowDash" aria-hidden="true">
                         ·
                       </span>
-                      <span className="pf-stacked__nowAt pf-muted">{n.at}</span>
+                      <span className="pf-stacked__nowAt">{n.at}</span>
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="pf-stacked__heroLinks">
-                {data.identity.links.map((l) => {
+              <div className="pf-stacked__heroContact">
+                {emailLink ? (
+                  <a
+                    href={emailLink.href}
+                    className="pf-stacked__contact"
+                    aria-label={`Send email to ${emailLink.handle}`}
+                  >
+                    {EmailIcon ? (
+                      <span className="pf-stacked__contactIcon" aria-hidden="true">
+                        <EmailIcon />
+                      </span>
+                    ) : null}
+                    <span className="pf-stacked__contactText">
+                      <span className="pf-stacked__contactLabel">Get in touch</span>
+                      <span className="pf-stacked__contactSep" aria-hidden="true">·</span>
+                      <span className="pf-stacked__contactHandle">{emailLink.handle}</span>
+                    </span>
+                    <span className="pf-stacked__contactArrow" aria-hidden="true">↗</span>
+                  </a>
+                ) : null}
+              </div>
+              <div className="pf-stacked__heroLinks" aria-label="Social profiles">
+                {socialLinks.map((l) => {
                   const Icon = window.PFIcons[l.label];
                   return (
-                    <a key={l.label} href={l.href} target="_blank" rel="noopener noreferrer" className="pf-link">
+                    <a
+                      key={l.label}
+                      href={l.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="pf-link"
+                      aria-label={`${l.label} profile (${l.handle}), opens in new tab`}
+                    >
                       {Icon ? <Icon /> : null}
                       <span>{l.label}</span>
                       <span className="pf-link__arrow">↗</span>
@@ -349,12 +463,14 @@ function LayoutStacked({ data, density }) {
         </div>
       </section>
 
+      <StickyNav />
+
+      <main id="main-content">
       <section className="pf-block pf-block--work" id="block-work">
         <div className="pf-block__inner">
           <header className="pf-blockHead">
-            <span className="pf-mono pf-eyebrow">01<span className="pf-mark">.</span></span>
             <h2 className="pf-blockHead__title">Work</h2>
-            <p className="pf-blockHead__sub">Seven roles across software, autonomous systems, and entrepreneurship.</p>
+            <p className="pf-blockHead__sub">Mortgage tooling, quant trading, autonomy ops, and a few detours in between.</p>
           </header>
           <div className="pf-list">
             {data.work.map((w) =>
@@ -363,6 +479,8 @@ function LayoutStacked({ data, density }) {
               id={`entry-${w.id}`}
               current={w.current}
               density={density}
+              summary={`${w.title} at ${w.org}`}
+              preview={w.bullets?.[0]}
               header={<><span className="pf-entry__role">{w.title}</span><span className="pf-entry__at"> at {w.org}</span></>}
               meta={`${w.date} · ${w.location}`}>
               
@@ -376,9 +494,8 @@ function LayoutStacked({ data, density }) {
       <section className="pf-block pf-block--projects pf-block--alt" id="block-projects">
         <div className="pf-block__inner">
           <header className="pf-blockHead">
-            <span className="pf-mono pf-eyebrow">02<span className="pf-mark">.</span></span>
             <h2 className="pf-blockHead__title">Projects</h2>
-            <p className="pf-blockHead__sub">Builds spanning full-stack apps, distributed systems, and graphics.</p>
+            <p className="pf-blockHead__sub">Side projects from PWAs to MapReduce; most still on GitHub.</p>
           </header>
           <div className="pf-list">
             {data.projects.map((p) =>
@@ -386,6 +503,8 @@ function LayoutStacked({ data, density }) {
               key={p.id}
               id={`entry-${p.id}`}
               density={density}
+              summary={`${p.title}, ${p.tagline}`}
+              preview={p.bullets?.[0] ?? p.blurb}
               header={<><span className="pf-entry__role">{p.title}</span><span className="pf-entry__at"> — {p.tagline}</span></>}
               meta={p.date}>
               
@@ -400,23 +519,25 @@ function LayoutStacked({ data, density }) {
         <div className="pf-block__inner">
           <header className="pf-blockHead pf-blockHead--music">
             <div>
-              <span className="pf-mono pf-eyebrow">03<span className="pf-mark">.</span></span>
               <h2 className="pf-blockHead__title">Music</h2>
-              <p className="pf-blockHead__sub">Techno, house, ambient — produced under my own name.</p>
+              <p className="pf-blockHead__sub">Techno, house, and ambient, all under my own name.</p>
             </div>
             <button
               id="visualizer-toggle"
               className="visualizer-toggle"
-              aria-label="Toggle audio visualizer"
               type="button"
+              aria-pressed="false"
+              aria-describedby="visualizer-status"
             >
               <span className="visualizer-toggle__dot" aria-hidden="true" />
-              <span className="visualizer-toggle-text">AUDIO VISUALIZER (EXPERIMENTAL)</span>
+              <span className="visualizer-toggle-text">Audio visualizer</span>
             </button>
           </header>
+          <p id="visualizer-status" className="pf-sr-only" aria-live="polite" />
           <NowPlayingHero data={data.music} />
         </div>
       </section>
+      </main>
 
       <footer className="pf-foot pf-foot--stacked">
         <div className="pf-foot__inner">
@@ -431,10 +552,10 @@ function LayoutStacked({ data, density }) {
       <canvas id="audio-visualizer" className="audio-visualizer" aria-hidden="true"></canvas>
       <div id="visualizer-controls" className="visualizer-controls" aria-hidden="true">
         <button id="visualizer-mode-toggle" className="visualizer-control" type="button" aria-label="Toggle visualizer mode">
-          TOGGLE MODE
+          Toggle mode
         </button>
         <button id="visualizer-exit" className="visualizer-control visualizer-exit" type="button" aria-label="Exit visualizer">
-          EXIT
+          Exit
         </button>
       </div>
     </div>);

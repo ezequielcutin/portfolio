@@ -2,15 +2,17 @@
 const { useState, useEffect, useRef, useMemo } = React;
 
 // ───────── Accordion entry ─────────
-function Entry({ id, header, meta, children, current, defaultOpen = false, density = "comfortable" }) {
-  const [open, setOpen] = useState(defaultOpen);
+function Entry({ id, header, meta, children, current, defaultOpen = false, density = "comfortable", summary, preview }) {
+  const [open, setOpen] = useState(defaultOpen || !!current);
   const padY = density === "compact" ? "pf-py-3" : "pf-py-5";
+  const panelId = `${id}-panel`;
   return (
     <div className={`pf-entry ${open ? "is-open" : ""} ${current ? "is-current" : ""}`} id={id}>
       <button
         className={`pf-entry__header ${padY}`}
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}
+        aria-controls={panelId}
       >
         <div className="pf-entry__primary">
           {current && <span className="pf-live" aria-hidden="true"><span className="pf-live__core" /></span>}
@@ -21,7 +23,16 @@ function Entry({ id, header, meta, children, current, defaultOpen = false, densi
           <span className="pf-chev" aria-hidden="true">+</span>
         </div>
       </button>
-      <div className="pf-entry__body" hidden={!open}>
+      {!open && preview ? (
+        <p className="pf-entry__preview">{preview}</p>
+      ) : null}
+      <div
+        id={panelId}
+        className="pf-entry__body"
+        hidden={!open}
+        role="region"
+        aria-label={summary ? `${summary} details` : undefined}
+      >
         <div className="pf-entry__bodyInner">{children}</div>
       </div>
     </div>
@@ -50,9 +61,9 @@ function Carousel({ images }) {
       </div>
       {n > 1 && (
         <div className="pf-carousel__controls">
-          <button className="pf-carousel__btn" onClick={() => setI((i - 1 + n) % n)} aria-label="Previous">←</button>
-          <span className="pf-carousel__counter">{i + 1} / {n}</span>
-          <button className="pf-carousel__btn" onClick={() => setI((i + 1) % n)} aria-label="Next">→</button>
+          <button className="pf-carousel__btn" onClick={() => setI((i - 1 + n) % n)} aria-label={`Previous image (${i + 1} of ${n})`}>←</button>
+          <span className="pf-carousel__counter" aria-live="polite">{i + 1} / {n}</span>
+          <button className="pf-carousel__btn" onClick={() => setI((i + 1) % n)} aria-label={`Next image (${i + 1} of ${n})`}>→</button>
         </div>
       )}
     </div>
@@ -142,7 +153,7 @@ function VideoPlayer({ src }) {
             <span className="pf-video__time">{fmt(time.cur)} / {fmt(time.dur)}</span>
           </div>
           <div className="pf-video__right">
-            <button className="pf-video__btn" onClick={cycleSpeed}>{speed}×</button>
+            <button className="pf-video__btn" onClick={cycleSpeed} aria-label={`Playback speed ${speed}x`}>{speed}×</button>
             <button className="pf-video__btn" onClick={fs} aria-label="Fullscreen">⛶</button>
           </div>
         </div>
@@ -163,7 +174,6 @@ function Tabs({ tabs, active, onChange, variant = "minimal" }) {
           className={`pf-tab ${active === t.id ? "is-active" : ""}`}
           onClick={() => onChange(t.id)}
         >
-          <span className="pf-tab__num">{t.num}</span>
           <span className="pf-tab__label">{t.label}</span>
         </button>
       ))}
@@ -316,6 +326,7 @@ function NowPlayingHero({ data }) {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState({ played: 0, cur: 0, dur: 0 });
   const [widgetReady, setWidgetReady] = useState(false);
+  const [widgetError, setWidgetError] = useState(false);
   const iframeRef = useRef(null);
   const widgetRef = useRef(null);
   const tracksRef = useRef(tracks);
@@ -423,18 +434,24 @@ function NowPlayingHero({ data }) {
       const onPause = () => setPlaying(false);
       const onFinish = () =>
         setActive((i) => (i + 1) % Math.max(1, tracksRef.current.length));
+      const onError = () => setWidgetError(true);
 
       w.bind(E.PLAY_PROGRESS, onProgress);
       w.bind(E.PLAY, onPlay);
       w.bind(E.PAUSE, onPause);
       w.bind(E.FINISH, onFinish);
+      w.bind(E.ERROR, onError);
       unbindsRef.current = [
         () => w.unbind(E.PLAY_PROGRESS),
         () => w.unbind(E.PLAY),
         () => w.unbind(E.PAUSE),
         () => w.unbind(E.FINISH),
+        () => w.unbind(E.ERROR),
       ];
       setWidgetReady(true);
+      setWidgetError(false);
+    }).catch(() => {
+      if (!cancelled) setWidgetError(true);
     });
     return () => {
       cancelled = true;
@@ -468,7 +485,11 @@ function NowPlayingHero({ data }) {
 
   const togglePlay = () => {
     const w = widgetRef.current;
-    if (!w) return;
+    const row = tracksRef.current[active];
+    if (!w) {
+      if (row?.url) window.open(row.url, "_blank", "noopener,noreferrer");
+      return;
+    }
     if (playing) w.pause();
     else w.play();
   };
@@ -476,9 +497,15 @@ function NowPlayingHero({ data }) {
   const next = () => setActive((i) => (i + 1) % tracks.length);
 
   const t = tracks[active];
+  const trackLabel = t.title && t.title !== "—" ? t.title : `Track ${active + 1}`;
 
   return (
     <div className="pf-mh">
+      {widgetError ? (
+        <p className="pf-mh__status" role="status">
+          The embedded player did not load. Use the SoundCloud links below to listen.
+        </p>
+      ) : null}
       <div className="pf-mh__stage">
         <div className="pf-mh__art" aria-hidden="true">
           {t.artwork ? (
@@ -495,47 +522,52 @@ function NowPlayingHero({ data }) {
           <div className="pf-mh__artScrim" />
           <div className="pf-mh__artLabel">
             {t.title || ""}
-            <small>{String(active + 1).padStart(2, "0")}</small>
           </div>
         </div>
         <div className="pf-mh__info">
           <h3 className="pf-mh__title">{t.title}</h3>
-          <p className="pf-mh__meta">{String(active + 1).padStart(2, "0")} / {String(tracks.length).padStart(2, "0")}</p>
           <NowPlayingWave seed={active * 47 + 13} played={progress.played} />
-          <div className="pf-mh__time">
+          <div className="pf-mh__time" aria-live="off">
+            <span className="pf-sr-only">Playback time </span>
             {_fmtTime(progress.cur)} / {_fmtTime(progress.dur)}
           </div>
           <div className="pf-mh__trans">
             <button className="pf-mh__transSm" onClick={prev} aria-label="Previous track">‹‹</button>
-            <button className="pf-mh__transMain" onClick={togglePlay} aria-label={playing ? "Pause" : "Play"}>
+            <button
+              className="pf-mh__transMain"
+              onClick={togglePlay}
+              aria-label={playing ? `Pause ${trackLabel}` : `Play ${trackLabel}`}
+            >
               {playing ? "❚❚" : "▶"}
             </button>
             <button className="pf-mh__transSm" onClick={next} aria-label="Next track">››</button>
           </div>
           <a href={t.url} target="_blank" rel="noopener noreferrer" className="pf-mh__cta">
-            View on SoundCloud ↗
+            View {trackLabel} on SoundCloud ↗
           </a>
         </div>
       </div>
 
       <div className="pf-mh__strip" role="tablist" aria-label="Track list" style={{ "--pf-strip-cols": tracks.length }}>
-        {tracks.map((tr, i) => (
+        {tracks.map((tr, i) => {
+          const cellLabel = tr.title && tr.title !== "—" ? tr.title : `Track ${i + 1}`;
+          return (
           <button
             key={i}
             role="tab"
             aria-selected={i === active}
+            aria-label={`${cellLabel}${i === active && playing ? ", playing" : ""}`}
             className={`pf-mh__cell ${i === active ? "is-active" : ""}`}
             onClick={() => { setActive(i); setPlaying(true); }}
           >
-            <span className="pf-mh__cellNum">
-              {playing && i === active
-                ? <PlayingBars />
-                : String(i + 1).padStart(2, "0")}
-            </span>
+            {playing && i === active ? (
+              <span className="pf-mh__cellPlay" aria-hidden="true"><PlayingBars /></span>
+            ) : null}
             <span className="pf-mh__cellTitle">{tr.title}</span>
             <span className="pf-mh__cellChev" aria-hidden>›</span>
           </button>
-        ))}
+          );
+        })}
       </div>
 
       <div className="pf-mh__foot">
