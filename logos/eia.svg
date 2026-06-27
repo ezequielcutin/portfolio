@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="12" fill="#5CBE26"/>
+  <!-- star -->
+  <path d="M63 13 L65.35 19.76 L72.51 19.91 L66.80 24.24 L68.88 31.09 L63 27 L57.12 31.09 L59.20 24.24 L53.49 19.91 L60.65 19.76 Z" fill="#FFFFFF"/>
+  <g fill="#FFFFFF" text-anchor="middle"
+     font-family="'Arial Rounded MT Bold','Varela Round','Baloo 2',system-ui,'Trebuchet MS',sans-serif"
+     font-weight="800" font-size="13" letter-spacing="0.3">
+    <text x="50" y="51">EUROPEAN</text>
+    <text x="50" y="68">INNOVATION</text>
+    <text x="50" y="85">ACADEMY</text>
+  </g>
+</svg>

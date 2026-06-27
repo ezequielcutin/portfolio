@@ -26,6 +26,7 @@ window.PORTFOLIO_DATA = {
       id: "uwm",
       title: "Software Developer I",
       org: "United Wholesale Mortgage",
+      logo: "logos/uwm.svg",
       date: "Jan 2025 to Present",
       location: "Metro Detroit, MI",
       current: true,
@@ -41,6 +42,7 @@ window.PORTFOLIO_DATA = {
       id: "glenbrook",
       title: "Algorithm Developer",
       org: "Glenbrook Trading",
+      logo: "logos/glenbrook.svg",
       date: "Jun 2024 to Present",
       location: "Remote",
       current: true,
@@ -57,6 +59,7 @@ window.PORTFOLIO_DATA = {
       id: "zoox",
       title: "Automated Driver / Software Operator",
       org: "Zoox",
+      logo: "logos/zoox.svg",
       date: "Oct 2024 to Jan 2025",
       location: "Miami, FL",
       bullets: [
@@ -70,6 +73,8 @@ window.PORTFOLIO_DATA = {
       id: "umich-ta",
       title: "Teaching Assistant",
       org: "University of Michigan",
+      logo: "logos/michigan.svg",
+      logoBleed: true,
       date: "Aug 2023 to May 2024",
       location: "Ann Arbor, MI",
       bullets: [
@@ -83,6 +88,7 @@ window.PORTFOLIO_DATA = {
       id: "msh",
       title: "Technical Product Management Intern",
       org: "MSH",
+      logo: "logos/msh.svg",
       date: "Jun 2023 to Aug 2023",
       location: "Ft. Lauderdale, FL",
       bullets: [
@@ -96,6 +102,7 @@ window.PORTFOLIO_DATA = {
       id: "eia",
       title: "Technical Lead",
       org: "European Innovation Academy",
+      logo: "logos/eia.svg",
       date: "Jul 2022 to Aug 2022",
       location: "Porto, Portugal",
       bullets: [
@@ -114,6 +121,7 @@ window.PORTFOLIO_DATA = {
       id: "detroit",
       title: "Data Analyst",
       org: "City of Detroit",
+      logo: "logos/detroit.svg",
       date: "May 2022 to Jul 2022",
       location: "Detroit, MI",
       bullets: [

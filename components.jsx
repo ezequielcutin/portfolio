@@ -249,6 +249,16 @@ function _railLabel(dateStr) {
   const m = /(\d{4})/.exec(dateStr || "");
   return m ? m[1] : "";
 }
+/** Monogram shown until a real logo SVG is dropped into /logos. */
+function _initials(org) {
+  const skip = new Set(["of", "the", "and", "for", "at"]);
+  const words = (org || "").split(/\s+/).filter((w) => w && !skip.has(w.toLowerCase()));
+  if (words.length === 1) {
+    const w = words[0];
+    return (w.length <= 3 ? w : w.slice(0, 2)).toUpperCase();
+  }
+  return words.map((w) => w[0]).join("").slice(0, 3).toUpperCase();
+}
 
 function WorkTimeline({ items }) {
   const ordered = useMemo(
@@ -340,13 +350,25 @@ function WorkTimeline({ items }) {
       aria-current={w.current ? "true" : undefined}
     >
       <div className="pf-tl__panelTop">
-        <span className="pf-tl__index">{String(i + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}</span>
-        {w.current ? (
-          <span className="pf-tl__nowTag">
-            <span className="pf-live" aria-hidden="true"><span className="pf-live__core" /></span>
-            current
-          </span>
-        ) : null}
+        <span className={`pf-tl__logo ${w.logoBleed ? "is-bleed" : ""}`}>
+          <span className="pf-tl__logoFallback" aria-hidden="true">{_initials(w.org)}</span>
+          <img
+            className="pf-tl__logoImg"
+            src={w.logo || `logos/${w.id}.svg`}
+            alt={`${w.org} logo`}
+            loading="lazy"
+            onError={(e) => { e.currentTarget.style.display = "none"; }}
+          />
+        </span>
+        <div className="pf-tl__topRight">
+          <span className="pf-tl__index">{String(i + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}</span>
+          {w.current ? (
+            <span className="pf-tl__nowTag">
+              <span className="pf-live" aria-hidden="true"><span className="pf-live__core" /></span>
+              current
+            </span>
+          ) : null}
+        </div>
       </div>
       <div className="pf-tl__year">{_railLabel(w.date)}</div>
       <h3 className="pf-tl__role">{w.title}</h3>
