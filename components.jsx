@@ -246,17 +246,47 @@ function ProjectsTerminal({ items }) {
   const [err, setErr] = useState(false);
   const [history, setHistory] = useState([]);
   const [histIdx, setHistIdx] = useState(-1);
+  const [hint, setHint] = useState(false);
+  const rootRef = useRef(null);
   const listRef = useRef(null);
   const paneRef = useRef(null);
+  const mountedRef = useRef(false);
   const open = items.find((p) => p.id === openId) || items[0];
 
-  // On project switch, return the reading pane to the top and keep the active
-  // row in view, so long READMEs scroll within the window instead of jumping.
+  // On project switch, return the reading pane to the top. On desktop keep the
+  // active row in view; on mobile bring the reading pane into view (it sits
+  // below the file list, so a tap lower in the list would otherwise be silent).
   useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
     if (paneRef.current) paneRef.current.scrollTop = 0;
-    const row = listRef.current && listRef.current.querySelector(".pf-term__item.is-open");
-    if (row && row.scrollIntoView) row.scrollIntoView({ block: "nearest" });
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const mobile = window.matchMedia("(max-width: 760px)").matches;
+    if (mobile && paneRef.current) {
+      paneRef.current.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    } else {
+      const row = listRef.current && listRef.current.querySelector(".pf-term__item.is-open");
+      if (row && row.scrollIntoView) row.scrollIntoView({ block: "nearest" });
+    }
   }, [openId]);
+
+  // First time the terminal scrolls into view this session, briefly draw the
+  // eye to the command line so the prompt reads as typeable, not decorative.
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") return;
+    try { if (sessionStorage.getItem("pf-term-hinted") === "1") return; } catch (e) {}
+    const el = rootRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((en) => en.isIntersecting)) {
+        setHint(true);
+        try { sessionStorage.setItem("pf-term-hinted", "1"); } catch (e) {}
+        io.disconnect();
+        setTimeout(() => setHint(false), 2600);
+      }
+    }, { threshold: 0.35 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   const onInputKeyDown = (e) => {
     if (e.key === "Tab") {
@@ -321,7 +351,7 @@ function ProjectsTerminal({ items }) {
   };
 
   return (
-    <div className="pf-term" role="group" aria-label="Projects explorer">
+    <div className={`pf-term ${hint ? "is-hinting" : ""}`} ref={rootRef} role="group" aria-label="Projects explorer">
       <div className="pf-term__bar">
         <span className="pf-term__dots" aria-hidden="true"><i /><i /><i /></span>
         <span className="pf-term__path">ezecutin@portfolio: ~/projects</span>
