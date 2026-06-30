@@ -480,23 +480,9 @@ function LayoutStacked({ data, density }) {
         <div className="pf-block__inner">
           <header className="pf-blockHead">
             <h2 className="pf-blockHead__title">Projects</h2>
-            <p className="pf-blockHead__sub">Side projects from PWAs to MapReduce; most still on GitHub.</p>
+            <p className="pf-blockHead__sub">Side projects from PWAs to MapReduce; most still on GitHub. Open one to read its file.</p>
           </header>
-          <div className="pf-list">
-            {data.projects.map((p) =>
-            <Entry
-              key={p.id}
-              id={`entry-${p.id}`}
-              density={density}
-              summary={`${p.title}, ${p.tagline}`}
-              preview={p.bullets?.[0] ?? p.blurb}
-              header={<><span className="pf-entry__role">{p.title}</span><span className="pf-entry__at"> — {p.tagline}</span></>}
-              meta={p.date}>
-              
-                <ProjectBody item={p} />
-              </Entry>
-            )}
-          </div>
+          <ProjectsTerminal items={data.projects} />
         </div>
       </section>
 

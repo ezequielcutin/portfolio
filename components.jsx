@@ -236,6 +236,191 @@ function ProjectBody({ item }) {
   );
 }
 
+// ───────── Projects terminal (~/projects explorer) ─────────
+function _projYear(d) { const m = /(\d{4})/.exec(d || ""); return m ? m[1] : ""; }
+
+function ProjectsTerminal({ items }) {
+  const [openId, setOpenId] = useState(items[0] && items[0].id);
+  const [cmd, setCmd] = useState("");
+  const [msg, setMsg] = useState(null);
+  const [err, setErr] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [histIdx, setHistIdx] = useState(-1);
+  const listRef = useRef(null);
+  const paneRef = useRef(null);
+  const open = items.find((p) => p.id === openId) || items[0];
+
+  // On project switch, return the reading pane to the top and keep the active
+  // row in view, so long READMEs scroll within the window instead of jumping.
+  useEffect(() => {
+    if (paneRef.current) paneRef.current.scrollTop = 0;
+    const row = listRef.current && listRef.current.querySelector(".pf-term__item.is-open");
+    if (row && row.scrollIntoView) row.scrollIntoView({ block: "nearest" });
+  }, [openId]);
+
+  const onInputKeyDown = (e) => {
+    if (e.key === "Tab") {
+      const parts = cmd.trim().split(/\s+/);
+      const partial = (parts.length === 2 ? parts[1] : parts[0] || "").toLowerCase();
+      const m = partial && items.find((p) => p.id.startsWith(partial));
+      if (m) { e.preventDefault(); setCmd(parts.length === 2 ? `${parts[0]} ${m.id} ` : `${m.id}`); }
+      return;
+    }
+    if (e.key === "ArrowUp" && history.length) {
+      e.preventDefault();
+      const ni = histIdx < 0 ? history.length - 1 : Math.max(0, histIdx - 1);
+      setHistIdx(ni); setCmd(history[ni]);
+    } else if (e.key === "ArrowDown" && histIdx >= 0) {
+      e.preventDefault();
+      const ni = histIdx + 1;
+      if (ni >= history.length) { setHistIdx(-1); setCmd(""); }
+      else { setHistIdx(ni); setCmd(history[ni]); }
+    }
+  };
+
+  const runCmd = (raw) => {
+    const line = (raw || "").trim();
+    if (!line) return;
+    setHistory((h) => (h[h.length - 1] === line ? h : [...h, line]));
+    setHistIdx(-1);
+    const parts = line.split(/\s+/);
+    const verb = parts[0].toLowerCase();
+    const arg = parts.slice(1).join(" ").replace(/\/+$/, "").toLowerCase();
+    const find = (n) => n && (
+      items.find((p) => p.id === n) ||
+      items.find((p) => p.id.startsWith(n)) ||
+      items.find((p) => p.id.includes(n))
+    );
+    const OPENERS = ["open", "cat", "cd", "less", "vim", "nano", "code"];
+
+    if (verb === "ls") { setErr(false); setMsg(items.map((p) => p.id + "/").join("  ")); return; }
+    if (verb === "help") { setErr(false); setMsg("commands: open <name> · cat <name> · ls · clear"); return; }
+    if (verb === "clear") { setErr(false); setMsg(null); setCmd(""); return; }
+
+    // "open gobank", "cat frac", or a bare project name like "gobank"
+    const target = OPENERS.includes(verb) ? find(arg) : find(verb);
+    if (target) { setOpenId(target.id); setCmd(""); setErr(false); setMsg(null); return; }
+
+    setErr(true);
+    setMsg(OPENERS.includes(verb) ? `no such project: ${arg || "?"}` : `command not found: ${verb}`);
+  };
+
+  const focusRow = (idx) => {
+    const rows = listRef.current && listRef.current.querySelectorAll(".pf-term__item");
+    if (rows && rows[idx]) rows[idx].focus();
+  };
+  const onKeyDown = (e) => {
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "Home" && e.key !== "End") return;
+    e.preventDefault();
+    const cur = items.findIndex((p) => p.id === (e.target.dataset ? e.target.dataset.id : openId));
+    const i = cur < 0 ? 0 : cur;
+    if (e.key === "ArrowDown") focusRow(Math.min(items.length - 1, i + 1));
+    else if (e.key === "ArrowUp") focusRow(Math.max(0, i - 1));
+    else if (e.key === "Home") focusRow(0);
+    else if (e.key === "End") focusRow(items.length - 1);
+  };
+
+  return (
+    <div className="pf-term" role="group" aria-label="Projects explorer">
+      <div className="pf-term__bar">
+        <span className="pf-term__dots" aria-hidden="true"><i /><i /><i /></span>
+        <span className="pf-term__path">ezecutin@portfolio: ~/projects</span>
+        <span className="pf-term__hint" aria-hidden="true">type a command · ↑↓ browse</span>
+      </div>
+
+      <div className="pf-term__body">
+        <div className="pf-term__list" ref={listRef} onKeyDown={onKeyDown}>
+          <p className="pf-term__ls" aria-hidden="true"><span className="pf-term__pfx">$</span> ls projects/</p>
+          {items.map((p) => (
+            <button
+              key={p.id}
+              data-id={p.id}
+              type="button"
+              aria-current={p.id === openId ? "true" : undefined}
+              className={`pf-term__item ${p.id === openId ? "is-open" : ""}`}
+              onClick={() => setOpenId(p.id)}
+              onFocus={() => setOpenId(p.id)}
+            >
+              <span className="pf-term__caret" aria-hidden="true">▸</span>
+              <span className="pf-term__name">{p.id}/</span>
+              <span className="pf-term__year">{_projYear(p.date)}</span>
+              <span className="pf-term__cmt">{p.tagline}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="pf-term__pane" key={open.id} ref={paneRef}>
+          <p className="pf-term__cmd"><span className="pf-term__pfx">$</span> cat {open.id}/README.md</p>
+          <h3 className="pf-term__title">{open.title}</h3>
+          <p className="pf-term__blurb">{open.blurb}</p>
+
+          {open.bullets && (
+            <>
+              <p className="pf-term__sec"><span className="pf-term__hash" aria-hidden="true">##</span> highlights</p>
+              <ul className="pf-term__bullets">
+                {open.bullets.map((b, i) => <li key={i}>{b}</li>)}
+              </ul>
+            </>
+          )}
+
+          {open.stack && (
+            <>
+              <p className="pf-term__sec"><span className="pf-term__hash" aria-hidden="true">##</span> stack</p>
+              <Stack items={open.stack} />
+            </>
+          )}
+
+          {(open.video || open.images) && (
+            <>
+              <p className="pf-term__sec"><span className="pf-term__hash" aria-hidden="true">##</span> preview</p>
+              {open.video && <div className="pf-term__media"><VideoPlayer src={open.video} /></div>}
+              {open.images && <div className="pf-term__media"><Carousel images={open.images} /></div>}
+            </>
+          )}
+
+          {open.note && <p className="pf-term__note"># {open.note}</p>}
+
+          {open.links && (
+            <div className="pf-term__links">
+              {open.links.map((l, i) => {
+                const isGH = /github\.com/i.test(l.href) || /github/i.test(l.label);
+                const GH = window.PFIcons && window.PFIcons.GitHub;
+                return (
+                  <a key={i} href={l.href} target="_blank" rel="noopener noreferrer" className="pf-term__link">
+                    {isGH && GH && <GH className="pf-term__link__icon" />}
+                    <span>{l.label}</span>
+                    <span className="pf-term__link__arrow" aria-hidden="true">↗</span>
+                  </a>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <form className="pf-term__prompt" onSubmit={(e) => { e.preventDefault(); runCmd(cmd); }}>
+        <label className="pf-term__pfx" htmlFor="pf-term-input">$</label>
+        <input
+          id="pf-term-input"
+          className="pf-term__input"
+          type="text"
+          value={cmd}
+          onChange={(e) => { setCmd(e.target.value); setHistIdx(-1); if (msg) { setMsg(null); setErr(false); } }}
+          onKeyDown={onInputKeyDown}
+          placeholder={`open ${open ? open.id : "project"}`}
+          aria-label="Run a command, for example: open gobank. Tab completes, up arrow recalls history."
+          autoComplete="off"
+          autoCapitalize="off"
+          spellCheck="false"
+        />
+        {msg && (
+          <span className={`pf-term__msg ${err ? "is-err" : ""}`} role="status" aria-live="polite">{msg}</span>
+        )}
+      </form>
+    </div>
+  );
+}
+
 // ───────── Work timeline (pinned horizontal scroll) ─────────
 const _MONTHS = { jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11 };
 function _startSort(dateStr) {
@@ -790,5 +975,5 @@ function NowPlayingHero({ data }) {
 // Export to global scope
 Object.assign(window, {
   Entry, Stack, Carousel, VideoPlayer, Tabs, WorkBody, ProjectBody, MusicBlock,
-  NowPlayingHero, WorkTimeline,
+  NowPlayingHero, WorkTimeline, ProjectsTerminal,
 });

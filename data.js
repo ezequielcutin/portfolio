@@ -135,7 +135,7 @@ window.PORTFOLIO_DATA = {
 
   projects: [
     {
-      id: "quietly",
+      id: "quietly-build",
       title: "Quietly Build",
       tagline: "Ritual-based productivity PWA for founders",
       date: "Feb 2026 to Present",
