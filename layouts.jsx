@@ -302,18 +302,36 @@ function StickyNav() {
     };
   }, []);
 
-  React.useEffect(() => {
+  // Position the sliding indicator under the active tab. Reads the live
+  // .is-active element so it stays correct, and re-runs on resize / font load
+  // (tab widths change between the desktop auto layout and the mobile thirds).
+  const positionIndicator = React.useCallback(() => {
     const track = navRef.current?.querySelector(".pf-snav__track");
-    if (!track || !indicatorRef.current || !activeId) return;
-    const activeBtn = track.querySelector(`[data-section="${activeId}"]`);
-    if (!activeBtn) return;
+    const ind = indicatorRef.current;
+    if (!track || !ind) return;
+    const activeBtn = track.querySelector(".pf-snav__link.is-active");
+    if (!activeBtn) { ind.style.opacity = "0"; return; }
     const trackRect = track.getBoundingClientRect();
     const btnRect = activeBtn.getBoundingClientRect();
-    const ind = indicatorRef.current;
     ind.style.width = `${btnRect.width}px`;
     ind.style.transform = `translateX(${btnRect.left - trackRect.left - 3}px)`;
     ind.style.opacity = "1";
-  }, [activeId]);
+  }, []);
+
+  React.useLayoutEffect(() => { positionIndicator(); }, [activeId, positionIndicator]);
+
+  React.useEffect(() => {
+    const track = navRef.current?.querySelector(".pf-snav__track");
+    if (!track) return;
+    const ro = new ResizeObserver(() => positionIndicator());
+    ro.observe(track);
+    window.addEventListener("resize", positionIndicator, { passive: true });
+    if (document.fonts?.ready) document.fonts.ready.then(positionIndicator);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", positionIndicator);
+    };
+  }, [positionIndicator]);
 
   const handleClick = (e, id) => {
     e.preventDefault();
