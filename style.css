@@ -1337,10 +1337,10 @@ img { display: block; max-width: 100%; height: auto; }
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 12px;
     border: 1px solid var(--rule);
     border-radius: 2px;
-    padding: 20px 16px;
+    padding: 16px 14px;
   }
   /* Ouroboros: a faint ember chasing its own tail around the box, never resting */
   .pf-stacked__heroLinks::before {
@@ -1368,7 +1368,7 @@ img { display: block; max-width: 100%; height: auto; }
   .pf-stacked__heroLinksLabel {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.2em;
@@ -1397,10 +1397,8 @@ img { display: block; max-width: 100%; height: auto; }
     min-height: 52px;
     padding: 10px 0;
     border-bottom: none;
-    border-right: 1px solid var(--rule);
-  }
-  .pf-stacked__heroLinksRow .pf-link:last-child {
     border-right: none;
+    border-radius: 6px;
   }
   .pf-stacked__heroLinks .pf-link:active {
     background-color: color-mix(in srgb, var(--accent) 6%, transparent);
@@ -1412,6 +1410,10 @@ img { display: block; max-width: 100%; height: auto; }
     width: 22px;
     height: 22px;
     color: var(--fg-soft);
+  }
+  .pf-stacked__heroLinksRow .pf-link:last-child svg {
+    width: 25px;
+    height: 20px;
   }
   .pf-stacked__heroLinks .pf-link.pf-stacked__heroLinksEmail svg {
     color: var(--fg-soft);
