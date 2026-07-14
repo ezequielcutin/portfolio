@@ -1327,6 +1327,7 @@ img { display: block; max-width: 100%; height: auto; }
     padding-top: 16px;
   }
   .pf-stacked__heroLinks .pf-link {
+    justify-content: center;
     min-height: 48px;
     padding: 12px 0;
     border-bottom-color: var(--rule);
