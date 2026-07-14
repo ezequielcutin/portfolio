@@ -495,11 +495,9 @@ function _initials(org) {
   return words.map((w) => w[0]).join("").slice(0, 3).toUpperCase();
 }
 
-/** Mobile deck card: same panel anatomy as pinned, but bullets + stack sit
- *  behind a tap-expand so the deck stays one viewport tall. */
-function WorkDeckCard({ w, i, n, active }) {
-  const [expanded, setExpanded] = useState(false);
-  const detailsId = `tl-deck-details-${w.id}`;
+/** Mobile deck card: a concise timeline preview that opens a focused dossier. */
+function WorkDeckCard({ w, i, n, active, onOpen }) {
+  const detailsId = `tl-dossier-${w.id}`;
   return (
     <article
       role="listitem"
@@ -532,24 +530,194 @@ function WorkDeckCard({ w, i, n, active }) {
       <h3 className="pf-tl__role">{w.title}</h3>
       <div className="pf-tl__org">{w.org}</div>
       <div className="pf-tl__meta">{w.date} · {w.location}</div>
-      {!expanded && <p className="pf-tl__cardPreview">{w.bullets[0]}</p>}
-      <div id={detailsId} hidden={!expanded}>
-        <ul className="pf-tl__bullets">
-          {w.bullets.map((b, bi) => <li key={bi}>{b}</li>)}
-        </ul>
-        <Stack items={w.stack} />
-      </div>
+      <p className="pf-tl__cardPreview">{w.bullets[0]}</p>
       <button
         type="button"
         className="pf-tl__cardMore"
-        aria-expanded={expanded}
+        aria-haspopup="dialog"
         aria-controls={detailsId}
-        onClick={() => setExpanded((e) => !e)}
+        onClick={(event) => onOpen(w, event.currentTarget)}
       >
-        <span className="pf-chev" aria-hidden="true">+</span>
-        {expanded ? "less" : "details"}
+        <span>View details</span>
+        <span className="pf-tl__cardMoreArrow" aria-hidden="true">↗</span>
       </button>
     </article>
+  );
+}
+
+function WorkDossier({ w, i, n, direction, opener, onClose, onNavigate }) {
+  const dialogRef = useRef(null);
+  const titleId = `tl-dossier-title-${w.id}`;
+
+  useEffect(() => {
+    const body = document.body;
+    const appRoot = document.getElementById("root");
+    const scrollY = window.scrollY;
+    const rootWasInert = appRoot?.inert;
+    const rootAriaHidden = appRoot?.getAttribute("aria-hidden");
+    const previous = {
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      overflow: body.style.overflow,
+    };
+
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+    if (appRoot) {
+      appRoot.inert = true;
+      appRoot.setAttribute("aria-hidden", "true");
+    }
+    dialogRef.current?.querySelector("button")?.focus({ preventScroll: true });
+
+    return () => {
+      if (appRoot) {
+        appRoot.inert = !!rootWasInert;
+        if (rootAriaHidden === null) appRoot.removeAttribute("aria-hidden");
+        else appRoot.setAttribute("aria-hidden", rootAriaHidden);
+      }
+      body.style.position = previous.position;
+      body.style.top = previous.top;
+      body.style.width = previous.width;
+      body.style.overflow = previous.overflow;
+      const focusTarget = opener?.isConnected
+        ? opener
+        : document.querySelector("#block-work");
+      focusTarget?.focus?.({ preventScroll: true });
+      window.scrollTo(0, scrollY);
+    };
+  }, [opener]);
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      onClose();
+      return;
+    }
+    if (event.key !== "Tab") return;
+
+    const focusable = Array.from(
+      dialogRef.current?.querySelectorAll(
+        'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+      ) || []
+    );
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
+  return ReactDOM.createPortal(
+    <div
+      className="pf-tl__dossierBackdrop"
+      onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
+    >
+      <article
+        id={`tl-dossier-${w.id}`}
+        ref={dialogRef}
+        className={`pf-tl__dossier ${w.current ? "is-current" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onKeyDown={handleKeyDown}
+      >
+        <header className="pf-tl__dossierBar">
+          <button type="button" className="pf-tl__dossierClose" onClick={onClose}>
+            <span aria-hidden="true">←</span>
+            Timeline
+          </button>
+          <span className="pf-tl__dossierCounter" aria-live="polite" aria-atomic="true">
+            <span className="pf-sr-only">{w.title} at {w.org}, </span>
+            {String(i + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}
+          </span>
+          <nav className="pf-tl__dossierNav" aria-label="Browse work experiences">
+            <button
+              type="button"
+              onClick={() => onNavigate(-1)}
+              aria-disabled={i === 0 ? "true" : undefined}
+              aria-label="Previous work experience"
+            >
+              ←
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate(1)}
+              aria-disabled={i === n - 1 ? "true" : undefined}
+              aria-label="Next work experience"
+            >
+              →
+            </button>
+          </nav>
+        </header>
+
+        <div
+          key={w.id}
+          className={`pf-tl__dossierContent is-${direction < 0 ? "previous" : "next"}`}
+        >
+        <div className="pf-tl__dossierBody">
+          <div className="pf-tl__dossierTop">
+            <span className={`pf-tl__logo ${w.logoBleed ? "is-bleed" : ""}`}>
+              <span className="pf-tl__logoFallback" aria-hidden="true">{_initials(w.org)}</span>
+              <img
+                className="pf-tl__logoImg"
+                src={w.logo || `logos/${w.id}.svg`}
+                alt={`${w.org} logo`}
+                onError={(event) => { event.currentTarget.style.display = "none"; }}
+              />
+            </span>
+            <div className="pf-tl__dossierStatus">
+              {w.current ? (
+                <span className="pf-tl__nowTag">
+                  <span className="pf-live" aria-hidden="true"><span className="pf-live__core" /></span>
+                  current
+                </span>
+              ) : null}
+            </div>
+            <div className="pf-tl__dossierYear" aria-hidden="true">{_railLabel(w.date)}</div>
+          </div>
+
+          <h3 className="pf-tl__dossierTitle" id={titleId}>{w.title}</h3>
+          <p className="pf-tl__dossierOrg">{w.org}</p>
+
+          <dl className="pf-tl__dossierMeta">
+            <div><dt>Period</dt><dd>{w.date}</dd></div>
+            <div><dt>Location</dt><dd>{w.location}</dd></div>
+          </dl>
+
+          <section className="pf-tl__dossierSection" aria-labelledby={`${titleId}-impact`}>
+            <h4 id={`${titleId}-impact`}><span>01</span> Highlights</h4>
+            <ol className="pf-tl__dossierBullets">
+              {w.bullets.map((bullet, bulletIndex) => (
+                <li key={bulletIndex}>
+                  <span aria-hidden="true">{String(bulletIndex + 1).padStart(2, "0")}</span>
+                  <p>{bullet}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          <section className="pf-tl__dossierSection" aria-labelledby={`${titleId}-tools`}>
+            <h4 id={`${titleId}-tools`}><span>02</span> Systems used</h4>
+            <Stack items={w.stack} />
+          </section>
+        </div>
+
+        <footer className="pf-tl__dossierFooter">
+          <span aria-hidden="true">END / {w.id.toUpperCase()}</span>
+          <button type="button" onClick={onClose}>Return to timeline</button>
+        </footer>
+        </div>
+      </article>
+    </div>,
+    document.body
   );
 }
 
@@ -563,12 +731,15 @@ function WorkTimeline({ items }) {
   const pinned = mode === "pinned";
   const [active, setActive] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [dossierId, setDossierId] = useState(null);
+  const [dossierDirection, setDossierDirection] = useState(1);
   const sectionRef = useRef(null);
   const stickyRef = useRef(null);
   const viewportRef = useRef(null);
   const trackRef = useRef(null);
   const maxXRef = useRef(0);
   const deckRef = useRef(null);
+  const dossierOpenerRef = useRef(null);
 
   useEffect(() => {
     const pinnedMq = window.matchMedia(
@@ -585,6 +756,10 @@ function WorkTimeline({ items }) {
       deckMq.removeEventListener("change", apply);
     };
   }, []);
+
+  useEffect(() => {
+    if (mode !== "deck") setDossierId(null);
+  }, [mode]);
 
   // Pinned scroll-jack: translate the track from NATIVE scroll position.
   // We never capture the wheel, so keyboard / trackpad / scrollbar all keep working.
@@ -701,6 +876,8 @@ function WorkTimeline({ items }) {
   ));
 
   if (mode === "deck") {
+    const dossierIndex = ordered.findIndex((work) => work.id === dossierId);
+    const dossier = dossierIndex >= 0 ? ordered[dossierIndex] : null;
     return (
       <div className="pf-tl pf-tl--deck">
         <div
@@ -710,7 +887,18 @@ function WorkTimeline({ items }) {
           aria-label="Work timeline, swipe horizontally"
         >
           {ordered.map((w, i) => (
-            <WorkDeckCard key={w.id} w={w} i={i} n={n} active={i === active} />
+            <WorkDeckCard
+              key={w.id}
+              w={w}
+              i={i}
+              n={n}
+              active={i === active}
+              onOpen={(work, opener) => {
+                dossierOpenerRef.current = opener;
+                setDossierDirection(1);
+                setDossierId(work.id);
+              }}
+            />
           ))}
         </div>
         <div className="pf-tl__deckMeta">
@@ -728,6 +916,24 @@ function WorkTimeline({ items }) {
             <span aria-hidden="true">{_railLabel(ordered[n - 1].date)}</span>
           </div>
         </div>
+        {dossier ? (
+          <WorkDossier
+            w={dossier}
+            i={dossierIndex}
+            n={n}
+            direction={dossierDirection}
+            opener={dossierOpenerRef.current}
+            onClose={() => setDossierId(null)}
+            onNavigate={(step) => {
+              const nextIndex = Math.min(n - 1, Math.max(0, dossierIndex + step));
+              if (nextIndex === dossierIndex) return;
+              const dialog = document.querySelector(".pf-tl__dossier");
+              if (dialog) dialog.scrollTop = 0;
+              setDossierDirection(step);
+              setDossierId(ordered[nextIndex].id);
+            }}
+          />
+        ) : null}
       </div>
     );
   }

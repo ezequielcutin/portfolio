@@ -497,7 +497,7 @@ function LayoutStacked({ data, density }) {
       <StickyNav />
 
       <main id="main-content">
-      <section className="pf-block pf-block--work" id="block-work">
+      <section className="pf-block pf-block--work" id="block-work" tabIndex={-1}>
         <div className="pf-block__inner">
           <header className="pf-blockHead">
             <h2 className="pf-blockHead__title">Work</h2>
