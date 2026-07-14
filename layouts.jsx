@@ -459,6 +459,16 @@ function LayoutStacked({ data, density }) {
               </div>
               <div className="pf-stacked__heroLinks" aria-label="Social profiles">
                 <span className="pf-stacked__heroLinksLabel" aria-hidden="true">Connect</span>
+                {emailLink ? (
+                  <a
+                    href={emailLink.href}
+                    className="pf-link pf-stacked__heroLinksEmail"
+                    aria-label={`Send email to ${emailLink.handle}`}
+                  >
+                    {EmailIcon ? <EmailIcon /> : null}
+                    <span>Email</span>
+                  </a>
+                ) : null}
                 {socialLinks.map((l) => {
                   const Icon = window.PFIcons[l.label];
                   return (

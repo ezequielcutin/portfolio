@@ -1111,6 +1111,7 @@ img { display: block; max-width: 100%; height: auto; }
   border-top: 1px solid var(--rule);
 }
 .pf-stacked__heroLinksLabel { display: none; }
+.pf-stacked__heroLinks .pf-link.pf-stacked__heroLinksEmail { display: none; }
 .pf-stacked__heroLinks .pf-link {
   display: inline-flex;
   align-items: center;
@@ -1319,12 +1320,13 @@ img { display: block; max-width: 100%; height: auto; }
   .pf-stacked__nowAt { font-size: 14px; line-height: 1.35; }
   .pf-stacked__nowMarker { padding-top: 4px; }
   .pf-stacked__heroContact {
-    margin-bottom: 14px;
+    display: none;
   }
   .pf-stacked__heroLinks {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    column-gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: 14px;
     row-gap: 18px;
     border: 1px solid var(--rule);
     border-radius: 14px;
@@ -1332,7 +1334,7 @@ img { display: block; max-width: 100%; height: auto; }
   }
   .pf-stacked__heroLinksLabel {
     display: block;
-    grid-column: 1 / -1;
+    flex-basis: 100%;
     text-align: center;
     font-family: var(--font-mono);
     font-size: 10px;
@@ -1340,13 +1342,28 @@ img { display: block; max-width: 100%; height: auto; }
     text-transform: uppercase;
     color: var(--muted);
   }
+  .pf-stacked__heroLinks .pf-link.pf-stacked__heroLinksEmail {
+    display: inline-flex;
+  }
   .pf-stacked__heroLinks .pf-link {
+    position: relative;
     flex-direction: column;
     align-items: center;
     gap: 10px;
     min-height: 44px;
     padding: 0;
     border-bottom: none;
+  }
+  /* Invisible tap-zone: keeps narrow items (X, Email) at a real 44px hit
+     target without widening the visible row and breaking the one-line fit. */
+  .pf-stacked__heroLinks .pf-link::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
   }
   .pf-stacked__heroLinks .pf-link svg {
     width: 24px;
