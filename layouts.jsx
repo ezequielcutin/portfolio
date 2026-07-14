@@ -458,6 +458,7 @@ function LayoutStacked({ data, density }) {
                 ) : null}
               </div>
               <div className="pf-stacked__heroLinks" aria-label="Social profiles">
+                <span className="pf-stacked__heroLinksLabel" aria-hidden="true">Connect</span>
                 {socialLinks.map((l) => {
                   const Icon = window.PFIcons[l.label];
                   return (
