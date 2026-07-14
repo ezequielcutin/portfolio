@@ -730,7 +730,7 @@ function WorkTimeline({ items }) {
   const [mode, setMode] = useState("stacked");
   const pinned = mode === "pinned";
   const [active, setActive] = useState(0);
-  const [progress, setProgress] = useState(0);
+  const activeRef = useRef(0);
   const [dossierId, setDossierId] = useState(null);
   const [dossierDirection, setDossierDirection] = useState(1);
   const sectionRef = useRef(null);
@@ -738,6 +738,11 @@ function WorkTimeline({ items }) {
   const viewportRef = useRef(null);
   const trackRef = useRef(null);
   const maxXRef = useRef(0);
+  const railLineRef = useRef(null);
+  const railFillRef = useRef(null);
+  const cubeCursorRef = useRef(null);
+  const hintRef = useRef(null);
+  const railWidthRef = useRef(0);
   const deckRef = useRef(null);
   const dossierOpenerRef = useRef(null);
 
@@ -768,11 +773,16 @@ function WorkTimeline({ items }) {
     const section = sectionRef.current;
     const track = trackRef.current;
     const viewport = viewportRef.current;
-    if (!section || !track || !viewport) return;
+    const railLine = railLineRef.current;
+    const railFill = railFillRef.current;
+    const cubeCursor = cubeCursorRef.current;
+    const hint = hintRef.current;
+    if (!section || !track || !viewport || !railLine || !railFill || !cubeCursor || !hint) return;
 
     let raf = 0;
     const measure = () => {
       maxXRef.current = Math.max(0, track.scrollWidth - viewport.clientWidth);
+      railWidthRef.current = railLine.clientWidth;
     };
     const render = () => {
       raf = 0;
@@ -781,9 +791,34 @@ function WorkTimeline({ items }) {
       const dist = section.offsetHeight - vh; // scrollable budget while pinned
       const p = dist > 0 ? Math.min(1, Math.max(0, (window.scrollY - top) / dist)) : 0;
       const x = -p * maxXRef.current;
+      const segment = p * Math.max(1, n - 1);
+      const segmentPhase = segment - Math.floor(segment);
+      const hop = Math.sin(segmentPhase * Math.PI);
       track.style.transform = `translate3d(${x}px,0,0)`;
-      setProgress(p);
-      setActive(Math.round(p * (n - 1)));
+      railFill.style.transform = `scaleX(${p})`;
+      cubeCursor.style.transform = `translate3d(${p * railWidthRef.current - 22}px,-50%,0)`;
+      cubeCursor.style.setProperty("--pf-cube-lift", `${hop * 11}px`);
+      cubeCursor.style.setProperty("--pf-cube-glow", `${0.45 + hop * 0.45}`);
+      cubeCursor.style.setProperty("--pf-cube-rx", `${24 + segment * 92}deg`);
+      cubeCursor.style.setProperty("--pf-cube-ry", `${-32 + segment * 126}deg`);
+      cubeCursor.style.setProperty("--pf-cube-rz", `${segment * 42}deg`);
+      hint.classList.toggle("is-hidden", p > 0.015);
+
+      Array.from(track.children).forEach((card, i) => {
+        const distance = i - p * (n - 1);
+        card.style.transform = [
+          "perspective(1200px)",
+          `translateZ(${-Math.min(Math.abs(distance) * 68, 120)}px)`,
+          `rotateY(${Math.max(-7, Math.min(7, distance * -4))}deg)`,
+          `scale(${1 - Math.min(Math.abs(distance) * 0.024, 0.05)})`,
+        ].join(" ");
+      });
+
+      const nextActive = Math.round(p * (n - 1));
+      if (activeRef.current !== nextActive) {
+        activeRef.current = nextActive;
+        setActive(nextActive);
+      }
     };
     const onScroll = () => { if (!raf) raf = requestAnimationFrame(render); };
 
@@ -793,11 +828,13 @@ function WorkTimeline({ items }) {
     const ro = new ResizeObserver(() => { measure(); render(); });
     ro.observe(track);
     ro.observe(viewport);
+    ro.observe(railLine);
     return () => {
       window.removeEventListener("scroll", onScroll);
       ro.disconnect();
       if (raf) cancelAnimationFrame(raf);
       track.style.transform = "";
+      Array.from(track.children).forEach((card) => { card.style.transform = ""; });
     };
   }, [pinned, n]);
 
@@ -812,7 +849,10 @@ function WorkTimeline({ items }) {
         entries.forEach((en) => {
           if (!en.isIntersecting) return;
           const idx = cards.indexOf(en.target);
-          if (idx >= 0) setActive(idx);
+          if (idx >= 0) {
+            activeRef.current = idx;
+            setActive(idx);
+          }
         });
       },
       { root: rail, threshold: 0.6 }
@@ -837,12 +877,12 @@ function WorkTimeline({ items }) {
   };
 
   const Panels = ordered.map((w, i) => (
-    <article
-      key={w.id}
-      id={`tl-panel-${w.id}`}
-      className={`pf-tl__panel ${w.current ? "is-current" : ""} ${pinned && i === active ? "is-active" : ""}`}
-      aria-current={w.current ? "true" : undefined}
-    >
+      <article
+        key={w.id}
+        id={`tl-panel-${w.id}`}
+        className={`pf-tl__panel ${w.current ? "is-current" : ""} ${pinned && i === active ? "is-active" : ""}`}
+        aria-current={w.current ? "true" : undefined}
+      >
       <div className="pf-tl__panelTop">
         <span className={`pf-tl__logo ${w.logoBleed ? "is-bleed" : ""}`}>
           <span className="pf-tl__logoFallback" aria-hidden="true">{_initials(w.org)}</span>
@@ -872,7 +912,7 @@ function WorkTimeline({ items }) {
         {w.bullets.map((b, bi) => <li key={bi}>{b}</li>)}
       </ul>
       <Stack items={w.stack} />
-    </article>
+      </article>
   ));
 
   if (mode === "deck") {
@@ -959,8 +999,25 @@ function WorkTimeline({ items }) {
           </div>
         </div>
         <div className="pf-tl__rail" role="presentation">
-          <div className="pf-tl__railLine">
-            <div className="pf-tl__railFill" style={{ transform: `scaleX(${progress})` }} />
+          <div className="pf-tl__railLine" ref={railLineRef}>
+            <div className="pf-tl__railFill" ref={railFillRef} />
+            <div
+              className="pf-tl__cubeCursor"
+              ref={cubeCursorRef}
+              aria-hidden="true"
+            >
+              <span className="pf-tl__cubeOrbit pf-tl__cubeOrbit--one" />
+              <span className="pf-tl__cubeOrbit pf-tl__cubeOrbit--two" />
+              <span className="pf-tl__cube">
+                <b className="pf-tl__cubeCore" />
+                <i className="pf-tl__cubeFace pf-tl__cubeFace--front" />
+                <i className="pf-tl__cubeFace pf-tl__cubeFace--back" />
+                <i className="pf-tl__cubeFace pf-tl__cubeFace--right" />
+                <i className="pf-tl__cubeFace pf-tl__cubeFace--left" />
+                <i className="pf-tl__cubeFace pf-tl__cubeFace--top" />
+                <i className="pf-tl__cubeFace pf-tl__cubeFace--bottom" />
+              </span>
+            </div>
           </div>
           <div className="pf-tl__railTicks">
             {ordered.map((w, i) => (
@@ -977,7 +1034,7 @@ function WorkTimeline({ items }) {
             ))}
           </div>
         </div>
-        <div className={`pf-tl__hint ${progress > 0.015 ? "is-hidden" : ""}`} aria-hidden="true">
+        <div className="pf-tl__hint" ref={hintRef} aria-hidden="true">
           scroll to walk the timeline <span className="pf-tl__hintArrow">→</span>
         </div>
       </div>

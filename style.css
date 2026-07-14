@@ -2321,6 +2321,16 @@ img { display: block; max-width: 100%; height: auto; }
   border-color: color-mix(in srgb, var(--accent) 45%, var(--rule));
 }
 .pf-tl__panel .pf-stack { margin: 12px 0 0; }
+.pf-tl--pinned .pf-tl__panel {
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  transition: border-color 320ms ease, opacity 220ms ease;
+}
+.pf-tl--pinned .pf-tl__panel.is-active {
+  box-shadow:
+    0 26px 56px -38px rgba(0, 0, 0, 0.82),
+    0 0 0 1px color-mix(in srgb, var(--fg) 4%, transparent);
+}
 
 /* ---- Rail ---- */
 .pf-tl__rail {
@@ -2340,6 +2350,128 @@ img { display: block; max-width: 100%; height: auto; }
   background: var(--accent);
   height: 1px;
 }
+.pf-tl__cubeCursor {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  perspective: 280px;
+  pointer-events: none;
+  transform: translate3d(-22px, -50%, 0);
+  --pf-cube-rx: 24deg;
+  --pf-cube-ry: -32deg;
+  --pf-cube-rz: 0deg;
+  --pf-cube-lift: 0px;
+  --pf-cube-glow: 0.45;
+}
+.pf-tl__cubeCursor::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--accent) 24%, transparent),
+    transparent 68%
+  );
+  opacity: var(--pf-cube-glow);
+  filter: blur(5px);
+  transform: translateY(calc(0px - var(--pf-cube-lift))) scale(1.3);
+}
+.pf-tl__cubeCursor::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 1px;
+  width: 24px;
+  height: 4px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--fg) 34%, transparent);
+  filter: blur(2.5px);
+  opacity: 0.42;
+  transform: translateX(-50%) scaleX(0.84);
+}
+.pf-tl__cubeOrbit {
+  position: absolute;
+  z-index: 0;
+  width: 38px;
+  height: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 56%, transparent);
+  border-radius: 50%;
+  opacity: var(--pf-cube-glow);
+  transform: translateY(calc(0px - var(--pf-cube-lift))) rotate(-14deg);
+}
+.pf-tl__cubeOrbit--two {
+  width: 15px;
+  height: 39px;
+  border-color: color-mix(in srgb, var(--fg) 22%, transparent);
+  transform: translateY(calc(0px - var(--pf-cube-lift))) rotate(38deg);
+}
+.pf-tl__cube {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 24px;
+  height: 24px;
+  transform-style: preserve-3d;
+  transform:
+    translateY(calc(0px - var(--pf-cube-lift)))
+    rotateX(var(--pf-cube-rx))
+    rotateY(var(--pf-cube-ry))
+    rotateZ(var(--pf-cube-rz));
+  will-change: transform;
+}
+.pf-tl__cubeCore {
+  position: absolute;
+  inset: 6px;
+  display: block;
+  transform: translateZ(0);
+  border-radius: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--accent) 76%, transparent);
+}
+.pf-tl__cubeFace {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--fg) 64%, var(--rule));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--fg) 18%, transparent), transparent 54%),
+    color-mix(in srgb, var(--card) 78%, var(--accent) 8%);
+  backface-visibility: hidden;
+  box-shadow: inset 0 0 7px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.pf-tl__cubeFace::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.pf-tl__cubeFace--front {
+  border-color: color-mix(in srgb, var(--accent) 76%, var(--rule));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 48%, transparent), transparent 62%),
+    color-mix(in srgb, var(--card) 70%, var(--accent) 18%);
+  transform: translateZ(12px);
+}
+.pf-tl__cubeFace--back { transform: rotateY(180deg) translateZ(12px); }
+.pf-tl__cubeFace--right {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--rule));
+  background: color-mix(in srgb, var(--accent) 24%, var(--card));
+  transform: rotateY(90deg) translateZ(12px);
+}
+.pf-tl__cubeFace--left { transform: rotateY(-90deg) translateZ(12px); }
+.pf-tl__cubeFace--top {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--rule));
+  background: color-mix(in srgb, var(--fg) 18%, var(--card));
+  transform: rotateX(90deg) translateZ(12px);
+}
+.pf-tl__cubeFace--bottom { transform: rotateX(-90deg) translateZ(12px); }
 .pf-tl__railTicks {
   display: flex;
   justify-content: space-between;
