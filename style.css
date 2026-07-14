@@ -2846,8 +2846,12 @@ img { display: block; max-width: 100%; height: auto; }
   }
   .pf-term.is-reading .pf-term__pane {
     scroll-margin-top: 76px;
+    padding-bottom: 36px;
   }
-  .pf-term.is-reading .pf-term__body::after { display: block; }
+  /* Shorter than the desktop fade (30px): at this font size a stack chip row
+     is only ~25px tall, so the full-height fade swallowed whole rows instead
+     of just hinting at the cut-off edge. */
+  .pf-term.is-reading .pf-term__body::after { display: block; height: 16px; }
 
   .pf-term__back {
     position: sticky;
