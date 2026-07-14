@@ -554,10 +554,7 @@ function WorkDeckCard({ w, i, n, active }) {
 }
 
 function WorkTimeline({ items }) {
-  const ordered = useMemo(
-    () => [...items].sort((a, b) => _startSort(a.date) - _startSort(b.date)),
-    [items]
-  );
+  const ordered = items;
   const n = ordered.length;
 
   // Three modes: "pinned" desktop scroll-jack, "deck" mobile swipe rail,
