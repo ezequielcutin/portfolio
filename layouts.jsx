@@ -459,33 +459,35 @@ function LayoutStacked({ data, density }) {
               </div>
               <div className="pf-stacked__heroLinks" aria-label="Social profiles">
                 <span className="pf-stacked__heroLinksLabel" aria-hidden="true">Connect</span>
-                {emailLink ? (
-                  <a
-                    href={emailLink.href}
-                    className="pf-link pf-stacked__heroLinksEmail"
-                    aria-label={`Send email to ${emailLink.handle}`}
-                  >
-                    {EmailIcon ? <EmailIcon /> : null}
-                    <span>Email</span>
-                  </a>
-                ) : null}
-                {socialLinks.map((l) => {
-                  const Icon = window.PFIcons[l.label];
-                  return (
+                <div className="pf-stacked__heroLinksRow">
+                  {emailLink ? (
                     <a
-                      key={l.label}
-                      href={l.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="pf-link"
-                      aria-label={`${l.label} profile (${l.handle}), opens in new tab`}
+                      href={emailLink.href}
+                      className="pf-link pf-stacked__heroLinksEmail"
+                      aria-label={`Send email to ${emailLink.handle}`}
                     >
-                      {Icon ? <Icon /> : null}
-                      <span>{l.label}</span>
-                      <span className="pf-link__arrow">↗</span>
+                      {EmailIcon ? <EmailIcon /> : null}
+                      <span>Email</span>
                     </a>
-                  );
-                })}
+                  ) : null}
+                  {socialLinks.map((l) => {
+                    const Icon = window.PFIcons[l.label];
+                    return (
+                      <a
+                        key={l.label}
+                        href={l.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="pf-link"
+                        aria-label={`${l.label} profile (${l.handle}), opens in new tab`}
+                      >
+                        {Icon ? <Icon /> : null}
+                        <span>{l.label}</span>
+                        <span className="pf-link__arrow">↗</span>
+                      </a>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
