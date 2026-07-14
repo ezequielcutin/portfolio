@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <clipPath id="photo-frame">
+      <path d="M0 0H514V630H0Z" />
+    </clipPath>
+    <linearGradient id="photo-fade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="68%" stop-color="#100f0d" stop-opacity="0" />
+      <stop offset="100%" stop-color="#100f0d" />
+    </linearGradient>
+    <linearGradient id="warm-wash" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#e08055" stop-opacity="0.02" />
+      <stop offset="1" stop-color="#100f0d" stop-opacity="0.2" />
+    </linearGradient>
+    <filter id="photo-grade" color-interpolation-filters="sRGB">
+      <feColorMatrix type="saturate" values="0.88" />
+      <feComponentTransfer>
+        <feFuncR type="linear" slope="0.92" intercept="0.01" />
+        <feFuncG type="linear" slope="0.92" intercept="0.01" />
+        <feFuncB type="linear" slope="0.92" intercept="0.01" />
+      </feComponentTransfer>
+    </filter>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&amp;family=Space+Grotesk:wght@400;500;600&amp;display=swap");
+      .display { font-family: "Space Grotesk", sans-serif; }
+      .mono { font-family: "JetBrains Mono", monospace; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="630" fill="#100f0d" />
+
+  <g clip-path="url(#photo-frame)">
+    <image
+      href="headshot_budapest.png"
+      x="-6"
+      y="0"
+      width="526"
+      height="630"
+      preserveAspectRatio="xMidYMid slice"
+      filter="url(#photo-grade)"
+    />
+    <rect width="514" height="630" fill="url(#warm-wash)" />
+    <rect x="350" width="164" height="630" fill="url(#photo-fade)" />
+  </g>
+
+  <path d="M514 54V576" stroke="#2a2723" />
+  <path d="M552 82H1160" stroke="#2a2723" />
+  <path d="M552 548H1160" stroke="#2a2723" />
+
+  <g class="mono" font-size="14" font-weight="500" letter-spacing="2.4">
+    <text x="580" y="65" fill="#8a8378">PORTFOLIO / 2026</text>
+    <text x="580" y="584" fill="#8a8378">EZEQUIELCUTIN.COM</text>
+    <text x="1128" y="584" fill="#e08055" text-anchor="end">DETROIT, MI</text>
+  </g>
+
+  <g class="display">
+    <text x="574" y="229" fill="#ebe6dc" font-size="88" font-weight="500" letter-spacing="-4.6">Ezequiel</text>
+    <text x="574" y="319" fill="#ebe6dc" font-size="88" font-weight="500" letter-spacing="-4.6">Cutin</text>
+    <circle cx="777" cy="303" r="9" fill="#e08055" />
+
+    <text x="580" y="402" fill="#b8b1a3" font-size="31" font-weight="400" letter-spacing="-0.5">
+      Engineer, builder,
+    </text>
+    <text x="580" y="446" fill="#b8b1a3" font-size="31" font-weight="400" letter-spacing="-0.5">
+      occasional techno producer.
+    </text>
+  </g>
+
+  <g fill="#e08055">
+    <rect x="552" y="54" width="20" height="2" />
+    <rect x="552" y="54" width="2" height="20" />
+    <rect x="1140" y="556" width="20" height="2" />
+    <rect x="1158" y="556" width="2" height="20" />
+  </g>
+</svg>
