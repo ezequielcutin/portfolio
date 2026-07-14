@@ -1280,6 +1280,16 @@ img { display: block; max-width: 100%; height: auto; }
   50%      { transform: scaleY(1);    }
 }
 
+/* Ouroboros border-chase: a single ember tracing an endless loop around a box */
+@property --ouro-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes pf-ouroboros {
+  to { --ouro-angle: 360deg; }
+}
+
 /* ═══════════ MOBILE OPTIMIZATIONS ═══════════ */
 
 /* ───── Stacked layout: tighten block spacing ───── */
@@ -1324,33 +1334,36 @@ img { display: block; max-width: 100%; height: auto; }
     display: none;
   }
   .pf-stacked__heroLinks {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 18px;
     border: 1px solid var(--rule);
     border-radius: 2px;
     padding: 20px 16px;
-    /* Corner tick marks — same signature detail as the desktop contact box */
-    background-image:
-      linear-gradient(var(--accent), var(--accent)),
-      linear-gradient(var(--accent), var(--accent)),
-      linear-gradient(var(--accent), var(--accent)),
-      linear-gradient(var(--accent), var(--accent)),
-      linear-gradient(var(--accent), var(--accent)),
-      linear-gradient(var(--accent), var(--accent)),
-      linear-gradient(var(--accent), var(--accent)),
-      linear-gradient(var(--accent), var(--accent));
-    background-size:
-      10px 1.5px, 1.5px 10px,
-      10px 1.5px, 1.5px 10px,
-      10px 1.5px, 1.5px 10px,
-      10px 1.5px, 1.5px 10px;
-    background-position:
-      0 0,       0 0,
-      100% 0,    100% 0,
-      0 100%,    0 100%,
-      100% 100%, 100% 100%;
-    background-repeat: no-repeat;
+  }
+  /* Ouroboros: a faint ember chasing its own tail around the box, never resting */
+  .pf-stacked__heroLinks::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(
+      from var(--ouro-angle, 0deg),
+      transparent 0deg,
+      transparent 265deg,
+      color-mix(in srgb, var(--accent) 55%, transparent) 300deg,
+      var(--accent) 320deg,
+      color-mix(in srgb, var(--accent) 55%, transparent) 340deg,
+      transparent 360deg
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.85;
+    pointer-events: none;
+    animation: pf-ouroboros 10s linear infinite;
   }
   .pf-stacked__heroLinksLabel {
     display: flex;
@@ -1401,7 +1414,7 @@ img { display: block; max-width: 100%; height: auto; }
     color: var(--fg-soft);
   }
   .pf-stacked__heroLinks .pf-link.pf-stacked__heroLinksEmail svg {
-    color: var(--accent);
+    color: var(--fg-soft);
   }
   .pf-stacked__heroLinks .pf-link span {
     font-size: 11px;
@@ -2720,6 +2733,14 @@ img { display: block; max-width: 100%; height: auto; }
   scrollbar-width: thin;
   scrollbar-color: var(--rule) transparent;
   animation: pf-term-in 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* iOS Safari sometimes fails to repaint flex-wrapped bordered chips (the
+     stack row) that sit below the fold inside a scrollable ancestor while
+     this mount animation runs, leaving them visually torn/half-clipped until
+     a manual scroll forces a repaint. Promoting the pane to its own
+     compositing layer avoids the stale paint. */
+  will-change: opacity, transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 .pf-term__list::-webkit-scrollbar,
 .pf-term__pane::-webkit-scrollbar { width: 10px; }
@@ -2922,6 +2943,7 @@ img { display: block; max-width: 100%; height: auto; }
     max-height: 70vh;
     overflow-y: auto;
     overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
   .pf-term.is-reading .pf-term__pane {
     scroll-margin-top: 76px;
