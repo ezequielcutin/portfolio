@@ -12,7 +12,12 @@ function initHeaderAmbience() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const ctx = canvas.getContext('2d');
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Small screens: cheaper canvas — fewer device pixels, fewer particles.
+    const smallViewport =
+        window.innerWidth < 901 ||
+        (window.matchMedia('(pointer: coarse)').matches &&
+            Math.min(window.innerWidth, window.innerHeight) < 720);
+    const dpr = Math.min(window.devicePixelRatio || 1, smallViewport ? 1.5 : 2);
 
     // Accent color from CSS
     const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4488ff';
@@ -30,7 +35,7 @@ function initHeaderAmbience() {
     const dragDropPhysics = true;
 
     // Particle config
-    const PARTICLE_COUNT = 80;
+    const PARTICLE_COUNT = smallViewport ? 42 : 80;
     const CONNECTION_DIST = 120;
     const MOUSE_RADIUS = 180;
     const BASE_SPEED = 0.18;

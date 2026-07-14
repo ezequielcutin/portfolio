@@ -488,7 +488,11 @@ function LayoutStacked({ data, density }) {
         <div className="pf-block__inner">
           <header className="pf-blockHead">
             <h2 className="pf-blockHead__title">Work</h2>
-            <p className="pf-blockHead__sub">Mortgage tooling, quant trading, autonomy ops, and a few detours in between. Scroll the timeline from Detroit to now.</p>
+            <p className="pf-blockHead__sub">
+              Mortgage tooling, quant trading, autonomy ops, and a few detours in between.{" "}
+              <span className="pf-sub--desktop">Scroll the timeline from Detroit to now.</span>
+              <span className="pf-sub--mobile">Swipe the timeline from Detroit to now.</span>
+            </p>
           </header>
         </div>
         <WorkTimeline items={data.work} />

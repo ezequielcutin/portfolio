@@ -915,10 +915,6 @@ img { display: block; max-width: 100%; height: auto; }
   padding-top: 48px;
   border-top: 1px solid var(--rule);
 }
-@media (max-width: 720px) {
-  .pf-stacked__heroGrid { grid-template-columns: 1fr; gap: 28px; padding-top: 32px; }
-  .pf-stacked__photoFrame { max-width: 300px; }
-}
 .pf-stacked__photoFrame {
   position: relative;
   width: 100%;
@@ -950,6 +946,14 @@ img { display: block; max-width: 100%; height: auto; }
   margin: 0 0 32px;
   max-width: 60ch;
   text-wrap: pretty;
+}
+@media (max-width: 720px) {
+  .pf-block { padding: 56px 24px; }
+  .pf-block--hero { padding: 56px 24px 40px; }
+  .pf-stacked__tagline { margin-bottom: 36px; }
+  .pf-stacked__heroGrid { grid-template-columns: 1fr; gap: 24px; padding-top: 28px; }
+  .pf-stacked__photoFrame { max-width: 240px; }
+  .pf-stacked__bio { margin-bottom: 24px; font-size: 17px; }
 }
 .pf-stacked__now {
   border-top: 1px solid var(--rule);
@@ -1277,10 +1281,10 @@ img { display: block; max-width: 100%; height: auto; }
 
 /* ───── Stacked layout: tighten block spacing ───── */
 @media (max-width: 600px) {
-  .pf-block { padding: 56px 24px 64px; }
+  .pf-block { padding: 56px 24px; }
   .pf-block--hero {
-    padding: max(36px, calc(env(safe-area-inset-top, 0px) + 16px)) 24px 48px;
-    padding-bottom: max(48px, calc(env(safe-area-inset-bottom, 0px) + 28px));
+    padding: max(36px, calc(env(safe-area-inset-top, 0px) + 16px)) 24px 40px;
+    padding-bottom: max(40px, calc(env(safe-area-inset-bottom, 0px) + 20px));
   }
   .pf-block__inner { max-width: 100%; }
   .pf-blockHead { margin-bottom: 28px; }
@@ -1358,7 +1362,7 @@ img { display: block; max-width: 100%; height: auto; }
 
   /* Hero headshot: editorial presence on narrow screens */
   .pf-stacked__photoFrame {
-    max-width: min(292px, 88vw);
+    max-width: min(240px, 88vw);
     margin-inline: auto;
   }
   .pf-stacked__photoFrame::before {
@@ -1378,7 +1382,7 @@ img { display: block; max-width: 100%; height: auto; }
 /* ───── Stacked hero grid: tighter on small phones ───── */
 @media (max-width: 480px) {
   .pf-stacked__heroGrid { gap: 20px; padding-top: 20px; }
-  .pf-stacked__photoFrame { max-width: min(276px, 86vw); margin-inline: auto; }
+  .pf-stacked__photoFrame { max-width: min(240px, 86vw); margin-inline: auto; }
   .pf-stacked__photoFrame::before {
     transform: translate(4px, 4px);
   }
@@ -1754,6 +1758,72 @@ img { display: block; max-width: 100%; height: auto; }
   opacity: 0;
   pointer-events: none;
   border: 0;
+}
+
+/* ---- Mini-player: docked bar while music plays off-screen (mobile) ---- */
+.pf-mini {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 80;
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 6px 6px 18px;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  box-shadow: 0 14px 34px -14px rgba(0, 0, 0, 0.65);
+  animation: pf-mini-in 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (max-width: 900px) {
+  .pf-mini { display: flex; }
+}
+.pf-mini .pf-mh__bars { flex: none; }
+.pf-mini__title {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 10px 0;
+  line-height: 24px;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pf-mini__toggle {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--rule));
+  border-radius: 50%;
+  background: transparent;
+  color: var(--accent);
+  font-size: 12px;
+  cursor: pointer;
+}
+.pf-mini__toggle:focus-visible,
+.pf-mini__title:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+@keyframes pf-mini-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-mini { animation: none; }
+  .pf-mini .pf-mh__bars span { animation: none; }
 }
 
 /* ═══════════ AUDIO VISUALIZER ═══════════ */
@@ -2276,6 +2346,112 @@ img { display: block; max-width: 100%; height: auto; }
   .pf-tl__hintArrow { animation: none; }
 }
 
+/* ---- Deck (mobile swipe rail) ---- */
+.pf-tl--deck { padding: 0; }
+.pf-tl__deckRail {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 24px 18px;
+  scrollbar-width: none;
+}
+.pf-tl__deckRail::-webkit-scrollbar { display: none; }
+.pf-tl--deck .pf-tl__panel {
+  flex: 0 0 84vw;
+  max-width: 460px;
+  width: auto;
+  max-height: none;
+  overflow: visible;
+  scroll-snap-align: center;
+  opacity: 0.55;
+  transform: none;
+  transition: opacity 240ms ease, border-color 240ms ease;
+  padding: 24px 22px;
+}
+.pf-tl--deck .pf-tl__panel.is-active {
+  opacity: 1;
+  border-color: color-mix(in srgb, var(--rule) 60%, var(--fg) 14%);
+}
+.pf-tl--deck .pf-tl__panel.is-current.is-active {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--rule));
+}
+.pf-tl__cardPreview {
+  margin: 0 0 4px;
+  color: var(--fg-soft);
+  font-size: 14px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pf-tl__cardMore {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-top: 4px;
+  padding: 0 4px 0 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 200ms ease;
+}
+.pf-tl__cardMore .pf-chev {
+  display: inline-block;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  font-size: 14px;
+  transition: transform 200ms ease, color 200ms ease;
+}
+.pf-tl__cardMore[aria-expanded="true"] .pf-chev {
+  transform: rotate(45deg);
+  color: var(--accent);
+}
+.pf-tl__cardMore:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+.pf-tl__deckMeta { padding: 0 24px 8px; }
+.pf-tl__deckMeta .pf-tl__railLine { margin-bottom: 10px; }
+.pf-tl__deckMeta .pf-tl__railFill {
+  transform-origin: left center;
+  transition: transform 240ms ease;
+}
+.pf-tl__deckYears {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.pf-tl__deckNow { color: var(--fg); }
+@media (prefers-reduced-motion: reduce) {
+  .pf-tl--deck .pf-tl__panel,
+  .pf-tl__deckMeta .pf-tl__railFill,
+  .pf-tl__cardMore .pf-chev { transition: none; }
+}
+
+/* Copy variants: desktop says scroll, mobile says swipe. */
+.pf-sub--mobile { display: none; }
+@media (max-width: 900px) {
+  .pf-sub--desktop { display: none; }
+  .pf-sub--mobile { display: inline; }
+}
+
 /* ---- Work timeline: org logos ---- */
 .pf-tl__topRight {
   display: flex;
@@ -2632,8 +2808,12 @@ img { display: block; max-width: 100%; height: auto; }
   }
 }
 
-/* Mobile: stack list above the reading pane and flow at natural height
-   (no inner scrolling on small screens). */
+/* Back row exists only on mobile (base rule must precede the media query). */
+.pf-term__back { display: none; }
+
+/* Mobile: single-pane terminal. The list IS the terminal; opening a project
+   swaps in the README (cat), and "$ cd .." returns. Real terminals are
+   single-pane — the split view is a desktop luxury. */
 @media (max-width: 760px) {
   .pf-term__body {
     grid-template-columns: 1fr;
@@ -2642,12 +2822,54 @@ img { display: block; max-width: 100%; height: auto; }
   .pf-term__body::after { display: none; }
   .pf-term__list {
     border-right: none;
-    border-bottom: 1px solid var(--rule);
     flex-direction: column;
     overflow-y: visible;
   }
-  .pf-term__pane { padding: 20px 18px 24px; overflow-y: visible; }
+  .pf-term__pane { padding: 0 18px 24px; overflow-y: visible; }
   .pf-term__hint { display: none; }
+
+  /* One view at a time */
+  .pf-term.is-reading .pf-term__list { display: none; }
+  .pf-term:not(.is-reading) .pf-term__pane { display: none; }
+
+  /* README view: bounded frame with internal scroll so a long README doesn't
+     turn the page into a wall; overscroll-behavior keeps page scroll free.
+     The scroll container must be .pf-term__body (not .pf-term__pane): with an
+     implicit grid row sized to content, .pf-term__pane's own box stretches to
+     fit its content (no internal overflow to scroll), so overflow has to be
+     clipped/scrolled one level up, on the element that actually carries the
+     max-height. */
+  .pf-term.is-reading .pf-term__body {
+    max-height: 70vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .pf-term.is-reading .pf-term__pane {
+    scroll-margin-top: 76px;
+  }
+  .pf-term.is-reading .pf-term__body::after { display: block; }
+
+  .pf-term__back {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: calc(100% + 36px);
+    margin: 0 -18px 12px;
+    padding: 14px 18px;
+    min-height: 44px;
+    border: none;
+    border-bottom: 1px solid var(--rule);
+    background: var(--card);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    text-align: left;
+    color: var(--fg);
+  }
+  .pf-term__back:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

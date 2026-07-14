@@ -247,6 +247,9 @@ function ProjectsTerminal({ items }) {
   const [history, setHistory] = useState([]);
   const [histIdx, setHistIdx] = useState(-1);
   const [hint, setHint] = useState(false);
+  // Mobile single-pane: "list" shows ls output, "reading" shows the README.
+  // Desktop ignores this (CSS only applies it under 760px).
+  const [mobileView, setMobileView] = useState("list");
   const rootRef = useRef(null);
   const listRef = useRef(null);
   const paneRef = useRef(null);
@@ -258,11 +261,19 @@ function ProjectsTerminal({ items }) {
   // below the file list, so a tap lower in the list would otherwise be silent).
   useEffect(() => {
     if (!mountedRef.current) { mountedRef.current = true; return; }
-    if (paneRef.current) paneRef.current.scrollTop = 0;
+    if (paneRef.current) {
+      paneRef.current.scrollTop = 0;
+      if (paneRef.current.parentElement) paneRef.current.parentElement.scrollTop = 0;
+    }
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const mobile = window.matchMedia("(max-width: 760px)").matches;
-    if (mobile && paneRef.current) {
-      paneRef.current.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    if (mobile) {
+      // Single-pane: the README replaces the list in place; just make sure the
+      // terminal frame's top (with the cd .. row) is on screen.
+      if (rootRef.current) {
+        const top = rootRef.current.getBoundingClientRect().top;
+        if (top < 0) rootRef.current.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+      }
     } else {
       const row = listRef.current && listRef.current.querySelector(".pf-term__item.is-open");
       if (row && row.scrollIntoView) row.scrollIntoView({ block: "nearest" });
@@ -326,10 +337,11 @@ function ProjectsTerminal({ items }) {
     if (verb === "ls") { setErr(false); setMsg(items.map((p) => p.id + "/").join("  ")); return; }
     if (verb === "help") { setErr(false); setMsg("commands: open <name> · cat <name> · ls · clear"); return; }
     if (verb === "clear") { setErr(false); setMsg(null); setCmd(""); return; }
+    if (verb === "cd" && (arg === ".." || arg === "")) { setErr(false); setMsg(null); setCmd(""); setMobileView("list"); return; }
 
     // "open gobank", "cat frac", or a bare project name like "gobank"
     const target = OPENERS.includes(verb) ? find(arg) : find(verb);
-    if (target) { setOpenId(target.id); setCmd(""); setErr(false); setMsg(null); return; }
+    if (target) { setOpenId(target.id); setCmd(""); setErr(false); setMsg(null); setMobileView("reading"); return; }
 
     setErr(true);
     setMsg(OPENERS.includes(verb) ? `no such project: ${arg || "?"}` : `command not found: ${verb}`);
@@ -351,7 +363,7 @@ function ProjectsTerminal({ items }) {
   };
 
   return (
-    <div className={`pf-term ${hint ? "is-hinting" : ""}`} ref={rootRef} role="group" aria-label="Projects explorer">
+    <div className={`pf-term ${hint ? "is-hinting" : ""} ${mobileView === "reading" ? "is-reading" : ""}`} ref={rootRef} role="group" aria-label="Projects explorer">
       <div className="pf-term__bar">
         <span className="pf-term__dots" aria-hidden="true"><i /><i /><i /></span>
         <span className="pf-term__path">ezecutin@portfolio: ~/projects</span>
@@ -368,7 +380,7 @@ function ProjectsTerminal({ items }) {
               type="button"
               aria-current={p.id === openId ? "true" : undefined}
               className={`pf-term__item ${p.id === openId ? "is-open" : ""}`}
-              onClick={() => setOpenId(p.id)}
+              onClick={() => { setOpenId(p.id); setMobileView("reading"); }}
               onFocus={() => setOpenId(p.id)}
             >
               <span className="pf-term__caret" aria-hidden="true">▸</span>
@@ -380,6 +392,14 @@ function ProjectsTerminal({ items }) {
         </div>
 
         <div className="pf-term__pane" key={open.id} ref={paneRef}>
+          <button
+            type="button"
+            className="pf-term__back"
+            onClick={() => setMobileView("list")}
+            aria-label="Back to project list"
+          >
+            <span className="pf-term__pfx" aria-hidden="true">$</span> cd ..
+          </button>
           <p className="pf-term__cmd"><span className="pf-term__pfx">$</span> cat {open.id}/README.md</p>
           <h3 className="pf-term__title">{open.title}</h3>
           <p className="pf-term__blurb">{open.blurb}</p>
@@ -475,6 +495,64 @@ function _initials(org) {
   return words.map((w) => w[0]).join("").slice(0, 3).toUpperCase();
 }
 
+/** Mobile deck card: same panel anatomy as pinned, but bullets + stack sit
+ *  behind a tap-expand so the deck stays one viewport tall. */
+function WorkDeckCard({ w, i, n, active }) {
+  const [expanded, setExpanded] = useState(false);
+  const detailsId = `tl-deck-details-${w.id}`;
+  return (
+    <article
+      role="listitem"
+      id={`tl-panel-${w.id}`}
+      className={`pf-tl__panel ${w.current ? "is-current" : ""} ${active ? "is-active" : ""}`}
+      aria-current={w.current ? "true" : undefined}
+    >
+      <div className="pf-tl__panelTop">
+        <span className={`pf-tl__logo ${w.logoBleed ? "is-bleed" : ""}`}>
+          <span className="pf-tl__logoFallback" aria-hidden="true">{_initials(w.org)}</span>
+          <img
+            className="pf-tl__logoImg"
+            src={w.logo || `logos/${w.id}.svg`}
+            alt={`${w.org} logo`}
+            loading="lazy"
+            onError={(e) => { e.currentTarget.style.display = "none"; }}
+          />
+        </span>
+        <div className="pf-tl__topRight">
+          <span className="pf-tl__index">{String(i + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}</span>
+          {w.current ? (
+            <span className="pf-tl__nowTag">
+              <span className="pf-live" aria-hidden="true"><span className="pf-live__core" /></span>
+              current
+            </span>
+          ) : null}
+        </div>
+      </div>
+      <div className="pf-tl__year">{_railLabel(w.date)}</div>
+      <h3 className="pf-tl__role">{w.title}</h3>
+      <div className="pf-tl__org">{w.org}</div>
+      <div className="pf-tl__meta">{w.date} · {w.location}</div>
+      {!expanded && <p className="pf-tl__cardPreview">{w.bullets[0]}</p>}
+      <div id={detailsId} hidden={!expanded}>
+        <ul className="pf-tl__bullets">
+          {w.bullets.map((b, bi) => <li key={bi}>{b}</li>)}
+        </ul>
+        <Stack items={w.stack} />
+      </div>
+      <button
+        type="button"
+        className="pf-tl__cardMore"
+        aria-expanded={expanded}
+        aria-controls={detailsId}
+        onClick={() => setExpanded((e) => !e)}
+      >
+        <span className="pf-chev" aria-hidden="true">+</span>
+        {expanded ? "less" : "details"}
+      </button>
+    </article>
+  );
+}
+
 function WorkTimeline({ items }) {
   const ordered = useMemo(
     () => [...items].sort((a, b) => _startSort(a.date) - _startSort(b.date)),
@@ -482,8 +560,10 @@ function WorkTimeline({ items }) {
   );
   const n = ordered.length;
 
-  // Desktop pinned mode only when there's room, a fine pointer, and motion is allowed.
-  const [pinned, setPinned] = useState(false);
+  // Three modes: "pinned" desktop scroll-jack, "deck" mobile swipe rail,
+  // "stacked" fallback (wide viewport but coarse pointer / reduced motion).
+  const [mode, setMode] = useState("stacked");
+  const pinned = mode === "pinned";
   const [active, setActive] = useState(0);
   const [progress, setProgress] = useState(0);
   const sectionRef = useRef(null);
@@ -491,15 +571,22 @@ function WorkTimeline({ items }) {
   const viewportRef = useRef(null);
   const trackRef = useRef(null);
   const maxXRef = useRef(0);
+  const deckRef = useRef(null);
 
   useEffect(() => {
-    const mq = window.matchMedia(
+    const pinnedMq = window.matchMedia(
       "(min-width: 901px) and (pointer: fine) and (prefers-reduced-motion: no-preference)"
     );
-    const apply = () => setPinned(mq.matches);
+    const deckMq = window.matchMedia("(max-width: 900px)");
+    const apply = () =>
+      setMode(pinnedMq.matches ? "pinned" : deckMq.matches ? "deck" : "stacked");
     apply();
-    mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
+    pinnedMq.addEventListener("change", apply);
+    deckMq.addEventListener("change", apply);
+    return () => {
+      pinnedMq.removeEventListener("change", apply);
+      deckMq.removeEventListener("change", apply);
+    };
   }, []);
 
   // Pinned scroll-jack: translate the track from NATIVE scroll position.
@@ -541,6 +628,26 @@ function WorkTimeline({ items }) {
       track.style.transform = "";
     };
   }, [pinned, n]);
+
+  // Deck mode: track which card is snapped so the progress line + counter follow.
+  useEffect(() => {
+    if (mode !== "deck") return;
+    const rail = deckRef.current;
+    if (!rail || typeof IntersectionObserver === "undefined") return;
+    const cards = Array.from(rail.querySelectorAll(".pf-tl__panel"));
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((en) => {
+          if (!en.isIntersecting) return;
+          const idx = cards.indexOf(en.target);
+          if (idx >= 0) setActive(idx);
+        });
+      },
+      { root: rail, threshold: 0.6 }
+    );
+    cards.forEach((c) => io.observe(c));
+    return () => io.disconnect();
+  }, [mode, n]);
 
   // Jump to a panel by scrolling the page (pinned) — keeps native scroll authoritative.
   const jumpTo = (i) => {
@@ -595,6 +702,38 @@ function WorkTimeline({ items }) {
       <Stack items={w.stack} />
     </article>
   ));
+
+  if (mode === "deck") {
+    return (
+      <div className="pf-tl pf-tl--deck">
+        <div
+          className="pf-tl__deckRail"
+          ref={deckRef}
+          role="list"
+          aria-label="Work timeline, swipe horizontally"
+        >
+          {ordered.map((w, i) => (
+            <WorkDeckCard key={w.id} w={w} i={i} n={n} active={i === active} />
+          ))}
+        </div>
+        <div className="pf-tl__deckMeta">
+          <div className="pf-tl__railLine" aria-hidden="true">
+            <div
+              className="pf-tl__railFill"
+              style={{ transform: `scaleX(${n > 1 ? active / (n - 1) : 1})` }}
+            />
+          </div>
+          <div className="pf-tl__deckYears">
+            <span aria-hidden="true">{_railLabel(ordered[0].date)}</span>
+            <span className="pf-tl__deckNow" aria-live="polite">
+              {String(active + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}
+            </span>
+            <span aria-hidden="true">{_railLabel(ordered[n - 1].date)}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!pinned) {
     return (
@@ -735,6 +874,8 @@ function NowPlayingHero({ data }) {
   const [widgetReady, setWidgetReady] = useState(false);
   const [widgetError, setWidgetError] = useState(false);
   const iframeRef = useRef(null);
+  const heroRef = useRef(null);
+  const [heroInView, setHeroInView] = useState(true);
   const widgetRef = useRef(null);
   const tracksRef = useRef(tracks);
   tracksRef.current = tracks;
@@ -868,6 +1009,19 @@ function NowPlayingHero({ data }) {
     };
   }, []);
 
+  // Mini-player: know when the music hero has scrolled off screen.
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") return;
+    const el = heroRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((en) => setHeroInView(en.isIntersecting)),
+      { threshold: 0.1 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   // Load the current track after the widget API is ready.
   // Do not depend on `tracks`: oEmbed/widget metadata updates must not call load() again.
   useEffect(() => {
@@ -907,7 +1061,7 @@ function NowPlayingHero({ data }) {
   const trackLabel = t.title && t.title !== "—" ? t.title : `Track ${active + 1}`;
 
   return (
-    <div className="pf-mh">
+    <div className="pf-mh" ref={heroRef}>
       {widgetError ? (
         <p className="pf-mh__status" role="status">
           The embedded player did not load. Use the SoundCloud links below to listen.
@@ -998,6 +1152,34 @@ function NowPlayingHero({ data }) {
         allow="autoplay"
         src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(tracks[0].url)}&visual=false&hide_related=true&show_comments=false&show_reposts=false&show_teaser=false`}
       />
+
+      {playing && !heroInView ? (
+        <div className="pf-mini" role="group" aria-label="Now playing">
+          <PlayingBars />
+          <button
+            type="button"
+            className="pf-mini__title"
+            onClick={() => {
+              const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+              document.getElementById("block-music")?.scrollIntoView({
+                behavior: reduce ? "auto" : "smooth",
+                block: "start",
+              });
+            }}
+            aria-label={`Now playing ${trackLabel}. Jump to player`}
+          >
+            {trackLabel}
+          </button>
+          <button
+            type="button"
+            className="pf-mini__toggle"
+            onClick={togglePlay}
+            aria-label={`Pause ${trackLabel}`}
+          >
+            ❚❚
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
