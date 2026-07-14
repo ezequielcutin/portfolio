@@ -55,7 +55,7 @@
   <g class="display">
     <text x="574" y="229" fill="#ebe6dc" font-size="88" font-weight="500" letter-spacing="-4.6">Ezequiel</text>
     <text x="574" y="319" fill="#ebe6dc" font-size="88" font-weight="500" letter-spacing="-4.6">Cutin</text>
-    <circle cx="777" cy="303" r="9" fill="#e08055" />
+    <circle cx="800" cy="303" r="9" fill="#e08055" />
 
     <text x="580" y="402" fill="#b8b1a3" font-size="31" font-weight="400" letter-spacing="-0.5">
       Engineer, builder,
@@ -65,10 +65,4 @@
     </text>
   </g>
 
-  <g fill="#e08055">
-    <rect x="552" y="54" width="20" height="2" />
-    <rect x="552" y="54" width="2" height="20" />
-    <rect x="1140" y="556" width="20" height="2" />
-    <rect x="1158" y="556" width="2" height="20" />
-  </g>
 </svg>
