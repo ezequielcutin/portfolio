@@ -258,6 +258,7 @@ function initHeroCrystal() {
   const SPRING_STIFFNESS = 0.045;  // same feel family as header-ambience
   const SPRING_DAMPING = 0.88;
   const JOURNEY_PITCH = 0.5;       // extra pitch over the scroll journey
+  const JOURNEY_YAW = 2.4;         // slow horizontal rotation across the journey
   const FLICK_RADIUS = 150;        // px; cursor sweep inside this flicks the crystal
   const GLOW_IDLE = 0.08;
 
@@ -265,6 +266,7 @@ function initHeroCrystal() {
   let tiltX = 0, tiltZ = 0, tiltVX = 0, tiltVZ = 0;
   let rollVel = 0;                 // flick inertia around the long axis
   let yawVel = 0;                  // flick inertia around the vertical axis
+  let yawBase = 0;                 // integrated idle + flick yaw; scroll adds on top
   let moteSwirl = 0;               // accumulated swirl the flicks drag the motes into
   let lastPX = -1e4, lastPY = -1e4, lastPT = 0;
 
@@ -302,7 +304,7 @@ function initHeroCrystal() {
     // Dual-axis spin: slow roll around the long axis + slow yaw around the
     // vertical, each carrying its own decaying flick inertia.
     crystal.rotation.y += (IDLE_ROLL + rollVel) * dt;
-    pivot.rotation.y += (IDLE_YAW + yawVel) * dt;
+    yawBase += (IDLE_YAW + yawVel) * dt;
     rollVel *= Math.pow(0.5, dt);                // slow, frame-rate independent decay
     yawVel *= Math.pow(0.5, dt);
 
@@ -341,6 +343,7 @@ function initHeroCrystal() {
     pivot.position.x = world.x + Math.cos(tm * ELLIPSE_SPEED) * ELLIPSE_X;
     pivot.position.y = world.y + Math.sin(tm * ELLIPSE_SPEED) * ELLIPSE_Y;
     lay.rotation.x = 0.28 + ease * JOURNEY_PITCH;
+    pivot.rotation.y = yawBase + ease * JOURNEY_YAW;
 
     // Fade out at the end of the journey; pause the loop once invisible.
     const fade = p < 0.75 ? 1 : Math.max(1 - (p - 0.75) / 0.25, 0);
