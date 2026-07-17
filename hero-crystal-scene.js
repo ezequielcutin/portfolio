@@ -290,6 +290,11 @@ function initHeroCrystal() {
   const JOURNEY_YAW = 2.4;         // slow horizontal rotation across the journey
   const FLICK_RADIUS = 150;        // px; cursor sweep inside this flicks the crystal
   const GLOW_IDLE = 0.08;
+  const CORE_ROLL_RATIO = -0.6;    // core rolls against the hull
+  const CORE_FLICK_RATIO = 0.5;    // damped share of flick inertia the core feels
+  const EMBER_PERIOD = 7;          // s, breathing sine
+  const EMBER_MID = 0.475;         // emissiveIntensity range ~0.25..0.7
+  const EMBER_AMP = 0.225;
 
   let targetTiltX = 0, targetTiltZ = 0;
   let tiltX = 0, tiltZ = 0, tiltVX = 0, tiltVZ = 0;
@@ -336,6 +341,15 @@ function initHeroCrystal() {
     yawBase += (IDLE_YAW + yawVel) * dt;
     rollVel *= Math.pow(0.5, dt);                // slow, frame-rate independent decay
     yawVel *= Math.pow(0.5, dt);
+
+    // Ember core counter-rolls: flick the hull right, the ember drifts left
+    // inside the glass. Its facets breathe on a slow, interaction-free sine.
+    if (core) {
+      core.rotation.y += CORE_ROLL_RATIO * (IDLE_ROLL + rollVel * CORE_FLICK_RATIO) * dt;
+      if (emberMat) {
+        emberMat.emissiveIntensity = EMBER_MID + EMBER_AMP * Math.sin(t / 1000 * (Math.PI * 2 / EMBER_PERIOD));
+      }
+    }
 
     // A hard spin shifts the material subtly: slight iridescence lift,
     // blueprint edges whisper in, then everything settles.
