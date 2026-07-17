@@ -887,7 +887,18 @@ img { display: block; max-width: 100%; height: auto; }
 }
 .pf-header-ambience.active { opacity: 1; }
 
-.pf-hero-crystal,
+/* Live canvas is viewport-fixed so the crystal can journey with scroll;
+   frame loop drives its fade, CSS only handles the initial reveal. */
+.pf-hero-crystal {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
 .pf-hero-crystal-poster {
   position: absolute;
   inset: 0;
@@ -897,8 +908,6 @@ img { display: block; max-width: 100%; height: auto; }
   z-index: 2;
   opacity: 0;
   transition: opacity 1.2s ease;
-  mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
 }
 .pf-hero-crystal.active,
 .pf-hero-crystal-poster.active { opacity: 1; }
