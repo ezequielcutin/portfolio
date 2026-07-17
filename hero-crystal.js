@@ -109,10 +109,69 @@ function initHeroCrystal() {
   layout();
   window.addEventListener('resize', layout);
 
+  // --- Motion state ---
+  const IDLE_SPIN = 0.22;          // rad/s around Y
+  const BOB_AMPLITUDE = 0.12;
+  const BOB_SPEED = 0.7;
+  const TILT_MAX = 0.35;           // rad, toward cursor
+  const SPRING_STIFFNESS = 0.045;  // same feel family as header-ambience
+  const SPRING_DAMPING = 0.88;
+  const PARALLAX_Y = 1.1;          // world units over one hero height of scroll
+
+  let targetTiltX = 0, targetTiltZ = 0;
+  let tiltX = 0, tiltZ = 0, tiltVX = 0, tiltVZ = 0;
+  const baseY = pivot.position.y;
+
+  window.addEventListener('pointermove', (e) => {
+    const r = host.getBoundingClientRect();
+    const nx = (e.clientX / window.innerWidth) * 2 - 1;   // -1..1
+    const ny = ((e.clientY - r.top) / Math.max(r.height, 1)) * 2 - 1;
+    targetTiltZ = -nx * TILT_MAX;
+    targetTiltX = ny * TILT_MAX;
+  });
+
+  let animId = null;
+  let lastT = 0;
+  function frame(t) {
+    animId = requestAnimationFrame(frame);
+    const dt = Math.min((t - lastT) / 1000, 0.05) || 0.016;
+    lastT = t;
+
+    crystal.rotation.y += IDLE_SPIN * dt;
+
+    tiltVX = (tiltVX + (targetTiltX - tiltX) * SPRING_STIFFNESS) * SPRING_DAMPING;
+    tiltVZ = (tiltVZ + (targetTiltZ - tiltZ) * SPRING_STIFFNESS) * SPRING_DAMPING;
+    tiltX += tiltVX; tiltZ += tiltVZ;
+    pivot.rotation.x = tiltX;
+    pivot.rotation.z = tiltZ;
+
+    const rect = host.getBoundingClientRect();
+    const scrollProgress = Math.min(Math.max(-rect.top / Math.max(rect.height, 1), 0), 1);
+    pivot.position.y = baseY + Math.sin(t / 1000 * BOB_SPEED) * BOB_AMPLITUDE + scrollProgress * PARALLAX_Y;
+
+    renderer.render(scene, camera);
+  }
+  function startLoop() {
+    if (animId === null) { lastT = performance.now(); animId = requestAnimationFrame(frame); }
+  }
+  function stopLoop() {
+    if (animId !== null) { cancelAnimationFrame(animId); animId = null; }
+  }
+
+  const io = new IntersectionObserver(
+    (entries) => { entries[0].isIntersecting && !document.hidden ? startLoop() : stopLoop(); },
+    { threshold: 0 }
+  );
+  io.observe(host);
+  document.addEventListener('visibilitychange', () => {
+    document.hidden ? stopLoop() : startLoop();
+  });
+
+  window.__heroCrystalRunning = () => animId !== null;
+
   renderer.render(scene, camera);           // first frame before fade-in
   canvas.classList.add('active');
-
-  // Motion + lifecycle wired in Task 2; static single render until then.
+  startLoop();
   return true;
 }
 
