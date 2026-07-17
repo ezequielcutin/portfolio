@@ -128,7 +128,25 @@ function initHeroCrystal() {
 
   // pivot: position + cursor tilt · lay: horizontal rest pose + scroll pitch
   // crystal: spins on its own long axis (rotisserie).
+  // Blueprint edges: faint accent wireframe that reveals near the cursor
+  // and flashes while the crystal is spinning fast.
+  function makeEdges(mesh) {
+    const e = new THREE.LineSegments(
+      new THREE.EdgesGeometry(mesh.geometry, 10),
+      new THREE.LineBasicMaterial({
+        color: accent,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      })
+    );
+    mesh.add(e);
+    return e;
+  }
+
   let crystal = createCrystalMesh(accent);
+  let edges = makeEdges(crystal);
   const lay = new THREE.Group();
   lay.rotation.z = Math.PI / 2 + 0.12;   // horizontal, a hair off-level
   lay.rotation.x = 0.28;                 // nose toward viewer so facets catch light
@@ -183,8 +201,10 @@ function initHeroCrystal() {
       loaded.rotation.copy(crystal.rotation);    // continue the spin seamlessly
       lay.remove(crystal);
       crystal.geometry.dispose();
+      edges.geometry.dispose();
       lay.add(loaded);
       crystal = loaded;
+      edges = makeEdges(loaded);
     },
     undefined,
     () => { /* glb failed — placeholder stays, no user-visible error */ }
@@ -231,6 +251,7 @@ function initHeroCrystal() {
   let targetTiltX = 0, targetTiltZ = 0;
   let tiltX = 0, tiltZ = 0, tiltVX = 0, tiltVZ = 0;
   let spinVel = 0;                 // flick impulse, decays back to idle
+  let moteSwirl = 0;               // accumulated swirl the flick drags the motes into
   let glow = GLOW_IDLE, glowTarget = GLOW_IDLE;
   let lastPX = -1e4, lastPY = -1e4, lastPT = 0;
 
@@ -268,6 +289,17 @@ function initHeroCrystal() {
     crystal.rotation.y += (IDLE_SPIN + spinVel) * dt;
     spinVel *= Math.pow(0.35, dt);               // frame-rate independent decay
 
+    // The crystal "charges" while spinning fast: iridescence shifts,
+    // core glow rises, blueprint edges flash then settle.
+    const spinEnergy = Math.min(Math.abs(spinVel) / 8, 1);
+    crystal.material.iridescence = 0.55 + spinEnergy * 0.3;
+    const nearT = (glow - GLOW_IDLE) / (GLOW_NEAR - GLOW_IDLE);
+    edges.material.opacity = 0.04 + nearT * 0.16 + spinEnergy * 0.3;
+
+    // Lamp prowls slowly so glints travel across facets even at idle.
+    const tl = t / 1000;
+    lamp.position.set(-3.5 + Math.sin(tl * 0.1) * 1.4, -1.2 + Math.cos(tl * 0.13) * 0.9, 2.5);
+
     tiltVX = (tiltVX + (targetTiltX - tiltX) * SPRING_STIFFNESS) * SPRING_DAMPING;
     tiltVZ = (tiltVZ + (targetTiltZ - tiltZ) * SPRING_STIFFNESS) * SPRING_DAMPING;
     tiltX += tiltVX; tiltZ += tiltVZ;
@@ -276,19 +308,23 @@ function initHeroCrystal() {
 
     // Near-cursor glow breathes up; eases both directions.
     glow += (glowTarget - glow) * Math.min(dt * 4, 1);
-    crystal.material.emissiveIntensity = glow;
+    crystal.material.emissiveIntensity = glow + spinEnergy * 0.25;
 
     const rect = host.getBoundingClientRect();
     const scrollProgress = Math.min(Math.max(-rect.top / Math.max(rect.height, 1), 0), 1);
     pivot.position.y = baseY + Math.sin(t / 1000 * BOB_SPEED) * BOB_AMPLITUDE + scrollProgress * PARALLAX_Y;
     lay.rotation.x = 0.28 + scrollProgress * SCROLL_PITCH;
 
-    // Dust motes orbit lazily; slight lift with the glow.
+    // Dust motes orbit lazily; a flick drags them into a faster swirl
+    // and pushes them outward until the spin settles.
+    moteSwirl += spinVel * dt * 0.3;
     const tm = t / 1000;
+    const fling = 1 + spinEnergy * 0.5;
     for (let i = 0; i < MOTES; i++) {
-      const a = moteSeed[i * 3] + tm * 0.12 * (i % 2 ? 1 : -1);
-      const b = moteSeed[i * 3 + 1] + tm * 0.07;
-      const rad = moteSeed[i * 3 + 2] * (2.2 + glow);
+      const dir = i % 2 ? 1 : -1;
+      const a = moteSeed[i * 3] + tm * 0.045 * dir + moteSwirl * dir;
+      const b = moteSeed[i * 3 + 1] + tm * 0.028 + moteSwirl * 0.4;
+      const rad = moteSeed[i * 3 + 2] * (2.2 + glow) * fling;
       motePos[i * 3] = Math.cos(a) * rad * 1.5;
       motePos[i * 3 + 1] = Math.sin(b) * rad * 0.65;
       motePos[i * 3 + 2] = Math.sin(a) * rad * 0.5;
