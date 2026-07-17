@@ -2,6 +2,7 @@
 // Ships a procedural placeholder mesh until public/models/crystal.glb exists.
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const SMALL_VIEWPORT = window.innerWidth < 901;
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -37,7 +38,11 @@ function createCrystalMesh(accent) {
   }
   geo = geo.toNonIndexed();
   geo.computeVertexNormals();
-  const mat = new THREE.MeshPhysicalMaterial({
+  return new THREE.Mesh(geo, createCrystalMaterial(accent));
+}
+
+function createCrystalMaterial(accent) {
+  return new THREE.MeshPhysicalMaterial({
     color: 0x0a0a12,
     metalness: 0,
     roughness: 0.18,
@@ -49,7 +54,6 @@ function createCrystalMesh(accent) {
     emissiveIntensity: 0.08,
     flatShading: true,
   });
-  return new THREE.Mesh(geo, mat);
 }
 
 function initHeroCrystal() {
@@ -90,11 +94,30 @@ function initHeroCrystal() {
   key.position.set(2, 3, 4);
   scene.add(key);
 
-  const crystal = createCrystalMesh(accent);
+  let crystal = createCrystalMesh(accent);
   const pivot = new THREE.Group();
   pivot.add(crystal);
   pivot.scale.setScalar(0.5);
   scene.add(pivot);
+
+  new GLTFLoader().load(
+    'public/models/crystal.glb',
+    (gltf) => {
+      const loaded = gltf.scene.getObjectByProperty('isMesh', true);
+      if (!loaded) return;                       // keep placeholder
+      loaded.material = createCrystalMaterial(accent);
+      // Match the placeholder's footprint so layout/motion tuning holds.
+      const size = new THREE.Box3().setFromObject(loaded).getSize(new THREE.Vector3());
+      loaded.scale.multiplyScalar(3.2 / Math.max(size.x, size.y, size.z));
+      loaded.rotation.copy(crystal.rotation);    // continue the spin seamlessly
+      pivot.remove(crystal);
+      crystal.geometry.dispose();
+      pivot.add(loaded);
+      crystal = loaded;
+    },
+    undefined,
+    () => { /* glb failed — placeholder stays, no user-visible error */ }
+  );
 
   function layout() {
     const W = host.clientWidth, H = host.clientHeight;
