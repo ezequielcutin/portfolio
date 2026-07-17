@@ -43,23 +43,6 @@ function showPoster(host) {
   host.appendChild(img);
 }
 
-// Placeholder shard: displaced icosahedron, flat-shaded so facets read as planes.
-function createCrystalMesh(accent) {
-  let geo = new THREE.IcosahedronGeometry(1, 1);
-  const pos = geo.attributes.position;
-  const v = new THREE.Vector3();
-  for (let i = 0; i < pos.count; i++) {
-    v.fromBufferAttribute(pos, i);
-    const stretch = 1 + 0.55 * Math.abs(v.y);
-    const jitter = 0.82 + 0.36 * Math.sin(v.x * 7.3 + v.y * 5.1 + v.z * 3.7);
-    v.multiplyScalar(jitter).setY(v.y * stretch * 1.6);
-    pos.setXYZ(i, v.x, v.y, v.z);
-  }
-  geo = geo.toNonIndexed();
-  geo.computeVertexNormals();
-  return new THREE.Mesh(geo, createCrystalMaterial(accent));
-}
-
 function createCrystalMaterial(accent) {
   return new THREE.MeshPhysicalMaterial({
     color: 0x0a0608,
@@ -99,7 +82,10 @@ function initHeroCrystal() {
     return true;
   }
 
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  // 1.5 instead of full retina: the glass material re-renders the viewport
+  // into a mipmapped MSAA target every frame, so pixels cost double here.
+  // On this dark, soft-edged object the resolution drop reads as nothing.
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
   renderer.setPixelRatio(dpr);
 
   const scene = new THREE.Scene();
@@ -145,12 +131,13 @@ function initHeroCrystal() {
     return e;
   }
 
-  let crystal = createCrystalMesh(accent);
-  let edges = makeEdges(crystal);
+  // No placeholder: the crystal appears only once the real gem has loaded,
+  // so the first thing seen is the final shape at its final size.
+  let crystal = null;
+  let edges = null;
   const lay = new THREE.Group();
   lay.rotation.z = Math.PI / 2 + 0.12;   // horizontal, a hair off-level
   lay.rotation.x = 0.28;                 // nose toward viewer so facets catch light
-  lay.add(crystal);
   const pivot = new THREE.Group();
   pivot.add(lay);
   pivot.scale.setScalar(0.5);
@@ -197,19 +184,15 @@ function initHeroCrystal() {
     'public/models/crystal.glb',
     (gltf) => {
       const hull = gltf.scene.getObjectByName('Crystal');
-      if (!hull || !hull.isMesh) return;         // keep placeholder
+      if (!hull || !hull.isMesh) { canvas.remove(); showPoster(host); return; }
       hull.material = createCrystalMaterial(accent);
-      // Match the placeholder's footprint so layout/motion tuning holds.
+      // Normalize to the footprint the layout/motion tuning was built around.
       const size = new THREE.Box3().setFromObject(hull).getSize(new THREE.Vector3());
       const norm = 3.2 / Math.max(size.x, size.y, size.z);
       hull.scale.multiplyScalar(norm);
       // Chunkier read: shorten the long axis so the horizontal pose keeps
       // visible depth instead of flattening into a sliver.
       hull.scale.y *= 0.72;
-      hull.rotation.copy(crystal.rotation);      // continue the spin seamlessly
-      lay.remove(crystal);
-      crystal.geometry.dispose();
-      edges.geometry.dispose();
       lay.add(hull);
       crystal = hull;
       edges = makeEdges(hull);
@@ -237,9 +220,10 @@ function initHeroCrystal() {
         lay.add(loadedCore);
         core = loadedCore;
       }
+      reveal();
     },
     undefined,
-    () => { /* glb failed — placeholder stays, no user-visible error */ }
+    () => { canvas.remove(); showPoster(host); }  // glb failed — poster instead
   );
 
   // The canvas is viewport-fixed; the crystal's home sits beside the hero
@@ -340,7 +324,7 @@ function initHeroCrystal() {
 
     // Dual-axis spin: slow roll around the long axis + slow yaw around the
     // vertical, each carrying its own decaying flick inertia.
-    crystal.rotation.y += (IDLE_ROLL + rollVel) * dt;
+    if (crystal) crystal.rotation.y += (IDLE_ROLL + rollVel) * dt;
     yawBase += (IDLE_YAW + yawVel) * dt;
     rollVel *= Math.pow(0.5, dt);                // slow, frame-rate independent decay
     yawVel *= Math.pow(0.5, dt);
@@ -357,8 +341,10 @@ function initHeroCrystal() {
     // A hard spin shifts the material subtly: slight iridescence lift,
     // blueprint edges whisper in, then everything settles.
     const spinEnergy = Math.min((Math.abs(rollVel) + Math.abs(yawVel)) / 4, 1);
-    crystal.material.iridescence = 0.55 + spinEnergy * 0.15;
-    edges.material.opacity = 0.04 + spinEnergy * 0.14;
+    if (crystal) {
+      crystal.material.iridescence = 0.55 + spinEnergy * 0.15;
+      edges.material.opacity = 0.04 + spinEnergy * 0.14;
+    }
 
     // Lamp prowls slowly so glints travel across facets even at idle.
     const tl = t / 1000;
@@ -370,7 +356,7 @@ function initHeroCrystal() {
     pivot.rotation.x = tiltX;
     pivot.rotation.z = tiltZ;
 
-    crystal.material.emissiveIntensity = GLOW_IDLE + spinEnergy * 0.08;
+    if (crystal) crystal.material.emissiveIntensity = GLOW_IDLE + spinEnergy * 0.08;
 
     // Scroll journey: home is anchored beside the tagline in document space;
     // as the page scrolls, the crystal detaches and glides toward mid-screen,
@@ -432,9 +418,16 @@ function initHeroCrystal() {
 
   window.__heroCrystalRunning = () => animId !== null;
 
-  renderer.render(scene, camera);           // first frame before fade-in
-  canvas.classList.add('active');
-  startLoop();
+  // Called by the loader once the gem is in the scene. Shaders compile off
+  // the main thread first (the transmission material is expensive to build),
+  // then one frame renders, the canvas fades in, and the loop starts.
+  function reveal() {
+    renderer.compileAsync(scene, camera).catch(() => {}).then(() => {
+      renderer.render(scene, camera);
+      canvas.classList.add('active');
+      startLoop();
+    });
+  }
   return true;
 }
 
