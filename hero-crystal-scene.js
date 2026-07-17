@@ -109,6 +109,7 @@ function initHeroCrystal() {
   const accent = getAccent();
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(makeStudioEnv(accent), 0.05).texture;
+  pmrem.dispose();
   // Studio lighting: warm terracotta "desk lamp" low-left, cool faint fill
   // from the right, so facets alternate warm/cool as the crystal turns.
   const lamp = new THREE.PointLight(accent, 24);
@@ -217,7 +218,9 @@ function initHeroCrystal() {
       // but owns its local roll. Refraction through the hull does the rest.
       const loadedCore = gltf.scene.getObjectByName('Core');
       if (loadedCore) {
-        loadedCore.scale.multiplyScalar(norm);   // same pass -> 42% ratio holds
+        // Same normalization as the hull. The hull's later 0.72 y-squash makes
+        // the long-axis ratio ~58% (short axes stay 42%) — art-directed, keep.
+        loadedCore.scale.multiplyScalar(norm);
         loadedCore.position.set(0, 0, 0);
         loadedCore.traverse((o) => {
           if (!o.isMesh) return;
