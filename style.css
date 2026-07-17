@@ -902,7 +902,18 @@ img { display: block; max-width: 100%; height: auto; }
 }
 .pf-hero-crystal.active,
 .pf-hero-crystal-poster.active { opacity: 1; }
-.pf-hero-crystal-poster { object-fit: contain; object-position: 78% 40%; }
+/* Poster sits behind the hero text (unlike the live canvas), pinned right. */
+.pf-hero-crystal-poster {
+  inset: auto;
+  top: 6%;
+  right: -4%;
+  height: 58%;
+  width: auto;
+  object-fit: contain;
+  z-index: 0;
+  opacity: 0;
+}
+.pf-hero-crystal-poster.active { opacity: 0.75; }
 .pf-stacked__name {
   font-family: var(--font-display);
   font-size: clamp(48px, 10vw, 96px);
