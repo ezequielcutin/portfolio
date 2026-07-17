@@ -18,9 +18,9 @@ function makeStudioEnv(accent) {
     m.lookAt(...lookAt);
     env.add(m);
   };
-  panel(accent, 5, 6, 2.2, [-4, 1.5, 3], [0, 0, 0]);          // warm lamp softbox
-  panel(0x8a97b8, 1.6, 5, 1.2, [4.5, -1, -2], [0, 0, 0]);     // cool slate strip
-  panel(0xffffff, 7, 1.1, 0.35, [0.5, 4.5, 1.5], [0, 0, 0]);  // narrow white glint bar
+  panel(accent, 9, 3.2, 1.5, [-4, 1.5, 3], [0, 0, 0]);        // warm lamp softbox, tight and hot
+  panel(0x8a97b8, 2.6, 4, 1.1, [4.5, -1, -2], [0, 0, 0]);     // cool slate strip
+  panel(0xffffff, 10, 1.1, 0.3, [0.5, 4.5, 1.5], [0, 0, 0]);  // narrow white glint bar
   return env;
 }
 
@@ -198,6 +198,9 @@ function initHeroCrystal() {
       // Match the placeholder's footprint so layout/motion tuning holds.
       const size = new THREE.Box3().setFromObject(loaded).getSize(new THREE.Vector3());
       loaded.scale.multiplyScalar(3.2 / Math.max(size.x, size.y, size.z));
+      // Chunkier read: shorten the long axis so the horizontal pose keeps
+      // visible depth instead of flattening into a sliver.
+      loaded.scale.y *= 0.72;
       loaded.rotation.copy(crystal.rotation);    // continue the spin seamlessly
       lay.remove(crystal);
       crystal.geometry.dispose();
