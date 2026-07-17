@@ -1,8 +1,28 @@
 // Hero crystal — three.js glass shard layered above the particle canvas.
 // Ships a procedural placeholder mesh until public/models/crystal.glb exists.
 import * as THREE from 'three';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+// Night-session studio environment: near-black room, one hot terracotta
+// softbox, one cool slate strip. Facets reflect colored streaks with real
+// darkness between glints instead of an even white room.
+function makeStudioEnv(accent) {
+  const env = new THREE.Scene();
+  env.background = new THREE.Color(0x030303);
+  const panel = (color, intensity, w, h, pos, lookAt) => {
+    const m = new THREE.Mesh(
+      new THREE.PlaneGeometry(w, h),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(intensity) })
+    );
+    m.position.set(...pos);
+    m.lookAt(...lookAt);
+    env.add(m);
+  };
+  panel(accent, 5, 6, 2.2, [-4, 1.5, 3], [0, 0, 0]);          // warm lamp softbox
+  panel(0x8a97b8, 1.6, 5, 1.2, [4.5, -1, -2], [0, 0, 0]);     // cool slate strip
+  panel(0xffffff, 7, 1.1, 0.35, [0.5, 4.5, 1.5], [0, 0, 0]);  // narrow white glint bar
+  return env;
+}
 
 const SMALL_VIEWPORT = window.innerWidth < 901;
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -43,13 +63,17 @@ function createCrystalMesh(accent) {
 
 function createCrystalMaterial(accent) {
   return new THREE.MeshPhysicalMaterial({
-    color: 0x0a0a12,
+    color: 0x0a0608,
     metalness: 0,
-    roughness: 0.18,
-    transmission: 0.85,
-    thickness: 1.4,
-    ior: 1.5,
-    envMapIntensity: 1.4,
+    roughness: 0.08,
+    transmission: 0.75,
+    thickness: 1.6,
+    ior: 1.6,
+    clearcoat: 1,
+    clearcoatRoughness: 0.12,
+    iridescence: 0.55,
+    iridescenceIOR: 1.6,
+    envMapIntensity: 1.6,
     emissive: accent,
     emissiveIntensity: 0.08,
     flatShading: true,
@@ -83,22 +107,69 @@ function initHeroCrystal() {
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 50);
   camera.position.set(0, 0, 7);
 
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-
   const accent = getAccent();
-  const rim = new THREE.PointLight(accent, 30);
-  rim.position.set(-3, 2, -2);
-  scene.add(rim);
-  const key = new THREE.DirectionalLight(0xffffff, 0.6);
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(makeStudioEnv(accent), 0.05).texture;
+  // Studio lighting: warm terracotta "desk lamp" low-left, cool faint fill
+  // from the right, so facets alternate warm/cool as the crystal turns.
+  const lamp = new THREE.PointLight(accent, 24);
+  lamp.position.set(-3.5, -1.2, 2.5);
+  scene.add(lamp);
+  const fill = new THREE.PointLight(0x5a6a8a, 8);
+  fill.position.set(4, 2, -1.5);
+  scene.add(fill);
+  const key = new THREE.DirectionalLight(0xfff2e0, 0.5);
   key.position.set(2, 3, 4);
   scene.add(key);
+  // Accent backlight rims the silhouette against the dark ground.
+  const back = new THREE.PointLight(accent, 18);
+  back.position.set(0.5, 0.8, -3.5);
+  scene.add(back);
 
+  // pivot: position + cursor tilt · lay: horizontal rest pose + scroll pitch
+  // crystal: spins on its own long axis (rotisserie).
   let crystal = createCrystalMesh(accent);
+  const lay = new THREE.Group();
+  lay.rotation.z = Math.PI / 2 + 0.12;   // horizontal, a hair off-level
+  lay.rotation.x = 0.28;                 // nose toward viewer so facets catch light
+  lay.add(crystal);
   const pivot = new THREE.Group();
-  pivot.add(crystal);
+  pivot.add(lay);
   pivot.scale.setScalar(0.5);
   scene.add(pivot);
+
+  // Dust motes: sparse accent-tinted points drifting around the crystal,
+  // echoing the particle field on the canvas behind.
+  const MOTES = 42;
+  const motePos = new Float32Array(MOTES * 3);
+  const moteSeed = new Float32Array(MOTES * 3);
+  for (let i = 0; i < MOTES; i++) {
+    moteSeed[i * 3] = Math.random() * Math.PI * 2;
+    moteSeed[i * 3 + 1] = Math.random() * Math.PI * 2;
+    moteSeed[i * 3 + 2] = 0.6 + Math.random() * 0.9;
+  }
+  const moteGeo = new THREE.BufferGeometry();
+  moteGeo.setAttribute('position', new THREE.BufferAttribute(motePos, 3));
+  // Soft round sprite so motes read as dust, not pixels.
+  const moteCanvas = document.createElement('canvas');
+  moteCanvas.width = moteCanvas.height = 64;
+  const mctx = moteCanvas.getContext('2d');
+  const grad = mctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, 'rgba(255,255,255,1)');
+  grad.addColorStop(0.4, 'rgba(255,255,255,0.5)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  mctx.fillStyle = grad;
+  mctx.fillRect(0, 0, 64, 64);
+  const motes = new THREE.Points(moteGeo, new THREE.PointsMaterial({
+    color: accent,
+    size: 0.09,
+    map: new THREE.CanvasTexture(moteCanvas),
+    transparent: true,
+    opacity: 0.7,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  }));
+  pivot.add(motes);
 
   new GLTFLoader().load(
     'public/models/crystal.glb',
@@ -110,9 +181,9 @@ function initHeroCrystal() {
       const size = new THREE.Box3().setFromObject(loaded).getSize(new THREE.Vector3());
       loaded.scale.multiplyScalar(3.2 / Math.max(size.x, size.y, size.z));
       loaded.rotation.copy(crystal.rotation);    // continue the spin seamlessly
-      pivot.remove(crystal);
+      lay.remove(crystal);
       crystal.geometry.dispose();
-      pivot.add(loaded);
+      lay.add(loaded);
       crystal = loaded;
     },
     undefined,
@@ -146,16 +217,22 @@ function initHeroCrystal() {
   window.addEventListener('resize', layout);
 
   // --- Motion state ---
-  const IDLE_SPIN = 0.22;          // rad/s around Y
-  const BOB_AMPLITUDE = 0.12;
-  const BOB_SPEED = 0.7;
-  const TILT_MAX = 0.35;           // rad, toward cursor
+  const IDLE_SPIN = 0.28;          // rad/s around the long axis
+  const BOB_AMPLITUDE = 0.1;
+  const BOB_SPEED = 0.6;
+  const TILT_MAX = 0.3;            // rad, toward cursor
   const SPRING_STIFFNESS = 0.045;  // same feel family as header-ambience
   const SPRING_DAMPING = 0.88;
-  const PARALLAX_Y = 1.1;          // world units over one hero height of scroll
+  const PARALLAX_Y = 1.3;          // world units over one hero height of scroll
+  const SCROLL_PITCH = 0.7;        // rad of pitch as the hero scrolls away
+  const FLICK_RADIUS = 150;        // px; cursor sweep inside this flicks the crystal
+  const GLOW_IDLE = 0.08, GLOW_NEAR = 0.3;
 
   let targetTiltX = 0, targetTiltZ = 0;
   let tiltX = 0, tiltZ = 0, tiltVX = 0, tiltVZ = 0;
+  let spinVel = 0;                 // flick impulse, decays back to idle
+  let glow = GLOW_IDLE, glowTarget = GLOW_IDLE;
+  let lastPX = -1e4, lastPY = -1e4, lastPT = 0;
 
   window.addEventListener('pointermove', (e) => {
     const r = host.getBoundingClientRect();
@@ -163,6 +240,21 @@ function initHeroCrystal() {
     const ny = ((e.clientY - r.top) / Math.max(r.height, 1)) * 2 - 1;
     targetTiltZ = -nx * TILT_MAX;
     targetTiltX = ny * TILT_MAX;
+
+    // Project the crystal to screen px; a fast sweep across it spins it.
+    const proj = pivot.position.clone().project(camera);
+    const cx = (proj.x + 1) / 2 * host.clientWidth;
+    const cy = (1 - proj.y) / 2 * host.clientHeight + r.top;
+    const dx = e.clientX - cx, dy = e.clientY - cy;
+    const dist = Math.hypot(dx, dy);
+    glowTarget = dist < FLICK_RADIUS * 1.6 ? GLOW_NEAR : GLOW_IDLE;
+    const now = e.timeStamp;
+    if (lastPT && dist < FLICK_RADIUS) {
+      const dtp = Math.max(now - lastPT, 1);
+      const vx = (e.clientX - lastPX) / dtp;              // px/ms
+      spinVel = THREE.MathUtils.clamp(spinVel + vx * 2.4, -14, 14);
+    }
+    lastPX = e.clientX; lastPY = e.clientY; lastPT = now;
   });
 
   let animId = null;
@@ -172,7 +264,9 @@ function initHeroCrystal() {
     const dt = Math.min((t - lastT) / 1000, 0.05) || 0.016;
     lastT = t;
 
-    crystal.rotation.y += IDLE_SPIN * dt;
+    // Rotisserie spin: idle drift plus decaying flick inertia.
+    crystal.rotation.y += (IDLE_SPIN + spinVel) * dt;
+    spinVel *= Math.pow(0.35, dt);               // frame-rate independent decay
 
     tiltVX = (tiltVX + (targetTiltX - tiltX) * SPRING_STIFFNESS) * SPRING_DAMPING;
     tiltVZ = (tiltVZ + (targetTiltZ - tiltZ) * SPRING_STIFFNESS) * SPRING_DAMPING;
@@ -180,9 +274,26 @@ function initHeroCrystal() {
     pivot.rotation.x = tiltX;
     pivot.rotation.z = tiltZ;
 
+    // Near-cursor glow breathes up; eases both directions.
+    glow += (glowTarget - glow) * Math.min(dt * 4, 1);
+    crystal.material.emissiveIntensity = glow;
+
     const rect = host.getBoundingClientRect();
     const scrollProgress = Math.min(Math.max(-rect.top / Math.max(rect.height, 1), 0), 1);
     pivot.position.y = baseY + Math.sin(t / 1000 * BOB_SPEED) * BOB_AMPLITUDE + scrollProgress * PARALLAX_Y;
+    lay.rotation.x = 0.28 + scrollProgress * SCROLL_PITCH;
+
+    // Dust motes orbit lazily; slight lift with the glow.
+    const tm = t / 1000;
+    for (let i = 0; i < MOTES; i++) {
+      const a = moteSeed[i * 3] + tm * 0.12 * (i % 2 ? 1 : -1);
+      const b = moteSeed[i * 3 + 1] + tm * 0.07;
+      const rad = moteSeed[i * 3 + 2] * (2.2 + glow);
+      motePos[i * 3] = Math.cos(a) * rad * 1.5;
+      motePos[i * 3 + 1] = Math.sin(b) * rad * 0.65;
+      motePos[i * 3 + 2] = Math.sin(a) * rad * 0.5;
+    }
+    moteGeo.attributes.position.needsUpdate = true;
 
     renderer.render(scene, camera);
   }

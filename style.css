@@ -905,10 +905,10 @@ img { display: block; max-width: 100%; height: auto; }
 /* Poster sits behind the hero text (unlike the live canvas), pinned right. */
 .pf-hero-crystal-poster {
   inset: auto;
-  top: 6%;
-  right: -4%;
-  height: 58%;
-  width: auto;
+  top: 8%;
+  right: -6%;
+  width: 52%;
+  height: auto;
   object-fit: contain;
   z-index: 0;
   opacity: 0;
