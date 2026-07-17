@@ -249,24 +249,23 @@ function initHeroCrystal() {
   window.addEventListener('resize', layout);
 
   // --- Motion state ---
-  const IDLE_ROLL = 0.2;           // rad/s around the long axis
-  const IDLE_YAW = 0.14;           // rad/s around the vertical axis
+  const IDLE_ROLL = 0.11;          // rad/s around the long axis
+  const IDLE_YAW = 0.07;           // rad/s around the vertical axis
   const ELLIPSE_X = 0.32;          // idle drift: elliptical orbit, world units
   const ELLIPSE_Y = 0.12;
-  const ELLIPSE_SPEED = 0.3;       // rad/s along the ellipse
-  const TILT_MAX = 0.3;            // rad, toward cursor
+  const ELLIPSE_SPEED = 0.17;      // rad/s along the ellipse
+  const TILT_MAX = 0.22;           // rad, toward cursor
   const SPRING_STIFFNESS = 0.045;  // same feel family as header-ambience
   const SPRING_DAMPING = 0.88;
   const JOURNEY_PITCH = 0.5;       // extra pitch over the scroll journey
   const FLICK_RADIUS = 150;        // px; cursor sweep inside this flicks the crystal
-  const GLOW_IDLE = 0.08, GLOW_NEAR = 0.3;
+  const GLOW_IDLE = 0.08;
 
   let targetTiltX = 0, targetTiltZ = 0;
   let tiltX = 0, tiltZ = 0, tiltVX = 0, tiltVZ = 0;
   let rollVel = 0;                 // flick inertia around the long axis
   let yawVel = 0;                  // flick inertia around the vertical axis
   let moteSwirl = 0;               // accumulated swirl the flicks drag the motes into
-  let glow = GLOW_IDLE, glowTarget = GLOW_IDLE;
   let lastPX = -1e4, lastPY = -1e4, lastPT = 0;
 
   window.addEventListener('pointermove', (e) => {
@@ -282,14 +281,13 @@ function initHeroCrystal() {
     const cx = (proj.x + 1) / 2 * VW;
     const cy = (1 - proj.y) / 2 * VH;
     const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
-    glowTarget = dist < FLICK_RADIUS * 1.6 ? GLOW_NEAR : GLOW_IDLE;
     const now = e.timeStamp;
     if (lastPT && dist < FLICK_RADIUS) {
       const dtp = Math.max(now - lastPT, 1);
       const vx = (e.clientX - lastPX) / dtp;              // px/ms
       const vy = (e.clientY - lastPY) / dtp;
-      yawVel = THREE.MathUtils.clamp(yawVel + vx * 2.0, -12, 12);
-      rollVel = THREE.MathUtils.clamp(rollVel + vy * 2.0, -12, 12);
+      yawVel = THREE.MathUtils.clamp(yawVel + vx * 0.7, -4, 4);
+      rollVel = THREE.MathUtils.clamp(rollVel + vy * 0.7, -4, 4);
     }
     lastPX = e.clientX; lastPY = e.clientY; lastPT = now;
   });
@@ -305,15 +303,14 @@ function initHeroCrystal() {
     // vertical, each carrying its own decaying flick inertia.
     crystal.rotation.y += (IDLE_ROLL + rollVel) * dt;
     pivot.rotation.y += (IDLE_YAW + yawVel) * dt;
-    rollVel *= Math.pow(0.35, dt);               // frame-rate independent decay
-    yawVel *= Math.pow(0.35, dt);
+    rollVel *= Math.pow(0.5, dt);                // slow, frame-rate independent decay
+    yawVel *= Math.pow(0.5, dt);
 
-    // The crystal "charges" while spinning fast: iridescence shifts,
-    // core glow rises, blueprint edges flash then settle.
-    const spinEnergy = Math.min((Math.abs(rollVel) + Math.abs(yawVel)) / 8, 1);
-    crystal.material.iridescence = 0.55 + spinEnergy * 0.3;
-    const nearT = (glow - GLOW_IDLE) / (GLOW_NEAR - GLOW_IDLE);
-    edges.material.opacity = 0.04 + nearT * 0.16 + spinEnergy * 0.3;
+    // A hard spin shifts the material subtly: slight iridescence lift,
+    // blueprint edges whisper in, then everything settles.
+    const spinEnergy = Math.min((Math.abs(rollVel) + Math.abs(yawVel)) / 4, 1);
+    crystal.material.iridescence = 0.55 + spinEnergy * 0.15;
+    edges.material.opacity = 0.04 + spinEnergy * 0.14;
 
     // Lamp prowls slowly so glints travel across facets even at idle.
     const tl = t / 1000;
@@ -325,9 +322,7 @@ function initHeroCrystal() {
     pivot.rotation.x = tiltX;
     pivot.rotation.z = tiltZ;
 
-    // Near-cursor glow breathes up; eases both directions.
-    glow += (glowTarget - glow) * Math.min(dt * 4, 1);
-    crystal.material.emissiveIntensity = glow + spinEnergy * 0.25;
+    crystal.material.emissiveIntensity = GLOW_IDLE + spinEnergy * 0.08;
 
     // Scroll journey: home is anchored beside the tagline in document space;
     // as the page scrolls, the crystal detaches and glides toward mid-screen,
@@ -355,13 +350,13 @@ function initHeroCrystal() {
 
     // Dust motes orbit lazily; a flick drags them into a faster swirl
     // and pushes them outward until the spin settles.
-    moteSwirl += (yawVel + rollVel) * dt * 0.2;
-    const fling = 1 + spinEnergy * 0.5;
+    moteSwirl += (yawVel + rollVel) * dt * 0.12;
+    const fling = 1 + spinEnergy * 0.25;
     for (let i = 0; i < MOTES; i++) {
       const dir = i % 2 ? 1 : -1;
       const a = moteSeed[i * 3] + tm * 0.045 * dir + moteSwirl * dir;
       const b = moteSeed[i * 3 + 1] + tm * 0.028 + moteSwirl * 0.4;
-      const rad = moteSeed[i * 3 + 2] * (2.2 + glow) * fling;
+      const rad = moteSeed[i * 3 + 2] * 2.28 * fling;
       motePos[i * 3] = Math.cos(a) * rad * 1.5;
       motePos[i * 3 + 1] = Math.sin(b) * rad * 0.65;
       motePos[i * 3 + 2] = Math.sin(a) * rad * 0.5;
