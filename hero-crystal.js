@@ -119,15 +119,28 @@ function initHeroCrystal() {
     () => { /* glb failed — placeholder stays, no user-visible error */ }
   );
 
+  let baseY = 0;   // resting height; layout() sets it, the bob orbits it
   function layout() {
     const W = host.clientWidth, H = host.clientHeight;
     renderer.setSize(W, H, false);
     camera.aspect = W / H;
     camera.updateProjectionMatrix();
-    // Place the crystal center-right: ~28% of the visible width to the right.
-    const halfW = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z * camera.aspect;
-    pivot.position.x = halfW * 0.56;
-    pivot.position.y = 0.2;
+    const halfH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
+    const halfW = halfH * camera.aspect;
+    // Anchor to the centered content column, not the viewport: park the
+    // crystal just inside the column's right edge, in the open space
+    // beside the tagline, and never let it clip the hero's right edge.
+    const inner = host.querySelector('.pf-block__inner');
+    let xPx = W * 0.78;
+    if (inner) {
+      const r = inner.getBoundingClientRect();
+      const hostLeft = host.getBoundingClientRect().left;
+      xPx = (r.right - hostLeft) - r.width * 0.1;
+    }
+    const xWorld = ((xPx / W) * 2 - 1) * halfW;
+    pivot.position.x = Math.min(xWorld, halfW - 0.85);
+    pivot.position.y = 1.0;
+    baseY = pivot.position.y;
   }
   layout();
   window.addEventListener('resize', layout);
@@ -143,7 +156,6 @@ function initHeroCrystal() {
 
   let targetTiltX = 0, targetTiltZ = 0;
   let tiltX = 0, tiltZ = 0, tiltVX = 0, tiltVZ = 0;
-  const baseY = pivot.position.y;
 
   window.addEventListener('pointermove', (e) => {
     const r = host.getBoundingClientRect();
