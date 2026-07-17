@@ -188,25 +188,52 @@ function initHeroCrystal() {
   }));
   pivot.add(motes);
 
+  // Ember core: opaque gem living inside the hull, loaded from the same glb.
+  let core = null;      // THREE.Object3D (Group or Mesh named "Core")
+  let emberMat = null;  // material of the emissive facets, driven in frame()
+
   new GLTFLoader().load(
     'public/models/crystal.glb',
     (gltf) => {
-      const loaded = gltf.scene.getObjectByProperty('isMesh', true);
-      if (!loaded) return;                       // keep placeholder
-      loaded.material = createCrystalMaterial(accent);
+      const hull = gltf.scene.getObjectByName('Crystal');
+      if (!hull || !hull.isMesh) return;         // keep placeholder
+      hull.material = createCrystalMaterial(accent);
       // Match the placeholder's footprint so layout/motion tuning holds.
-      const size = new THREE.Box3().setFromObject(loaded).getSize(new THREE.Vector3());
-      loaded.scale.multiplyScalar(3.2 / Math.max(size.x, size.y, size.z));
+      const size = new THREE.Box3().setFromObject(hull).getSize(new THREE.Vector3());
+      const norm = 3.2 / Math.max(size.x, size.y, size.z);
+      hull.scale.multiplyScalar(norm);
       // Chunkier read: shorten the long axis so the horizontal pose keeps
       // visible depth instead of flattening into a sliver.
-      loaded.scale.y *= 0.72;
-      loaded.rotation.copy(crystal.rotation);    // continue the spin seamlessly
+      hull.scale.y *= 0.72;
+      hull.rotation.copy(crystal.rotation);      // continue the spin seamlessly
       lay.remove(crystal);
       crystal.geometry.dispose();
       edges.geometry.dispose();
-      lay.add(loaded);
-      crystal = loaded;
-      edges = makeEdges(loaded);
+      lay.add(hull);
+      crystal = hull;
+      edges = makeEdges(hull);
+
+      // Ember core: sibling of the hull inside lay, so it shares the journey
+      // but owns its local roll. Refraction through the hull does the rest.
+      const loadedCore = gltf.scene.getObjectByName('Core');
+      if (loadedCore) {
+        loadedCore.scale.multiplyScalar(norm);   // same pass -> 42% ratio holds
+        loadedCore.position.set(0, 0, 0);
+        loadedCore.traverse((o) => {
+          if (!o.isMesh) return;
+          const isEmber = o.material && o.material.name === 'CoreEmber';
+          o.material = new THREE.MeshStandardMaterial({
+            color: 0x080405,
+            roughness: 0.5,
+            metalness: 0,
+            flatShading: true,
+            ...(isEmber ? { emissive: accent, emissiveIntensity: 0.475 } : {}),
+          });
+          if (isEmber) emberMat = o.material;
+        });
+        lay.add(loadedCore);
+        core = loadedCore;
+      }
     },
     undefined,
     () => { /* glb failed — placeholder stays, no user-visible error */ }
