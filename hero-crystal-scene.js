@@ -67,6 +67,8 @@ function createCrystalMaterial(accent) {
     emissive: accent,
     emissiveIntensity: 0.12,
     flatShading: true,
+    // Every facet fills from any angle; back faces read through the glass.
+    side: THREE.DoubleSide,
   });
 }
 
@@ -236,7 +238,7 @@ function initHeroCrystal() {
   let emberMat = null;
 
   new GLTFLoader().load(
-    'public/models/crystal.glb?v=3',
+    'public/models/crystal.glb?v=4',
     (gltf) => {
       const hull = gltf.scene.getObjectByName('Crystal');
       if (!hull || !hull.isMesh) { canvas.remove(); showPoster(host); return; }
