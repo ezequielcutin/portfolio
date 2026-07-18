@@ -287,15 +287,17 @@ function initHeroCrystal() {
     renderer.setSize(W, H, false);
     camera.aspect = W / H;
     let homeX, homeY;                   // hero-local px
+    // Top-right corner, level with the title: the piece never reaches down
+    // into the bio text. Only the faint disk particles cross the copy.
     const inner = host.querySelector('.pf-block__inner');
     if (inner) {
       const r = inner.getBoundingClientRect();
       const hr = host.getBoundingClientRect();
-      homeX = Math.min(r.right - hr.left - r.width * 0.08, W - 240);
-      homeY = (r.top - hr.top) + r.height * 0.32;
+      homeX = W - 340;
+      homeY = Math.max((r.top - hr.top) + r.height * 0.14, 150);
     } else {
-      homeX = W * 0.76;
-      homeY = H * 0.36;
+      homeX = W - 340;
+      homeY = H * 0.2;
     }
     camera.setViewOffset(W, H, W / 2 - homeX, H / 2 - homeY, W, H);
     camera.updateProjectionMatrix();
@@ -304,8 +306,10 @@ function initHeroCrystal() {
   window.addEventListener('resize', layout);
 
   // --- Motion state ---
-  const IDLE_ROLL = 0.11;          // rad/s, crystal around its long axis
-  const IDLE_YAW = 0.05;           // rad/s, whole piece around the vertical
+  const OSC_CENTER = 0.18;         // rad; rest angle of the turntable sweep
+  const OSC_AMP = 0.5;             // rad; sweep range keeps the broadside facing out
+  const OSC_PERIOD = 16;           // s per full back-and-forth
+  const YAW_SWAY = 0.07;           // rad; whole-piece lazy sway
   const ELLIPSE_X = 0.2;           // idle drift, world units
   const ELLIPSE_Y = 0.09;
   const ELLIPSE_SPEED = 0.15;      // rad/s along the drift ellipse
@@ -320,7 +324,6 @@ function initHeroCrystal() {
 
   let targetTiltX = 0, targetTiltZ = 0;
   let tiltX = 0, tiltZ = 0, tiltVX = 0, tiltVZ = 0;
-  let yawBase = 0;
 
   window.addEventListener('pointermove', (e) => {
     const nx = (e.clientX / window.innerWidth) * 2 - 1;   // -1..1
@@ -337,14 +340,15 @@ function initHeroCrystal() {
     lastT = t;
     const tm = t / 1000;
 
-    // Slow rotisserie roll + a lazy yaw for the whole piece.
-    if (crystal) crystal.rotation.y += IDLE_ROLL * dt;
-    yawBase += IDLE_YAW * dt;
+    // The turntable sweeps back and forth through its flattering arc
+    // instead of full revolutions, so the platform never turns end-on.
+    const sweep = OSC_CENTER + OSC_AMP * Math.sin(tm * (Math.PI * 2 / OSC_PERIOD));
+    if (crystal) crystal.rotation.y = sweep;
 
-    // Ember core counter-rolls inside the glass; its facets breathe on a
+    // Ember core counter-sweeps inside the glass; its facets breathe on a
     // slow, interaction-free sine.
     if (core) {
-      core.rotation.y += CORE_ROLL_RATIO * IDLE_ROLL * dt;
+      core.rotation.y = CORE_ROLL_RATIO * sweep;
       if (emberMat) {
         emberMat.emissiveIntensity = EMBER_MID + EMBER_AMP * Math.sin(tm * (Math.PI * 2 / EMBER_PERIOD));
       }
@@ -359,7 +363,7 @@ function initHeroCrystal() {
     tiltX += tiltVX; tiltZ += tiltVZ;
     pivot.rotation.x = tiltX;
     pivot.rotation.z = tiltZ;
-    pivot.rotation.y = yawBase;
+    pivot.rotation.y = YAW_SWAY * Math.sin(tm * 0.23);
 
     // The pivot lives at the origin (the view offset places it on screen);
     // only the small elliptical drift moves it.
