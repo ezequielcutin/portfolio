@@ -25,6 +25,7 @@ function makeStudioEnv(accent) {
   panel(0x8a97b8, 2.6, 4, 1.1, [4.5, -1, -2], [0, 0, 0]);     // cool slate strip
   panel(0xffffff, 10, 1.1, 0.3, [0.5, 4.5, 1.5], [0, 0, 0]);  // narrow white glint bar
   panel(0xfff1e2, 12, 0.35, 2.6, [-2.5, -3.5, 2], [0, 0, 0]); // thin warm streak low-left
+  panel(0xd98a4a, 5, 5, 3, [0, -4.5, 0.5], [0, 0, 0]);        // warm floor bounce for pavilion facets
   return env;
 }
 
@@ -46,24 +47,25 @@ function showPoster(host) {
   host.appendChild(img);
 }
 
+// Stylized glass: plain alpha transparency instead of physical
+// transmission. On a black page it reads more luminous (the disk and the
+// glowing core show straight through) and it removes the per-frame
+// full-viewport transmission pass — the scene's biggest GPU cost.
 function createCrystalMaterial(accent) {
   return new THREE.MeshPhysicalMaterial({
-    color: 0x140b06,
+    color: 0x6b3517,
     metalness: 0,
-    roughness: 0.06,
-    transmission: 0.82,
-    thickness: 1.6,
-    ior: 1.6,
-    // Amber depth: light passing through the glass picks up warmth.
-    attenuationColor: new THREE.Color(0xb4552a),
-    attenuationDistance: 1.6,
+    roughness: 0.05,
+    transparent: true,
+    opacity: 0.58,
+    depthWrite: false,
     clearcoat: 1,
-    clearcoatRoughness: 0.06,
-    iridescence: 0.55,
+    clearcoatRoughness: 0.05,
+    iridescence: 0.7,
     iridescenceIOR: 1.6,
-    envMapIntensity: 1.7,
+    envMapIntensity: 2.2,
     emissive: accent,
-    emissiveIntensity: 0.08,
+    emissiveIntensity: 0.12,
     flatShading: true,
   });
 }
@@ -132,14 +134,15 @@ function initHeroCrystal() {
   back.position.set(0.5, 0.8, -3.5);
   scene.add(back);
 
-  // Blueprint edges: faint accent wireframe tracing the facets.
+  // Facet ridges: pale-gold edge lines, the bright seams where light
+  // catches the cut — a big part of the reference's luminous read.
   function makeEdges(mesh) {
     const e = new THREE.LineSegments(
       new THREE.EdgesGeometry(mesh.geometry, 10),
       new THREE.LineBasicMaterial({
-        color: accent,
+        color: 0xffd9b0,
         transparent: true,
-        opacity: 0.05,
+        opacity: 0.28,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       })
@@ -255,15 +258,18 @@ function initHeroCrystal() {
         // the long-axis ratio ~58% (short axes stay 42%) — art-directed, keep.
         loadedCore.scale.multiplyScalar(norm);
         loadedCore.position.set(0, 0, 0);
+        // The core is the platform's inner light: every face smolders so the
+        // glass above it transmits a warm interior instead of darkness.
         loadedCore.traverse((o) => {
           if (!o.isMesh) return;
           const isEmber = o.material && o.material.name === 'CoreEmber';
           o.material = new THREE.MeshStandardMaterial({
-            color: 0x080405,
+            color: isEmber ? 0x35160a : 0x2a1208,
             roughness: 0.5,
             metalness: 0,
             flatShading: true,
-            ...(isEmber ? { emissive: accent, emissiveIntensity: 0.475 } : {}),
+            emissive: accent,
+            emissiveIntensity: isEmber ? 0.75 : 0.28,
           });
           if (isEmber) emberMat = o.material;
         });
@@ -318,8 +324,8 @@ function initHeroCrystal() {
   const SPRING_DAMPING = 0.88;
   const CORE_ROLL_RATIO = -0.6;    // core rolls against the hull
   const EMBER_PERIOD = 7;          // s, breathing sine
-  const EMBER_MID = 0.475;         // emissiveIntensity range ~0.25..0.7
-  const EMBER_AMP = 0.225;
+  const EMBER_MID = 0.75;          // emissiveIntensity range ~0.45..1.05
+  const EMBER_AMP = 0.3;
   const DISK_DRIFT = 0.012;        // rad/s, whole disk slowly wheels around
 
   let targetTiltX = 0, targetTiltZ = 0;
