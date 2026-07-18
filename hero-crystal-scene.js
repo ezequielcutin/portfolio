@@ -21,6 +21,7 @@ function makeStudioEnv(accent) {
   panel(accent, 9, 3.2, 1.5, [-4, 1.5, 3], [0, 0, 0]);        // warm lamp softbox, tight and hot
   panel(0x8a97b8, 2.6, 4, 1.1, [4.5, -1, -2], [0, 0, 0]);     // cool slate strip
   panel(0xffffff, 10, 1.1, 0.3, [0.5, 4.5, 1.5], [0, 0, 0]);  // narrow white glint bar
+  panel(0xfff1e2, 12, 0.35, 2.6, [-2.5, -3.5, 2], [0, 0, 0]); // thin warm streak low-left
   return env;
 }
 
@@ -47,12 +48,12 @@ function createCrystalMaterial(accent) {
   return new THREE.MeshPhysicalMaterial({
     color: 0x0a0608,
     metalness: 0,
-    roughness: 0.08,
+    roughness: 0.06,
     transmission: 0.75,
     thickness: 1.6,
     ior: 1.6,
     clearcoat: 1,
-    clearcoatRoughness: 0.12,
+    clearcoatRoughness: 0.06,
     iridescence: 0.55,
     iridescenceIOR: 1.6,
     envMapIntensity: 1.6,
@@ -145,7 +146,7 @@ function initHeroCrystal() {
 
   // Dust motes: sparse accent-tinted points drifting around the crystal,
   // echoing the particle field on the canvas behind.
-  const MOTES = 42;
+  const MOTES = 24;
   const motePos = new Float32Array(MOTES * 3);
   const moteSeed = new Float32Array(MOTES * 3);
   for (let i = 0; i < MOTES; i++) {
@@ -348,7 +349,7 @@ function initHeroCrystal() {
 
     // Lamp prowls slowly so glints travel across facets even at idle.
     const tl = t / 1000;
-    lamp.position.set(-3.5 + Math.sin(tl * 0.1) * 1.4, -1.2 + Math.cos(tl * 0.13) * 0.9, 2.5);
+    lamp.position.set(-3.5 + Math.sin(tl * 0.14) * 1.7, -1.2 + Math.cos(tl * 0.18) * 1.1, 2.5);
 
     tiltVX = (tiltVX + (targetTiltX - tiltX) * SPRING_STIFFNESS) * SPRING_DAMPING;
     tiltVZ = (tiltVZ + (targetTiltZ - tiltZ) * SPRING_STIFFNESS) * SPRING_DAMPING;
