@@ -68,12 +68,16 @@ drift only — not competing anchors. The hero crystal remains the star.
 
 ## Placement & CSS
 
-- Each of the three `pf-sectionHead` headers gets a child
-  `<div class="pf-section-accent">` host: `position: absolute`,
-  ~160×160px, hanging off the header row's right edge, vertically
-  centered on the heading, `pointer-events: none`. All three sit on the
+- The live layout is `LayoutStacked`: headers are `header.pf-blockHead`
+  inside `#block-work`, `#block-projects`, `#block-music`. Each of those
+  three headers gets a child `<div class="pf-section-accent">` host:
+  `position: absolute`, ~160×160px, at the header's right edge, roughly
+  level with the heading, `pointer-events: none`. All three sit on the
   right side (rhythm with the hero's top-right crystal).
-- Headers gain `position: relative` if they don't already have it.
+- `.pf-blockHead` gains `position: relative`. The Music header
+  (`.pf-blockHead--music`) is a flex row with the visualizer toggle on
+  its right; the Music accent gets an adjusted offset so it never
+  overlaps the toggle.
 - Canvas fades in with the hero's pattern: `opacity: 0` →
   `.active { opacity: 1 }`, ~1s ease transition.
 - The accent must not overlap header text at any desktop width
