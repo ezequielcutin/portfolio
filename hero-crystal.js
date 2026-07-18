@@ -2,5 +2,5 @@
 // keeps three.js (and the scene module) from downloading there at all.
 if (window.innerWidth >= 901) {
   // catch: if the CDN is unreachable the crystal quietly doesn't appear.
-  import('./hero-crystal-scene.js?v=21').catch(() => {});
+  import('./hero-crystal-scene.js?v=22').catch(() => {});
 }

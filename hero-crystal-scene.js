@@ -321,9 +321,9 @@ function initHeroCrystal() {
   const ELLIPSE_X = 0.2;           // idle drift, world units
   const ELLIPSE_Y = 0.09;
   const ELLIPSE_SPEED = 0.15;      // rad/s along the drift ellipse
-  const TILT_MAX = 0.13;           // rad, gentle lean toward the cursor
-  const SPRING_STIFFNESS = 0.045;
-  const SPRING_DAMPING = 0.88;
+  const TILT_MAX = 0.07;           // rad, barely-there lean toward the cursor
+  const SPRING_STIFFNESS = 0.016;  // heavy spring: the piece drifts after the
+  const SPRING_DAMPING = 0.92;     // cursor in slow motion, never tracks it
   const CORE_ROLL_RATIO = -0.6;    // core rolls against the hull
   const EMBER_PERIOD = 7;          // s, breathing sine
   const EMBER_MID = 0.75;          // emissiveIntensity range ~0.45..1.05
