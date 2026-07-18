@@ -41,7 +41,7 @@ function showPoster(host) {
   img.className = 'pf-hero-crystal-poster';
   img.alt = '';
   img.setAttribute('aria-hidden', 'true');
-  img.src = 'public/models/crystal-poster.png?v=2';
+  img.src = 'public/models/crystal-poster.png?v=3';
   img.onload = () => img.classList.add('active');
   img.onerror = () => img.remove();
   host.appendChild(img);
