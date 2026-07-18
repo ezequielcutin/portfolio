@@ -40,7 +40,7 @@ function showPoster(host) {
   img.className = 'pf-hero-crystal-poster';
   img.alt = '';
   img.setAttribute('aria-hidden', 'true');
-  img.src = 'public/models/crystal-poster.png';
+  img.src = 'public/models/crystal-poster.png?v=2';
   img.onload = () => img.classList.add('active');
   img.onerror = () => img.remove();
   host.appendChild(img);
@@ -51,12 +51,12 @@ function createCrystalMaterial(accent) {
     color: 0x140b06,
     metalness: 0,
     roughness: 0.06,
-    transmission: 0.75,
+    transmission: 0.82,
     thickness: 1.6,
     ior: 1.6,
     // Amber depth: light passing through the glass picks up warmth.
     attenuationColor: new THREE.Color(0xb4552a),
-    attenuationDistance: 1.1,
+    attenuationDistance: 1.6,
     clearcoat: 1,
     clearcoatRoughness: 0.06,
     iridescence: 0.55,
@@ -148,13 +148,13 @@ function initHeroCrystal() {
     return e;
   }
 
-  // pivot: position + cursor tilt · lay: horizontal rest pose · crystal
-  // rolls slowly on its long axis. No placeholder: the crystal appears only
-  // once the real gem has loaded, at its final size.
+  // pivot: position + cursor tilt · lay: rest pose · the crystal platform
+  // turns slowly on its vertical axis like a display turntable. No
+  // placeholder: it appears only once the real gem has loaded.
   let crystal = null;
   const lay = new THREE.Group();
-  lay.rotation.z = Math.PI / 2 + 0.12;   // horizontal, a hair off-level
-  lay.rotation.x = 0.28;                 // nose toward viewer so facets catch light
+  lay.rotation.x = 0.72;                 // tip the table toward the viewer
+  lay.rotation.z = 0.06;                 // a hair off-level
   lay.scale.setScalar(1.12);             // crystal dominates its disk slightly
   const pivot = new THREE.Group();
   pivot.add(lay);
@@ -165,7 +165,7 @@ function initHeroCrystal() {
   // A tilted disk group carries everything; particles advance along their
   // orbits Kepler-style (closer in = faster), which is what sells "gravity".
   const disk = new THREE.Group();
-  disk.rotation.x = -0.95;               // mostly face-on, like a spiral seen from above
+  disk.rotation.x = 0.78;                // nearly coplanar with the tipped table
   disk.rotation.z = 0.18;
   pivot.add(disk);
 
@@ -233,18 +233,16 @@ function initHeroCrystal() {
   let emberMat = null;
 
   new GLTFLoader().load(
-    'public/models/crystal.glb',
+    'public/models/crystal.glb?v=3',
     (gltf) => {
       const hull = gltf.scene.getObjectByName('Crystal');
       if (!hull || !hull.isMesh) { canvas.remove(); showPoster(host); return; }
       hull.material = createCrystalMaterial(accent);
-      // Normalize to the footprint the layout/motion tuning was built around.
+      // Normalize the platform's footprint; the modeled proportions
+      // (flat rhombus table + upright tip gem) are kept as-is.
       const size = new THREE.Box3().setFromObject(hull).getSize(new THREE.Vector3());
-      const norm = 3.2 / Math.max(size.x, size.y, size.z);
+      const norm = 3.6 / Math.max(size.x, size.y, size.z);
       hull.scale.multiplyScalar(norm);
-      // Chunkier read: shorten the long axis so the horizontal pose keeps
-      // visible depth instead of flattening into a sliver.
-      hull.scale.y *= 0.72;
       lay.add(hull);
       crystal = hull;
       makeEdges(hull);
@@ -279,34 +277,28 @@ function initHeroCrystal() {
   );
 
   // The canvas fills the hero block (absolute, clipped by the hero's
-  // overflow). The crystal holds a fixed home beside the tagline and
-  // simply scrolls away with the page — no journey.
-  let W = 0, H = 0, halfW = 0, halfH = 0;
-  let homeX = 0, homeY = 0;             // hero-local px
+  // overflow). The crystal renders ON the camera axis — so its pose reads
+  // exactly as designed, no off-axis perspective shear — and the camera's
+  // view offset slides the frame so the crystal lands beside the tagline.
+  let W = 0, H = 0;
 
   function layout() {
     W = host.clientWidth; H = host.clientHeight;
     renderer.setSize(W, H, false);
     camera.aspect = W / H;
-    camera.updateProjectionMatrix();
-    halfH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
-    halfW = halfH * camera.aspect;
+    let homeX, homeY;                   // hero-local px
     const inner = host.querySelector('.pf-block__inner');
     if (inner) {
       const r = inner.getBoundingClientRect();
       const hr = host.getBoundingClientRect();
-      homeX = Math.min(r.right - hr.left - r.width * 0.08, W - 220);
-      homeY = (r.top - hr.top) + r.height * 0.30;
+      homeX = Math.min(r.right - hr.left - r.width * 0.08, W - 240);
+      homeY = (r.top - hr.top) + r.height * 0.32;
     } else {
       homeX = W * 0.76;
-      homeY = H * 0.34;
+      homeY = H * 0.36;
     }
-  }
-  function pxToWorld(xPx, yPx) {
-    return {
-      x: ((xPx / W) * 2 - 1) * halfW,
-      y: (1 - (yPx / H) * 2) * halfH,
-    };
+    camera.setViewOffset(W, H, W / 2 - homeX, H / 2 - homeY, W, H);
+    camera.updateProjectionMatrix();
   }
   layout();
   window.addEventListener('resize', layout);
@@ -369,10 +361,10 @@ function initHeroCrystal() {
     pivot.rotation.z = tiltZ;
     pivot.rotation.y = yawBase;
 
-    // Home position + a small elliptical drift.
-    const world = pxToWorld(homeX, homeY);
-    pivot.position.x = world.x + Math.cos(tm * ELLIPSE_SPEED) * ELLIPSE_X;
-    pivot.position.y = world.y + Math.sin(tm * ELLIPSE_SPEED) * ELLIPSE_Y;
+    // The pivot lives at the origin (the view offset places it on screen);
+    // only the small elliptical drift moves it.
+    pivot.position.x = Math.cos(tm * ELLIPSE_SPEED) * ELLIPSE_X;
+    pivot.position.y = Math.sin(tm * ELLIPSE_SPEED) * ELLIPSE_Y;
 
     // Orbiters: advance each along its orbit; inner ones outpace outer ones.
     disk.rotation.y += DISK_DRIFT * dt;
