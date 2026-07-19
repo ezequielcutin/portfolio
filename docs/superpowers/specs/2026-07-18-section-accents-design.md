@@ -13,8 +13,10 @@ language down the page. They are ambient accents — small, quiet, calm idle
 drift only — not competing anchors. The hero crystal remains the star.
 
 - **Work** ("Where I've been spending my hours" / "Seven roles, four
-  cities"): a stack of thin tilted glass strata — offset slabs like
-  sediment layers, one layer carrying ember faces.
+  cities"): a spiral step stack — seven glass slabs winding upward like
+  a staircase, one mid-climb slab fully ember, each layer micro-swinging
+  around the axis at its own pace. (Revised 2026-07-19 from the original
+  flat strata pile.)
 - **Projects** ("Builds, experiments, and side quests"): an open lattice
   cube — a scaffold-like frame with one small solid gem caught inside.
 - **Music** ("Techno, house, and ambient"): a frozen waveform — seven
@@ -54,9 +56,10 @@ drift only — not competing anchors. The hero crystal remains the star.
 
 - Model all three in the existing Blender scene (alongside Crystal/Core),
   each low-poly and flat-shaded:
-  - `AccentWork`: 4–5 thin slabs (scaled, beveled boxes or flattened
-    hulls), each offset and tilted a few degrees from the one below;
-    footprint roughly 2:1 wide.
+  - `AccentWork`: seven thin slabs (1.15×0.5×0.13) as separate child
+    meshes `WorkStep0–6` under an `AccentWork` empty, each turned 48°
+    more than the last, offset 0.3 from the axis, rising 0.235 per step;
+    step 3 fully ember.
   - `AccentProjects`: cube frame (wireframe-style solid struts, e.g.
     a cube with faces inset/deleted leaving edge beams) plus one small
     convex-hull gem floating inside, parented into one object or exported
@@ -66,7 +69,7 @@ drift only — not competing anchors. The hero crystal remains the star.
     per-bar tilt/jitter; two bars (indices 3 and 5) fully ember.
 - Two material slots per accent, used only as face markers for export:
   `AccentGlass` (most faces) and `AccentEmber` (a small hand-picked set:
-  one stratum's faces on Work, the inner gem on Projects, two whole
+  step 3 on Work, the inner gem on Projects, two whole
   bars on Music). glTF splits slots into primitives;
   three.js distinguishes them by `material.name` containing "Ember".
 - Export all three meshes into a single `public/models/accents.glb`,

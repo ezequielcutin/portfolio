@@ -84,7 +84,7 @@ function makeEdges(mesh) {
 // phases so the three never move in sync. restZ lets a piece balance
 // off-axis (the Projects cube stands on a corner).
 const DEFS = [
-  { mesh: 'AccentWork',     header: '#block-work .pf-blockHead',     oscPeriod: 15, oscAmp: 0.5,  floatPeriod: 10, phase: 0,   restX: 0.5,  restY: 0.15, restZ: 0 },
+  { mesh: 'AccentWork',     header: '#block-work .pf-blockHead',     oscPeriod: 15, oscAmp: 0.5,  floatPeriod: 10, phase: 0,   restX: 0.5,  restY: 0.15, restZ: 0, fit: 2.2, flourish: 'steps' },
   { mesh: 'AccentProjects', header: '#block-projects .pf-blockHead', oscPeriod: 18, oscAmp: 0.6,  floatPeriod: 12, phase: 2.1, restX: 0.62, restY: 0.5,  restZ: 0.62, fit: 1.85, flourish: 'fireflies' },
   { mesh: 'AccentMusic',    header: '#block-music .pf-blockHead',    oscPeriod: 13, oscAmp: 0.4,  floatPeriod: 9,  phase: 4.2, restX: 0.3,  restY: 0.25, restZ: 0, fit: 2.6, flourish: 'ripples' },
 ];
@@ -110,6 +110,20 @@ function makeDustSprite() {
 
 // Section-specific flourishes. Each returns an update(tm) called per frame.
 const FLOURISHES = {
+  // Work: the spiral steps each swing a few degrees around the stack's
+  // axis at their own pace — seven layers of a career, still settling.
+  steps(obj) {
+    const steps = [];
+    obj.traverse((o) => {
+      if (o.isMesh && /^WorkStep/.test(o.name)) steps.push(o);
+    });
+    return (tm) => {
+      for (let i = 0; i < steps.length; i++) {
+        steps[i].rotation.y =
+          0.09 * Math.sin(tm * (Math.PI * 2 / (11 + i * 1.3)) + i * 1.4);
+      }
+    };
+  },
   // Projects: ember fireflies drifting inside the lattice — experiments
   // caught mid-flight in their jar.
   fireflies(obj, accent) {
@@ -329,7 +343,7 @@ function init() {
 
   const accent = getAccent();
   new GLTFLoader().load(
-    'public/models/accents.glb?v=3',
+    'public/models/accents.glb?v=4',
     (gltf) => {
       for (const def of DEFS) {
         const source = gltf.scene.getObjectByName(def.mesh);
