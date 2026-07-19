@@ -1294,6 +1294,45 @@ img { display: block; max-width: 100%; height: auto; }
   to { opacity: 0; }
 }
 
+/* ═══════════ Block title reveal — hero letter-in, extended to sections ═══════════ */
+/* Titles are fully visible by default; .is-in (added when the head first
+   scrolls into view) plays the entrance. Chars rise like the hero name,
+   then the terracotta period lands last. */
+.pf-bt__word { display: inline-block; white-space: nowrap; }
+.pf-bt__char,
+.pf-bt__mark { display: inline-block; }
+/* Armed = hidden while still off-screen, waiting for the entrance. Only ever
+   set from JS (before first paint), so content never hides after being seen
+   and never stays hidden when scripting is absent. */
+.pf-blockHead.is-armed .pf-bt__char,
+.pf-blockHead.is-armed .pf-bt__mark,
+.pf-blockHead.is-armed .pf-blockHead__sub { opacity: 0; }
+.pf-blockHead.is-in .pf-bt__char {
+  animation: pf-btChar 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+.pf-blockHead.is-in .pf-bt__mark {
+  transform-origin: 50% 85%;
+  animation: pf-btMark 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms + 140ms);
+}
+.pf-blockHead.is-in .pf-blockHead__sub {
+  animation: pf-btSub 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 240ms;
+}
+@keyframes pf-btChar {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pf-btMark {
+  from { opacity: 0; transform: scale(0.4); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes pf-btSub {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
 /* ═══════════ Music strip — playing equalizer ═══════════ */
 .pf-mh__bars {
   display: inline-flex;
@@ -1642,6 +1681,8 @@ img { display: block; max-width: 100%; height: auto; }
     transition-duration: 0.01ms !important;
   }
   .pf-stacked__char { opacity: 1; transform: none; }
+  .pf-bt__char, .pf-bt__mark { animation: none; opacity: 1 !important; transform: none; }
+  .pf-blockHead .pf-blockHead__sub { animation: none; opacity: 1 !important; }
   .pf-mh__bars span { transform: scaleY(0.7); }
 }
 
@@ -1757,7 +1798,10 @@ img { display: block; max-width: 100%; height: auto; }
   font-size: 14px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: background 180ms, color 180ms;
+  transition: background 180ms, color 180ms, transform 140ms ease;
+}
+.pf-mh__transMain:active {
+  transform: scale(0.95);
 }
 .pf-mh__cta {
   display: inline-flex;

@@ -1444,8 +1444,65 @@ function NowPlayingHero({ data }) {
   );
 }
 
+// ───────── Block title reveal ─────────
+// Extends the hero's staggered char entrance to the stacked section headlines:
+// chars rise in the first time the title scrolls into view, then the terracotta
+// period lands last. The title is fully visible by default; the observer only
+// adds the class that plays the entrance, so a failed observer never hides it.
+function RevealTitle({ text, className = "" }) {
+  const ref = useRef(null);
+
+  // useLayoutEffect: arm (hide) before first paint so the title never shows,
+  // vanishes, and replays. If the title is already on screen at mount (e.g.
+  // scroll restoration), skip the entrance entirely and leave it visible.
+  React.useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const rect = el.getBoundingClientRect();
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    if (rect.top < vh && rect.bottom > 0) return;
+    const head = el.closest(".pf-blockHead") || el;
+    head.classList.add("is-armed");
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((en) => en.isIntersecting)) {
+          head.classList.add("is-in");
+          io.disconnect();
+        }
+      },
+      { threshold: 0 }
+    );
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      head.classList.remove("is-armed");
+    };
+  }, []);
+
+  let idx = 0;
+  const words = String(text).trim().split(/\s+/);
+  return (
+    <h2 ref={ref} className={`pf-blockHead__title ${className}`} aria-label={text}>
+      <span aria-hidden="true">
+        {words.map((word, wi) => (
+          <React.Fragment key={wi}>
+            {wi > 0 ? " " : null}
+            <span className="pf-bt__word">
+              {word.split("").map((ch, i) => (
+                <span key={i} className="pf-bt__char" style={{ "--i": idx++ }}>{ch}</span>
+              ))}
+            </span>
+          </React.Fragment>
+        ))}
+        <span className="pf-bt__mark pf-mark" style={{ "--i": idx }}>.</span>
+      </span>
+    </h2>
+  );
+}
+
 // Export to global scope
 Object.assign(window, {
   Entry, Stack, Carousel, VideoPlayer, Tabs, WorkBody, ProjectBody, MusicBlock,
-  NowPlayingHero, WorkTimeline, ProjectsTerminal,
+  NowPlayingHero, WorkTimeline, ProjectsTerminal, RevealTitle,
 });

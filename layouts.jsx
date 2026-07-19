@@ -500,7 +500,7 @@ function LayoutStacked({ data, density }) {
       <section className="pf-block pf-block--work" id="block-work" tabIndex={-1}>
         <div className="pf-block__inner">
           <header className="pf-blockHead">
-            <h2 className="pf-blockHead__title">Work</h2>
+            <RevealTitle text="Work" />
             <p className="pf-blockHead__sub">
               Mortgage tooling, quant trading, autonomy ops, and a few detours in between.{" "}
               <span className="pf-sub--desktop">Scroll the timeline from now back to Detroit.</span>
@@ -514,7 +514,7 @@ function LayoutStacked({ data, density }) {
       <section className="pf-block pf-block--projects pf-block--alt" id="block-projects">
         <div className="pf-block__inner">
           <header className="pf-blockHead">
-            <h2 className="pf-blockHead__title">Projects</h2>
+            <RevealTitle text="Projects" />
             <p className="pf-blockHead__sub">Side projects from PWAs to MapReduce; most still on GitHub. Open one to read its file.</p>
           </header>
           <ProjectsTerminal items={data.projects} />
@@ -525,7 +525,7 @@ function LayoutStacked({ data, density }) {
         <div className="pf-block__inner">
           <header className="pf-blockHead pf-blockHead--music">
             <div>
-              <h2 className="pf-blockHead__title">Music</h2>
+              <RevealTitle text="Music" />
               <p className="pf-blockHead__sub">Techno, house, and ambient, all under my own name.</p>
             </div>
             <button
