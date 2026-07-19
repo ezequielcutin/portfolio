@@ -3485,3 +3485,28 @@ img { display: block; max-width: 100%; height: auto; }
   .pf-term.is-hinting .pf-term__prompt,
   .pf-term.is-hinting .pf-term__prompt .pf-term__pfx { animation: none; }
 }
+
+/* ═══════════ SECTION ACCENTS ═══════════ */
+.pf-blockHead { position: relative; }
+.pf-section-accent {
+  position: absolute;
+  top: -36px;
+  right: 0;
+  width: 160px;
+  height: 160px;
+  pointer-events: none;
+  z-index: 2;
+}
+/* Music header is a flex row with the visualizer toggle at its right;
+   lift the accent clear of the toggle. */
+.pf-blockHead--music .pf-section-accent { top: -120px; }
+.pf-section-accent canvas {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+.pf-section-accent canvas.active { opacity: 1; }
+@media (max-width: 900px) {
+  .pf-section-accent { display: none; }
+}
