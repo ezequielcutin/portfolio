@@ -85,7 +85,7 @@ function makeEdges(mesh) {
 const DEFS = [
   { mesh: 'AccentWork',     header: '#block-work .pf-blockHead',     oscPeriod: 15, oscAmp: 0.5,  floatPeriod: 10, phase: 0,   restX: 0.5,  restY: 0.15 },
   { mesh: 'AccentProjects', header: '#block-projects .pf-blockHead', oscPeriod: 18, oscAmp: 0.45, floatPeriod: 12, phase: 2.1, restX: 0.35, restY: 0.5  },
-  { mesh: 'AccentMusic',    header: '#block-music .pf-blockHead',    oscPeriod: 13, oscAmp: 0.55, floatPeriod: 9,  phase: 4.2, restX: 0.2,  restY: 0.1  },
+  { mesh: 'AccentMusic',    header: '#block-music .pf-blockHead',    oscPeriod: 13, oscAmp: 0.55, floatPeriod: 9,  phase: 4.2, restX: 1.05, restY: 0.1  },
 ];
 
 const EMBER_PERIOD = 7;   // s — same breathing as the hero core
