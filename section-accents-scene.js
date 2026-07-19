@@ -148,10 +148,16 @@ const FLOURISHES = {
       geo.attributes.position.needsUpdate = true;
     };
   },
-  // Music: concentric ripple rings breathing outward around the frozen
-  // waveform — sound radiating off the bars. Attached to the pivot (not
-  // the mesh) with absolute radii, so they halo the piece at any fit.
+  // Music: the bars play a slow-motion phantom track — each bar's height
+  // rides layered sines at different frequencies with per-bar phases, so
+  // it reads as a living waveform without any audio input. Concentric
+  // ripple rings breathe outward around it. Rings attach to the pivot
+  // (not the mesh) with absolute radii, so they halo the piece at any fit.
   ripples(obj, accent, pivot) {
+    const bars = [];
+    obj.traverse((o) => {
+      if (o.isMesh && /^MusicBar/.test(o.name)) bars.push(o);
+    });
     const rings = [];
     for (let k = 0; k < 3; k++) {
       const radius = 1.15 + k * 0.15;  // stays inside the small canvas even at max swell
@@ -177,6 +183,15 @@ const FLOURISHES = {
       rings.push({ line, mat, k });
     }
     return (tm) => {
+      // Bars scale about the midline (their origins sit on it), so each
+      // grows symmetrically up and down like the real player's waveform.
+      // Three layered frequencies keep it organic, never metronomic.
+      for (let i = 0; i < bars.length; i++) {
+        bars[i].scale.y = 0.86
+          + 0.14 * Math.sin(tm * (Math.PI * 2 / 5.2) + i * 1.7)
+          + 0.09 * Math.sin(tm * (Math.PI * 2 / 3.1) + i * 2.9)
+          + 0.05 * Math.sin(tm * (Math.PI * 2 / 7.7) + i * 0.8);
+      }
       for (const { line, mat, k } of rings) {
         // Each ring swells and fades slightly out of phase with the next,
         // so the set reads as a slow outward pulse.
@@ -235,8 +250,9 @@ function initAccent(def, source, accent) {
     if (!o.isMesh) return;
     const isEmber = o.material && o.material.name === 'AccentEmber';
     if (isEmber) {
-      o.material = createEmberMaterial(accent);
-      emberMat = o.material;
+      // One shared instance so every ember part breathes together.
+      if (!emberMat) emberMat = createEmberMaterial(accent);
+      o.material = emberMat;
     } else {
       o.material = createGlassMaterial(accent);
       makeEdges(o);
@@ -313,7 +329,7 @@ function init() {
 
   const accent = getAccent();
   new GLTFLoader().load(
-    'public/models/accents.glb?v=2',
+    'public/models/accents.glb?v=3',
     (gltf) => {
       for (const def of DEFS) {
         const source = gltf.scene.getObjectByName(def.mesh);

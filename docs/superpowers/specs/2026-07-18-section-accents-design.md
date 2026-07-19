@@ -45,6 +45,9 @@ drift only — not competing anchors. The hero crystal remains the star.
   period/phase so they never move in sync.
 - Gentle vertical float: ±4–6px equivalent, ~9–12s sine.
 - Ember breathing as above.
+- Music only: each bar's `scale.y` rides three layered slow sines
+  (5.2s/3.1s/7.7s periods, per-bar phase offsets, ±28% about a 0.86
+  mean) — a slow-motion phantom waveform. Purely procedural.
 - Explicitly NOT: scroll coupling, pointer reaction, audio reactivity.
 
 ## Blender work
