@@ -86,7 +86,7 @@ function makeEdges(mesh) {
 const DEFS = [
   { mesh: 'AccentWork',     header: '#block-work .pf-blockHead',     oscPeriod: 15, oscAmp: 0.5,  floatPeriod: 10, phase: 0,   restX: 0.5,  restY: 0.15, restZ: 0 },
   { mesh: 'AccentProjects', header: '#block-projects .pf-blockHead', oscPeriod: 18, oscAmp: 0.6,  floatPeriod: 12, phase: 2.1, restX: 0.62, restY: 0.5,  restZ: 0.62, fit: 1.85, flourish: 'fireflies' },
-  { mesh: 'AccentMusic',    header: '#block-music .pf-blockHead',    oscPeriod: 13, oscAmp: 0.55, floatPeriod: 9,  phase: 4.2, restX: 1.05, restY: 0.1,  restZ: 0, flourish: 'ripples' },
+  { mesh: 'AccentMusic',    header: '#block-music .pf-blockHead',    oscPeriod: 13, oscAmp: 0.4,  floatPeriod: 9,  phase: 4.2, restX: 0.3,  restY: 0.25, restZ: 0, fit: 2.6, flourish: 'ripples' },
 ];
 
 const EMBER_PERIOD = 7;   // s — same breathing as the hero core
@@ -148,12 +148,13 @@ const FLOURISHES = {
       geo.attributes.position.needsUpdate = true;
     };
   },
-  // Music: concentric ripple rings breathing outward from the broken
-  // ring — sound leaving the fracture.
-  ripples(obj, accent) {
+  // Music: concentric ripple rings breathing outward around the frozen
+  // waveform — sound radiating off the bars. Attached to the pivot (not
+  // the mesh) with absolute radii, so they halo the piece at any fit.
+  ripples(obj, accent, pivot) {
     const rings = [];
     for (let k = 0; k < 3; k++) {
-      const radius = 1.08 + k * 0.12;  // stays inside the small canvas even at max swell
+      const radius = 1.15 + k * 0.15;  // stays inside the small canvas even at max swell
       const segs = 64;
       const arr = new Float32Array((segs + 1) * 3);
       for (let s = 0; s <= segs; s++) {
@@ -172,7 +173,7 @@ const FLOURISHES = {
         depthWrite: false,
       });
       const line = new THREE.LineLoop(g, mat);
-      obj.add(line);
+      pivot.add(line);
       rings.push({ line, mat, k });
     }
     return (tm) => {
@@ -253,7 +254,7 @@ function initAccent(def, source, accent) {
   pivot.add(obj);
   scene.add(pivot);
 
-  const updateFlourish = def.flourish ? FLOURISHES[def.flourish](obj, accent) : null;
+  const updateFlourish = def.flourish ? FLOURISHES[def.flourish](obj, accent, pivot) : null;
 
   function layout() {
     const w = host.clientWidth, h = host.clientHeight;
@@ -312,7 +313,7 @@ function init() {
 
   const accent = getAccent();
   new GLTFLoader().load(
-    'public/models/accents.glb?v=1',
+    'public/models/accents.glb?v=2',
     (gltf) => {
       for (const def of DEFS) {
         const source = gltf.scene.getObjectByName(def.mesh);

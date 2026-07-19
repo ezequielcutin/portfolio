@@ -17,8 +17,11 @@ drift only — not competing anchors. The hero crystal remains the star.
   sediment layers, one layer carrying ember faces.
 - **Projects** ("Builds, experiments, and side quests"): an open lattice
   cube — a scaffold-like frame with one small solid gem caught inside.
-- **Music** ("Techno, house, and ambient"): a broken resonant ring — a
-  faceted torus with a chipped gap, ember glowing at the fracture points.
+- **Music** ("Techno, house, and ambient"): a frozen waveform — seven
+  faceted glass bars mirrored around the midline like the section's own
+  player, two bars ember-lit, with faint concentric ripple rings
+  breathing outward. (Revised 2026-07-19 from the original broken-ring
+  concept, which read poorly at accent size.)
 
 ## Design language (shared with hero)
 
@@ -55,15 +58,16 @@ drift only — not competing anchors. The hero crystal remains the star.
     a cube with faces inset/deleted leaving edge beams) plus one small
     convex-hull gem floating inside, parented into one object or exported
     as one mesh with two material zones.
-  - `AccentMusic`: torus, low segment counts for visible facets, with a
-    ~40–60° arc removed; slight jitter on vertices for a hewn look.
+  - `AccentMusic`: seven thin upright bars (widths ~0.32, heights
+    0.6–2.2 mirrored around the midline like a waveform), slight
+    per-bar tilt/jitter; two bars (indices 3 and 5) fully ember.
 - Two material slots per accent, used only as face markers for export:
   `AccentGlass` (most faces) and `AccentEmber` (a small hand-picked set:
-  one stratum's faces on Work, the inner gem on Projects, the fracture
-  faces at the ring gap on Music). glTF splits slots into primitives;
+  one stratum's faces on Work, the inner gem on Projects, two whole
+  bars on Music). glTF splits slots into primitives;
   three.js distinguishes them by `material.name` containing "Ember".
 - Export all three meshes into a single `public/models/accents.glb`,
-  +Y up, same settings as crystal.glb. Target <15KB total.
+  +Y up, same settings as crystal.glb. Target ~16KB total (final: 16.3KB — the waveform bars cost ~1.3KB over the original 15KB goal, accepted).
 - Recalculate normals before export (lesson from the tip-gem hole bug).
 
 ## Placement & CSS
