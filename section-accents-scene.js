@@ -81,17 +81,111 @@ function makeEdges(mesh) {
 }
 
 // Per-accent placement and motion personality. Different periods and
-// phases so the three never move in sync.
+// phases so the three never move in sync. restZ lets a piece balance
+// off-axis (the Projects cube stands on a corner).
 const DEFS = [
-  { mesh: 'AccentWork',     header: '#block-work .pf-blockHead',     oscPeriod: 15, oscAmp: 0.5,  floatPeriod: 10, phase: 0,   restX: 0.5,  restY: 0.15 },
-  { mesh: 'AccentProjects', header: '#block-projects .pf-blockHead', oscPeriod: 18, oscAmp: 0.45, floatPeriod: 12, phase: 2.1, restX: 0.35, restY: 0.5  },
-  { mesh: 'AccentMusic',    header: '#block-music .pf-blockHead',    oscPeriod: 13, oscAmp: 0.55, floatPeriod: 9,  phase: 4.2, restX: 1.05, restY: 0.1  },
+  { mesh: 'AccentWork',     header: '#block-work .pf-blockHead',     oscPeriod: 15, oscAmp: 0.5,  floatPeriod: 10, phase: 0,   restX: 0.5,  restY: 0.15, restZ: 0 },
+  { mesh: 'AccentProjects', header: '#block-projects .pf-blockHead', oscPeriod: 18, oscAmp: 0.6,  floatPeriod: 12, phase: 2.1, restX: 0.62, restY: 0.5,  restZ: 0.62, fit: 1.85, flourish: 'fireflies' },
+  { mesh: 'AccentMusic',    header: '#block-music .pf-blockHead',    oscPeriod: 13, oscAmp: 0.55, floatPeriod: 9,  phase: 4.2, restX: 1.05, restY: 0.1,  restZ: 0, flourish: 'ripples' },
 ];
 
 const EMBER_PERIOD = 7;   // s — same breathing as the hero core
 const EMBER_MID = 0.75;
 const EMBER_AMP = 0.3;
 const FLOAT_AMP = 0.09;   // world units of vertical float
+
+// Soft round sprite so points read as glowing motes, not squares.
+function makeDustSprite() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const ctx = c.getContext('2d');
+  const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, 'rgba(255,255,255,1)');
+  grad.addColorStop(0.4, 'rgba(255,255,255,0.5)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+}
+
+// Section-specific flourishes. Each returns an update(tm) called per frame.
+const FLOURISHES = {
+  // Projects: ember fireflies drifting inside the lattice — experiments
+  // caught mid-flight in their jar.
+  fireflies(obj, accent) {
+    const COUNT = 14;
+    const posArr = new Float32Array(COUNT * 3);
+    const seed = [];
+    for (let i = 0; i < COUNT; i++) {
+      seed.push([
+        0.18 + Math.random() * 0.34,          // orbit radius (inside the frame)
+        Math.random() * Math.PI * 2,          // start angle
+        0.25 + Math.random() * 0.35,          // angular speed
+        (Math.random() - 0.5) * 0.8,          // vertical band
+        Math.random() * Math.PI * 2,          // bob phase
+      ]);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+    const pts = new THREE.Points(geo, new THREE.PointsMaterial({
+      color: accent,
+      size: 0.13,
+      map: makeDustSprite(),
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }));
+    obj.add(pts);
+    return (tm) => {
+      for (let i = 0; i < COUNT; i++) {
+        const [r, a0, w, yBand, ph] = seed[i];
+        const a = a0 + tm * w;
+        posArr[i * 3] = Math.cos(a) * r;
+        posArr[i * 3 + 1] = yBand + Math.sin(tm * 0.5 + ph) * 0.14;
+        posArr[i * 3 + 2] = Math.sin(a) * r;
+      }
+      geo.attributes.position.needsUpdate = true;
+    };
+  },
+  // Music: concentric ripple rings breathing outward from the broken
+  // ring — sound leaving the fracture.
+  ripples(obj, accent) {
+    const rings = [];
+    for (let k = 0; k < 3; k++) {
+      const radius = 1.08 + k * 0.12;  // stays inside the small canvas even at max swell
+      const segs = 64;
+      const arr = new Float32Array((segs + 1) * 3);
+      for (let s = 0; s <= segs; s++) {
+        const a = (s / segs) * Math.PI * 2;
+        arr[s * 3] = Math.cos(a) * radius;
+        arr[s * 3 + 1] = 0;
+        arr[s * 3 + 2] = Math.sin(a) * radius;
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+      const mat = new THREE.LineBasicMaterial({
+        color: accent,
+        transparent: true,
+        opacity: 0.1,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const line = new THREE.LineLoop(g, mat);
+      obj.add(line);
+      rings.push({ line, mat, k });
+    }
+    return (tm) => {
+      for (const { line, mat, k } of rings) {
+        // Each ring swells and fades slightly out of phase with the next,
+        // so the set reads as a slow outward pulse.
+        const ph = tm * (Math.PI * 2 / 6) - k * 1.1;
+        line.scale.setScalar(1 + 0.05 * Math.sin(ph));
+        mat.opacity = 0.05 + 0.07 * (0.5 + 0.5 * Math.sin(ph));
+      }
+    };
+  },
+};
 
 let running = 0;
 window.__sectionAccentsRunning = () => running;
@@ -147,15 +241,19 @@ function initAccent(def, source, accent) {
       makeEdges(o);
     }
   });
-  // Normalize to a consistent on-screen size.
+  // Normalize to a consistent on-screen size (fit shrinks pieces whose
+  // pose swings their diagonal toward the canvas edge).
   const size = new THREE.Box3().setFromObject(obj).getSize(new THREE.Vector3());
-  obj.scale.multiplyScalar(2.4 / Math.max(size.x, size.y, size.z));
+  obj.scale.multiplyScalar((def.fit || 2.4) / Math.max(size.x, size.y, size.z));
 
   const pivot = new THREE.Group();
   pivot.rotation.x = def.restX;   // rest pose: tipped toward the viewer
   pivot.rotation.y = def.restY;
+  pivot.rotation.z = def.restZ;
   pivot.add(obj);
   scene.add(pivot);
+
+  const updateFlourish = def.flourish ? FLOURISHES[def.flourish](obj, accent) : null;
 
   function layout() {
     const w = host.clientWidth, h = host.clientHeight;
@@ -176,6 +274,7 @@ function initAccent(def, source, accent) {
     if (emberMat) {
       emberMat.emissiveIntensity = EMBER_MID + EMBER_AMP * Math.sin(tm * (Math.PI * 2 / EMBER_PERIOD));
     }
+    if (updateFlourish) updateFlourish(tm);
     renderer.render(scene, camera);
   }
   function startLoop() {
