@@ -55,7 +55,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" />
-<link rel="stylesheet" href="style.css?v=mini16" />
+<link rel="stylesheet" href="style.css?v=animate2" />
 </head>
 <body>
 <a class="pf-skip" href="#main-content">Skip to content</a>
@@ -121,6 +121,14 @@
 
 <div id="root"></div>
 
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
 <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
@@ -129,8 +137,10 @@
 <script src="header-ambience.js?v=quieter3"></script>
 <script src="audio-visualizer.js?v=quieter1"></script>
 <script type="text/babel" src="icons.jsx?v=quieter1" data-presets="react"></script>
-<script type="text/babel" src="components.jsx?v=mini3" data-presets="react"></script>
-<script type="text/babel" src="layouts.jsx?v=term12" data-presets="react"></script>
+<script type="text/babel" src="components.jsx?v=animate2" data-presets="react"></script>
+<script type="text/babel" src="layouts.jsx?v=animate1" data-presets="react"></script>
 <script type="text/babel" src="app.jsx?v=quieter1" data-presets="react"></script>
+<script type="module" src="hero-crystal.js?v=32"></script>
+<script type="module" src="section-accents.js?v=7"></script>
 </body>
 </html>

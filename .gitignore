@@ -30,6 +30,9 @@ tsconfig.node.json
 public/*
 !public/*.jsx
 !public/vite.svg
+# Hero crystal assets (served in production)
+!public/models/
+!public/models/**
 
 # Playwright MCP
 .playwright-mcp/

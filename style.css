@@ -886,6 +886,43 @@ img { display: block; max-width: 100%; height: auto; }
   -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
 }
 .pf-header-ambience.active { opacity: 1; }
+
+/* Live canvas fills the hero block and scrolls away with it; the hero's
+   overflow clips the accretion disk at the block edges. */
+.pf-hero-crystal {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+.pf-hero-crystal-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+.pf-hero-crystal.active,
+.pf-hero-crystal-poster.active { opacity: 1; }
+/* Poster sits behind the hero text (unlike the live canvas), pinned right. */
+.pf-hero-crystal-poster {
+  inset: auto;
+  top: 8%;
+  right: -6%;
+  width: 52%;
+  height: auto;
+  object-fit: contain;
+  z-index: 0;
+  opacity: 0;
+}
+.pf-hero-crystal-poster.active { opacity: 0.75; }
 .pf-stacked__name {
   font-family: var(--font-display);
   font-size: clamp(48px, 10vw, 96px);
@@ -1257,6 +1294,45 @@ img { display: block; max-width: 100%; height: auto; }
   to { opacity: 0; }
 }
 
+/* ═══════════ Block title reveal — hero letter-in, extended to sections ═══════════ */
+/* Titles are fully visible by default; .is-in (added when the head first
+   scrolls into view) plays the entrance. Chars rise like the hero name,
+   then the terracotta period lands last. */
+.pf-bt__word { display: inline-block; white-space: nowrap; }
+.pf-bt__char,
+.pf-bt__mark { display: inline-block; }
+/* Armed = hidden while still off-screen, waiting for the entrance. Only ever
+   set from JS (before first paint), so content never hides after being seen
+   and never stays hidden when scripting is absent. */
+.pf-blockHead.is-armed .pf-bt__char,
+.pf-blockHead.is-armed .pf-bt__mark,
+.pf-blockHead.is-armed .pf-blockHead__sub { opacity: 0; }
+.pf-blockHead.is-in .pf-bt__char {
+  animation: pf-btChar 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+.pf-blockHead.is-in .pf-bt__mark {
+  transform-origin: 50% 85%;
+  animation: pf-btMark 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms + 140ms);
+}
+.pf-blockHead.is-in .pf-blockHead__sub {
+  animation: pf-btSub 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 240ms;
+}
+@keyframes pf-btChar {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pf-btMark {
+  from { opacity: 0; transform: scale(0.4); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes pf-btSub {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
 /* ═══════════ Music strip — playing equalizer ═══════════ */
 .pf-mh__bars {
   display: inline-flex;
@@ -1605,6 +1681,8 @@ img { display: block; max-width: 100%; height: auto; }
     transition-duration: 0.01ms !important;
   }
   .pf-stacked__char { opacity: 1; transform: none; }
+  .pf-bt__char, .pf-bt__mark { animation: none; opacity: 1 !important; transform: none; }
+  .pf-blockHead .pf-blockHead__sub { animation: none; opacity: 1 !important; }
   .pf-mh__bars span { transform: scaleY(0.7); }
 }
 
@@ -1720,7 +1798,10 @@ img { display: block; max-width: 100%; height: auto; }
   font-size: 14px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: background 180ms, color 180ms;
+  transition: background 180ms, color 180ms, transform 140ms ease;
+}
+.pf-mh__transMain:active {
+  transform: scale(0.95);
 }
 .pf-mh__cta {
   display: inline-flex;
@@ -3447,4 +3528,34 @@ img { display: block; max-width: 100%; height: auto; }
   .pf-term__cursor { animation: none; }
   .pf-term.is-hinting .pf-term__prompt,
   .pf-term.is-hinting .pf-term__prompt .pf-term__pfx { animation: none; }
+}
+
+/* ═══════════ SECTION ACCENTS ═══════════ */
+.pf-blockHead { position: relative; }
+.pf-section-accent {
+  position: absolute;
+  top: -36px;
+  right: 0;
+  width: 160px;
+  height: 160px;
+  pointer-events: none;
+  z-index: 2;
+}
+/* Music header is a flex row with the visualizer toggle at its right;
+   sit the accent inline with the heading, shifted left of the toggle.
+   On narrower desktops that slot collides with the subtitle text, so
+   the accent tucks back up to the clear top-right corner. */
+.pf-blockHead--music .pf-section-accent { top: -30px; right: 210px; }
+@media (max-width: 1250px) {
+  .pf-blockHead--music .pf-section-accent { top: -120px; right: 0; }
+}
+.pf-section-accent canvas {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+.pf-section-accent canvas.active { opacity: 1; }
+@media (max-width: 900px) {
+  .pf-section-accent { display: none; }
 }
