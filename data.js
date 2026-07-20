@@ -4,7 +4,7 @@ window.PORTFOLIO_DATA = {
     name: "Ezequiel Cutin",
     tagline: "Engineer, builder, occasional techno producer.",
     location: "Metro Detroit, MI",
-    headshot: "headshot_budapest.png",
+    headshot: "headshot_budapest.webp",
     bio: "Born in Miami, studied and currently living in Michigan. I write software for a living, make techno when I can, and watch way too much football (the real one, not American). Producing music has taught me more about engineering than most classes did: the patience, the iteration, the obsession with getting small details right. I like building things that feel good to use, and tinkering with things until they do.",
     bioShort: "I write software for a living and make techno when I can. Currently building developer tooling at UWM and trading systems at Glenbrook.",
     links: [
