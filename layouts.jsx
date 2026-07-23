@@ -496,6 +496,12 @@ function LayoutStacked({ data, density }) {
 
       <StickyNav />
 
+      <div
+        id="hero-crystal-stage"
+        className="pf-crystal-stage"
+        aria-hidden="true"
+      />
+
       <main id="main-content">
       <section className="pf-block pf-block--work" id="block-work" tabIndex={-1}>
         <div className="pf-block__inner">
