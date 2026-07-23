@@ -12,7 +12,7 @@ if (DESKTOP) {
       requestAnimationFrame(bootStage);
       return;
     }
-    const load = () => import('./hero-crystal-stage-scene.js?v=1').catch(() => {});
+    const load = () => import('./hero-crystal-stage-scene.js?v=7').catch(() => {});
     const io = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;

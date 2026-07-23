@@ -6,6 +6,21 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const MOBILE = window.innerWidth < 901;
+const MUSIC_PIN_DEF = {
+  mesh: 'AccentMusic',
+  header: '#block-music .pf-blockHead',
+  oscPeriod: 13,
+  oscAmp: 0.4,
+  floatPeriod: 9,
+  phase: 4.2,
+  restX: 0.3,
+  restY: 0.25,
+  restZ: 0,
+  fit: 2.6,
+  flourish: 'ripples',
+  pin: true,
+};
 
 function getAccent() {
   const hex = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4488ff';
@@ -225,7 +240,9 @@ function initAccent(def, source, accent) {
   if (!header) return;
 
   const host = document.createElement('div');
-  host.className = 'pf-section-accent';
+  host.className = def.pin
+    ? 'pf-section-accent pf-section-accent--pin'
+    : 'pf-section-accent';
   host.setAttribute('aria-hidden', 'true');
   header.appendChild(host);
 
@@ -309,6 +326,7 @@ function initAccent(def, source, accent) {
     renderer.render(scene, camera);
   }
   function startLoop() {
+    if (REDUCED_MOTION) return;
     if (animId === null) { running++; animId = requestAnimationFrame(frame); }
   }
   function stopLoop() {
@@ -332,13 +350,32 @@ function initAccent(def, source, accent) {
     renderer.render(scene, camera);
     canvas.classList.add('active');
     revealed = true;
+    if (REDUCED_MOTION) {
+      frame(performance.now());
+      return;
+    }
     if (visible && !document.hidden) startLoop();
   });
 }
 
-function init() {
-  if (REDUCED_MOTION) return true;  // decorative: nothing renders at all
-  // All three headers are React-rendered; wait until at least one exists.
+function initMobileMusicPin() {
+  if (!document.querySelector('#block-music .pf-blockHead')) return false;
+
+  const accent = getAccent();
+  new GLTFLoader().load(
+    'public/models/accents.glb?v=4',
+    (gltf) => {
+      const source = gltf.scene.getObjectByName(MUSIC_PIN_DEF.mesh);
+      if (source) initAccent(MUSIC_PIN_DEF, source, accent);
+    },
+    undefined,
+    () => {}
+  );
+  return true;
+}
+
+function initDesktopAccents() {
+  if (REDUCED_MOTION) return true;
   if (!document.querySelector('#block-work .pf-blockHead')) return false;
 
   const accent = getAccent();
@@ -351,9 +388,14 @@ function init() {
       }
     },
     undefined,
-    () => {}  // glb failed — silently no accents
+    () => {}
   );
   return true;
+}
+
+function init() {
+  if (MOBILE) return initMobileMusicPin();
+  return initDesktopAccents();
 }
 
 (function waitForHeaders(triesLeft = 300) {

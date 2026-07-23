@@ -42,11 +42,11 @@ function createCrystalMaterial(accent) {
     depthWrite: false,
     clearcoat: 1,
     clearcoatRoughness: 0.05,
-    iridescence: 0.7,
+    iridescence: 0.4,
     iridescenceIOR: 1.6,
-    envMapIntensity: 2.2,
+    envMapIntensity: 1.15,
     emissive: accent,
-    emissiveIntensity: 0.12,
+    emissiveIntensity: 0.02,
     flatShading: true,
     side: THREE.DoubleSide,
   });
@@ -71,7 +71,7 @@ function makeEdges(mesh) {
     new THREE.LineBasicMaterial({
       color: 0xffd9b0,
       transparent: true,
-      opacity: 0.28,
+      opacity: 0.1,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     })
@@ -100,24 +100,25 @@ function initCrystalStage() {
   renderer.setPixelRatio(dpr);
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 50);
-  camera.position.set(0, 0, 6.2);
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 50);
+  camera.position.set(0, 0.36, 5.7);
+  camera.lookAt(0, -0.1, 0.18);
 
   const accent = getAccent();
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(makeStudioEnv(accent), 0.05).texture;
   pmrem.dispose();
 
-  const lamp = new THREE.PointLight(accent, 22);
+  const lamp = new THREE.PointLight(accent, 10);
   lamp.position.set(-3.5, -1.2, 2.5);
   scene.add(lamp);
-  const fill = new THREE.PointLight(0x5a6a8a, 7);
+  const fill = new THREE.PointLight(0x5a6a8a, 5);
   fill.position.set(4, 2, -1.5);
   scene.add(fill);
-  const key = new THREE.DirectionalLight(0xfff2e0, 0.45);
+  const key = new THREE.DirectionalLight(0xfff2e0, 0.3);
   key.position.set(2, 3, 4);
   scene.add(key);
-  const back = new THREE.PointLight(accent, 16);
+  const back = new THREE.PointLight(accent, 5);
   back.position.set(0.5, 0.8, -3.5);
   scene.add(back);
 
@@ -126,17 +127,22 @@ function initCrystalStage() {
   let emberMat = null;
 
   const lay = new THREE.Group();
-  lay.rotation.x = 0.68;
-  lay.rotation.z = 0.04;
-  lay.scale.setScalar(1.05);
+  lay.rotation.x = 1.05;
+  lay.rotation.z = 0.02;
+  lay.scale.set(1.08, 0.92, 1.08);
+  lay.position.z = -0.1;
   const pivot = new THREE.Group();
+  pivot.rotation.x = -0.2;
   pivot.add(lay);
-  pivot.scale.setScalar(0.58);
+  pivot.scale.set(0.58, 0.46, 0.58);
+  pivot.position.y = -0.18;
   scene.add(pivot);
 
   const disk = new THREE.Group();
-  disk.rotation.x = 0.78;
-  disk.rotation.z = 0.14;
+  disk.rotation.x = 1.22;
+  disk.rotation.z = 0.06;
+  disk.scale.set(0.92, 1, 0.92);
+  disk.position.set(0, 0, 0.16);
   pivot.add(disk);
 
   const sprite = makeDustSprite();
@@ -167,8 +173,8 @@ function initCrystalStage() {
     disk.add(pts);
     return { geo, posArr, seed, count };
   };
-  const dust = makeOrbiters(520, 0.032, accent, 0.5, 1.1, 2.4);
-  const sparks = makeOrbiters(80, 0.065, 0xffd9b0, 0.85, 1.0, 2.2);
+  const dust = makeOrbiters(520, 0.032, accent, 0.35, 1.1, 2.4);
+  const sparks = makeOrbiters(80, 0.065, 0xffd9b0, 0.55, 1.0, 2.2);
 
   const RINGS = 16;
   for (let i = 0; i < RINGS; i++) {
@@ -189,7 +195,7 @@ function initCrystalStage() {
     disk.add(new THREE.Line(g, new THREE.LineBasicMaterial({
       color: accent,
       transparent: true,
-      opacity: 0.035 + Math.random() * 0.05,
+      opacity: 0.03 + Math.random() * 0.04,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     })));
@@ -220,7 +226,7 @@ function initCrystalStage() {
             metalness: 0,
             flatShading: true,
             emissive: accent,
-            emissiveIntensity: isEmber ? 0.75 : 0.28,
+            emissiveIntensity: isEmber ? 0.32 : 0.1,
           });
           if (isEmber) emberMat = o.material;
         });
@@ -247,16 +253,18 @@ function initCrystalStage() {
 
   const OSC_CENTER = 0.12;
   const OSC_AMP = 0.42;
-  const OSC_PERIOD = 16;
-  const YAW_SWAY = 0.06;
-  const ELLIPSE_X = 0.12;
-  const ELLIPSE_Y = 0.06;
+  const OSC_PERIOD = 11.5;
+  const YAW_SWAY = 0.04;
+  const ELLIPSE_X = 0.18;
+  const ELLIPSE_Y = 0.025;
   const ELLIPSE_SPEED = 0.14;
   const CORE_ROLL_RATIO = -0.6;
   const EMBER_PERIOD = 7;
-  const EMBER_MID = 0.75;
-  const EMBER_AMP = 0.3;
+  const EMBER_MID = 0.32;
+  const EMBER_AMP = 0.1;
   const DISK_DRIFT = 0.01;
+  const LAMP_ORBIT_X = 0.22;
+  const LAMP_ORBIT_Y = 0.28;
 
   let animId = null;
   let lastT = 0;
@@ -275,10 +283,10 @@ function initCrystalStage() {
       }
     }
 
-    lamp.position.set(-3.5 + Math.sin(tm * 0.14) * 1.4, -1.2 + Math.cos(tm * 0.18) * 0.9, 2.5);
+    lamp.position.set(-3.5 + Math.sin(tm * LAMP_ORBIT_X) * 1.4, -1.2 + Math.cos(tm * LAMP_ORBIT_Y) * 0.9, 2.5);
     pivot.rotation.y = YAW_SWAY * Math.sin(tm * 0.23);
     pivot.position.x = Math.cos(tm * ELLIPSE_SPEED) * ELLIPSE_X;
-    pivot.position.y = Math.sin(tm * ELLIPSE_SPEED) * ELLIPSE_Y;
+    pivot.position.y = -0.18 + Math.sin(tm * ELLIPSE_SPEED) * ELLIPSE_Y;
 
     disk.rotation.y += DISK_DRIFT * dt;
     for (const sys of [dust, sparks]) {
