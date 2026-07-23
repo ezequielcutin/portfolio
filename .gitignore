@@ -36,3 +36,6 @@ public/*
 
 # Playwright MCP
 .playwright-mcp/
+
+# Brainstorm companion mockups
+.superpowers/
