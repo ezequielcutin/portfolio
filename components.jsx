@@ -1528,8 +1528,11 @@ function ThemeToggle() {
             ],
           },
           {
-            duration: 520,
-            easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+            // Expo-out: most of the travel happens in the first third, so
+            // the wavefront launches decisively and glides to a stop. Reads
+            // calmer than a shorter symmetric curve without feeling slower.
+            duration: 700,
+            easing: "cubic-bezier(0.16, 1, 0.3, 1)",
             pseudoElement: "::view-transition-new(root)",
           }
         );

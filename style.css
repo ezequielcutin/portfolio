@@ -3518,7 +3518,17 @@ html.pf-theme-switching *::after {
   animation: none;
   mix-blend-mode: normal;
 }
-::view-transition-new(root) { z-index: 1; }
+::view-transition-new(root) {
+  z-index: 1;
+  /* Accent rim on the wavefront. The shadow follows the clipped alpha
+     edge, so animating clip-path carries the glow along with it — no
+     second element, which matters because the view-transition layer
+     paints above all page content including the top layer, so a DOM
+     ring would be hidden behind the transition rather than riding it.
+     Blur kept small: this filter repaints the full-viewport snapshot
+     every frame. */
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--accent) 70%, transparent));
+}
 ::view-transition-old(root) { z-index: 0; }
 
 /* ═══════════ THEME TOGGLE ═══════════ */
