@@ -1449,6 +1449,76 @@ function NowPlayingHero({ data }) {
 // chars rise in the first time the title scrolls into view, then the terracotta
 // period lands last. The title is fully visible by default; the observer only
 // adds the class that plays the entrance, so a failed observer never hides it.
+// ───────── Print-only work list ─────────
+// The on-screen work deck is a sticky horizontal track driven by scroll
+// and inline transforms. Overriding all of that into a vertical stack for
+// print proved unreliable across print engines — some properties applied,
+// some didn't, and only one role reached the page. Rendering a plain list
+// instead removes every mechanism that has to be defeated: no sticky, no
+// flex, no transforms, no clipping. Hidden on screen, shown only in print.
+function PrintWork({ items }) {
+  return (
+    <div className="pf-printOnly pf-printWork" aria-hidden="true">
+      {items.map((w) => (
+        <article className="pf-printEntry" key={w.id}>
+          <h3 className="pf-printEntry__title">
+            {w.title}
+            <span className="pf-printEntry__sub"> · {w.org}</span>
+          </h3>
+          <p className="pf-printEntry__meta">
+            {w.date}
+            {w.location ? ` · ${w.location}` : ""}
+            {w.current ? " · Current" : ""}
+          </p>
+          {w.bullets?.length ? (
+            <ul className="pf-printEntry__bullets">
+              {w.bullets.map((b, i) => <li key={i}>{b}</li>)}
+            </ul>
+          ) : null}
+          {w.stack?.length ? (
+            <p className="pf-printEntry__stack">{w.stack.join(" · ")}</p>
+          ) : null}
+        </article>
+      ))}
+    </div>
+  );
+}
+
+// Projects print as a plain list for the same reason work does: on screen
+// they live in an interactive terminal that only expands one project at a
+// time, so paper would otherwise carry eight filenames and nothing else.
+function PrintProjects({ items }) {
+  return (
+    <div className="pf-printOnly pf-printProjects" aria-hidden="true">
+      {items.map((pr) => (
+        <article className="pf-printEntry" key={pr.id}>
+          <h3 className="pf-printEntry__title">
+            {pr.title}
+            {pr.tagline ? <span className="pf-printEntry__sub"> · {pr.tagline}</span> : null}
+          </h3>
+          {pr.date ? <p className="pf-printEntry__meta">{pr.date}</p> : null}
+          {pr.blurb ? <p className="pf-printEntry__blurb">{pr.blurb}</p> : null}
+          {pr.bullets?.length ? (
+            <ul className="pf-printEntry__bullets">
+              {pr.bullets.map((b, i) => <li key={i}>{b}</li>)}
+            </ul>
+          ) : null}
+          {pr.stack?.length ? (
+            <p className="pf-printEntry__stack">{pr.stack.join(" · ")}</p>
+          ) : null}
+          {pr.links?.length ? (
+            <p className="pf-printEntry__links">
+              {pr.links.map((l, i) => (
+                <a key={i} href={l.href}>{l.label}</a>
+              ))}
+            </p>
+          ) : null}
+        </article>
+      ))}
+    </div>
+  );
+}
+
 // Theme toggle — dark (default) and paper, the two palettes that carry
 // the terracotta accent. The active theme is stamped on <html> before
 // first paint by the inline script in index.html; this only flips it and

@@ -3584,6 +3584,8 @@ html.pf-theme-switching *::after {
   .pf-themeToggle { transition: none; }
 }
 
+.pf-printOnly { display: none; }
+
 /* ═══════════ PRINT ═══════════ */
 /* Forces a light palette regardless of the active theme, drops anything
    that cannot print, un-pins the horizontally-scrolling work deck so all
@@ -3631,31 +3633,59 @@ html.pf-theme-switching *::after {
     display: none !important;
   }
 
-  /* The work deck is a sticky horizontal track on screen. On paper the
-     panels stack: every role prints, not just the active one. */
-  .pf-tl--pinned { height: auto !important; }
-  .pf-tl__sticky {
-    position: static !important;
-    height: auto !important;
-  }
-  .pf-tl__viewport {
-    overflow: visible !important;
-    height: auto !important;
-  }
-  .pf-tl__track {
-    display: block !important;
-    transform: none !important;
-    width: auto !important;
-  }
-  .pf-tl__panel {
-    width: auto !important;
-    max-width: 100% !important;
-    opacity: 1 !important;
-    transform: none !important;
+  /* Neither interactive surface prints. The work deck is a sticky
+     horizontal track and the projects browser is a terminal that expands
+     one entry at a time; PrintWork and PrintProjects render the same data
+     as plain lists instead. See the component comments for why overriding
+     these layouts was abandoned. */
+  .pf-tl,
+  .pf-term { display: none !important; }
+
+  .pf-printOnly { display: block !important; }
+  .pf-printEntry {
     break-inside: avoid;
     page-break-inside: avoid;
-    margin-bottom: 18px;
+    margin: 0 0 20px;
+    padding: 0 0 16px;
+    border-bottom: 1px solid var(--rule-soft);
   }
+  .pf-printEntry:last-child { border-bottom: 0; }
+  .pf-printEntry__title {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 2px;
+  }
+  .pf-printEntry__sub { font-weight: 400; color: var(--fg-soft); }
+  .pf-printEntry__meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0 0 8px;
+  }
+  .pf-printEntry__bullets {
+    margin: 0 0 8px;
+    padding-left: 16px;
+  }
+  .pf-printEntry__bullets li { margin: 0 0 4px; font-size: 12px; line-height: 1.45; }
+  .pf-printEntry__stack {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--muted);
+    margin: 0;
+  }
+  .pf-printEntry__blurb {
+    font-size: 12px;
+    line-height: 1.45;
+    margin: 0 0 8px;
+  }
+  .pf-printEntry__links {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    margin: 6px 0 0;
+  }
+  .pf-printEntry__links a { margin-right: 14px; }
 
   /* Show destinations for links that would otherwise be dead ink. */
   a[href^="http"]::after {

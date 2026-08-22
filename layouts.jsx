@@ -508,6 +508,7 @@ function LayoutStacked({ data, density }) {
               <span className="pf-sub--mobile">Swipe the timeline from now back to Detroit.</span>
             </p>
           </header>
+          <PrintWork items={data.work} />
         </div>
         <WorkTimeline items={data.work} />
       </section>
@@ -518,6 +519,7 @@ function LayoutStacked({ data, density }) {
             <RevealTitle text="Projects" />
             <p className="pf-blockHead__sub">Side projects from PWAs to MapReduce; most still on GitHub. Open one to read its file.</p>
           </header>
+          <PrintProjects items={data.projects} />
           <ProjectsTerminal items={data.projects} />
         </div>
       </section>
