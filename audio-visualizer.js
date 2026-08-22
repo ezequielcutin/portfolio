@@ -118,6 +118,15 @@ function initAudioVisualizer() {
         drawVisualizer();
     }
 
+    // Ground colour for the motion-trail fade. Read live rather than
+    // hardcoded black: on the paper theme a black fade smears dark streaks
+    // across a cream background.
+    function getGroundRgb() {
+        const bg = getComputedStyle(document.documentElement)
+            .getPropertyValue('--bg').trim();
+        return /^#[0-9a-f]{6}$/i.test(bg) ? hexToRgb(bg) : { r: 0, g: 0, b: 0 };
+    }
+
     // Theme colors — pulled from the live --accent CSS variable (rust on dark).
     function getThemeColors() {
         const accent = (
@@ -268,7 +277,8 @@ function initAudioVisualizer() {
         const minDb = analyser.minDecibels;
         const maxDb = analyser.maxDecibels;
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        const groundA = getGroundRgb();
+        ctx.fillStyle = `rgba(${groundA.r}, ${groundA.g}, ${groundA.b}, 0.25)`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         const barCount = 96;
@@ -387,7 +397,8 @@ function initAudioVisualizer() {
         const colors = getThemeColors();
         const primaryRgb = hexToRgb(colors.primary);
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        const groundB = getGroundRgb();
+        ctx.fillStyle = `rgba(${groundB.r}, ${groundB.g}, ${groundB.b}, 0.2)`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         const centerY = canvas.height / 2;
@@ -473,7 +484,8 @@ function initAudioVisualizer() {
         const minDb = analyser.minDecibels;
         const maxDb = analyser.maxDecibels;
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        const groundC = getGroundRgb();
+        ctx.fillStyle = `rgba(${groundC.r}, ${groundC.g}, ${groundC.b}, 0.2)`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         const centerX = canvas.width / 2;
@@ -573,7 +585,8 @@ function initAudioVisualizer() {
         const colors = getThemeColors();
         const primaryRgb = hexToRgb(colors.primary);
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+        const groundD = getGroundRgb();
+        ctx.fillStyle = `rgba(${groundD.r}, ${groundD.g}, ${groundD.b}, 0.15)`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         const centerX = canvas.width / 2;

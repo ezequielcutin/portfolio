@@ -376,6 +376,7 @@ function LayoutStacked({ data, density }) {
       <section className="pf-block pf-block--hero">
         <canvas id="header-ambience" className="pf-header-ambience" aria-hidden="true"></canvas>
         <div className="pf-block__inner">
+          <ThemeToggle />
           <h1 className="pf-stacked__name" aria-label={data.identity.name}>
             <span aria-hidden="true">
             {(() => {

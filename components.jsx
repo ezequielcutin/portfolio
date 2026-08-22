@@ -1449,6 +1449,61 @@ function NowPlayingHero({ data }) {
 // chars rise in the first time the title scrolls into view, then the terracotta
 // period lands last. The title is fully visible by default; the observer only
 // adds the class that plays the entrance, so a failed observer never hides it.
+// Theme toggle — dark (default) and paper, the two palettes that carry
+// the terracotta accent. The active theme is stamped on <html> before
+// first paint by the inline script in index.html; this only flips it and
+// persists the choice. Canvas work (ambience, visualizer) listens for the
+// pf:themechange event, since those read CSS variables into JS.
+function ThemeToggle() {
+  const read = () =>
+    document.documentElement.getAttribute("data-theme") === "paper" ? "paper" : "dark";
+  const [theme, setTheme] = React.useState(read);
+
+  const flip = () => {
+    const next = theme === "dark" ? "paper" : "dark";
+    const root = document.documentElement;
+
+    // Freeze transitions for the swap frame, otherwise elements that
+    // animate their colours (sticky nav, visualizer toggle) trail the
+    // rest of the page and the switch reads as a flicker.
+    root.classList.add("pf-theme-switching");
+    root.setAttribute("data-theme", next);
+    void root.offsetHeight; // force the new colours to land in this frame
+
+    // Double-rAF is the right primitive, but rAF is paused in a
+    // backgrounded tab — without the timeout a switch immediately before
+    // tabbing away would leave transitions disabled indefinitely.
+    // Whichever fires first wins; removal is idempotent.
+    const restore = () => root.classList.remove("pf-theme-switching");
+    requestAnimationFrame(() => requestAnimationFrame(restore));
+    setTimeout(restore, 250);
+
+    try { localStorage.setItem("pf-theme", next); } catch (e) { /* private mode */ }
+    setTheme(next);
+    window.dispatchEvent(new CustomEvent("pf:themechange", { detail: { theme: next } }));
+  };
+
+  const Sun = window.PFIcons?.Sun;
+  const Moon = window.PFIcons?.Moon;
+  const goingLight = theme === "dark";
+
+  return (
+    <button
+      type="button"
+      className="pf-themeToggle"
+      onClick={flip}
+      aria-pressed={theme === "paper"}
+      aria-label={goingLight ? "Switch to light theme" : "Switch to dark theme"}
+      title={goingLight ? "Light" : "Dark"}
+    >
+      <span className="pf-themeToggle__icon" aria-hidden="true">
+        {goingLight ? (Sun ? <Sun /> : "\u2600") : (Moon ? <Moon /> : "\u263e")}
+      </span>
+      <span className="pf-themeToggle__label">{goingLight ? "Light" : "Dark"}</span>
+    </button>
+  );
+}
+
 function RevealTitle({ text, className = "" }) {
   const ref = useRef(null);
 

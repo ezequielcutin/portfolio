@@ -29,7 +29,18 @@ function initHeaderAmbience() {
         const b = parseInt(hex.slice(5, 7), 16);
         return { r, g, b };
     }
+    // Mutated in place on theme change so every draw call below picks up
+    // the new accent without re-initialising the scene.
     const col = hexToRgb(accent);
+
+    function syncAccent() {
+        const next = getComputedStyle(document.documentElement)
+            .getPropertyValue('--accent').trim();
+        if (!/^#[0-9a-f]{6}$/i.test(next)) return;
+        const rgb = hexToRgb(next);
+        col.r = rgb.r; col.g = rgb.g; col.b = rgb.b;
+    }
+    window.addEventListener('pf:themechange', syncAccent);
 
     // Feature flags
     const dragDropPhysics = true;

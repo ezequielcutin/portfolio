@@ -1,7 +1,8 @@
-// Portfolio entry — stacked layout, dark (warm) theme, rust accent.
+// Portfolio entry — stacked layout, rust accent.
+// Theme is resolved pre-paint by the inline script in index.html and
+// flipped thereafter by ThemeToggle; nothing to set here.
 function App() {
   React.useEffect(() => {
-    document.documentElement.setAttribute("data-theme", "dark");
     // Defer until canvas is in the DOM and laid out.
     requestAnimationFrame(() => {
       if (typeof initHeaderAmbience === "function") initHeaderAmbience();
