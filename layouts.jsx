@@ -457,6 +457,17 @@ function LayoutStacked({ data, density }) {
                     <span className="pf-stacked__contactArrow" aria-hidden="true">↗</span>
                   </a>
                 ) : null}
+                {data.identity.resume ? (
+                  <p className="pf-stacked__heroResume">
+                    <ResumeLink
+                      resume={data.identity.resume}
+                      className="pf-link pf-stacked__resumeLink"
+                    />
+                    <span className="pf-stacked__resumeNote">
+                      {data.identity.resume.note}
+                    </span>
+                  </p>
+                ) : null}
               </div>
               <div className="pf-stacked__heroLinks" aria-label="Social profiles">
                 <span className="pf-stacked__heroLinksLabel" aria-hidden="true">Connect</span>
@@ -471,6 +482,7 @@ function LayoutStacked({ data, density }) {
                       <span>Email</span>
                     </a>
                   ) : null}
+                  <ResumeLink resume={data.identity.resume} />
                   {socialLinks.map((l) => {
                     const Icon = window.PFIcons[l.label];
                     return (

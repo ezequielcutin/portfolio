@@ -38,6 +38,12 @@ const Icons = {
       <path d="M20.5 14.4A8.5 8.5 0 0 1 9.6 3.5a8.5 8.5 0 1 0 10.9 10.9z"/>
     </svg>
   ),
+  Document: (props) => (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
+      <path d="M14 2.75H7.25a1.5 1.5 0 0 0-1.5 1.5v15.5a1.5 1.5 0 0 0 1.5 1.5h9.5a1.5 1.5 0 0 0 1.5-1.5V7z"/>
+      <path d="M14 2.75V7h4.25M9 12.5h6M9 16h4"/>
+    </svg>
+  ),
 };
 
 window.PFIcons = Icons;

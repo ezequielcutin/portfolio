@@ -7,6 +7,14 @@ window.PORTFOLIO_DATA = {
     headshot: "headshot_budapest.webp",
     bio: "Born in Miami, studied and currently living in Michigan. I write software for a living, make techno when I can, and watch way too much football (the real one, not American). Producing music has taught me more about engineering than most classes did: the patience, the iteration, the obsession with getting small details right. I like building things that feel good to use, and tinkering with things until they do.",
     bioShort: "I write software for a living and make techno when I can. Currently building developer tooling at UWM and trading systems at Glenbrook.",
+    // Kept out of `links` on purpose: that array is filtered into
+    // socialLinks and rendered under an aria-label of "Social profiles".
+    // A document is not a profile.
+    resume: {
+      href: "Ezequiel-Cutin-Resume.pdf",
+      url: "https://ezequielcutin.com/Ezequiel-Cutin-Resume.pdf",
+      note: "PDF, 43 KB",
+    },
     links: [
       { label: "GitHub",     href: "https://github.com/ezequielcutin",                  handle: "@ezequielcutin" },
       { label: "LinkedIn",   href: "https://www.linkedin.com/in/ezequiel-cutin/",       handle: "ezequiel-cutin" },

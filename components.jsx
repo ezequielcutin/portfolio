@@ -545,10 +545,12 @@ function WorkDeckCard({ w, i, n, active, onOpen }) {
   );
 }
 
-function WorkDossier({ w, i, n, direction, opener, onClose, onNavigate }) {
-  const dialogRef = useRef(null);
-  const titleId = `tl-dossier-title-${w.id}`;
-
+// ───────── Modal shell ─────────
+// Locks body scroll without losing scroll position, takes the page out of
+// the a11y tree and tab order while a dialog is up, moves focus in, and
+// returns it to whatever opened the dialog. Shared by the work dossier and
+// the resume viewer — this is fiddly enough that a second copy would drift.
+function useModalShell(dialogRef, opener, fallbackSelector) {
   useEffect(() => {
     const body = document.body;
     const appRoot = document.getElementById("root");
@@ -584,13 +586,16 @@ function WorkDossier({ w, i, n, direction, opener, onClose, onNavigate }) {
       body.style.overflow = previous.overflow;
       const focusTarget = opener?.isConnected
         ? opener
-        : document.querySelector("#block-work");
+        : document.querySelector(fallbackSelector);
       focusTarget?.focus?.({ preventScroll: true });
       window.scrollTo(0, scrollY);
     };
-  }, [opener]);
+  }, [opener, dialogRef, fallbackSelector]);
+}
 
-  const handleKeyDown = (event) => {
+// Traps Tab inside the dialog and closes on Escape.
+function makeModalKeyHandler(dialogRef, onClose) {
+  return (event) => {
     if (event.key === "Escape") {
       event.preventDefault();
       onClose();
@@ -614,6 +619,15 @@ function WorkDossier({ w, i, n, direction, opener, onClose, onNavigate }) {
       first.focus();
     }
   };
+}
+
+function WorkDossier({ w, i, n, direction, opener, onClose, onNavigate }) {
+  const dialogRef = useRef(null);
+  const titleId = `tl-dossier-title-${w.id}`;
+
+  useModalShell(dialogRef, opener, "#block-work");
+
+  const handleKeyDown = makeModalKeyHandler(dialogRef, onClose);
 
   return ReactDOM.createPortal(
     <div
@@ -1449,6 +1463,116 @@ function NowPlayingHero({ data }) {
 // chars rise in the first time the title scrolls into view, then the terracotta
 // period lands last. The title is fully visible by default; the observer only
 // adds the class that plays the entrance, so a failed observer never hides it.
+// ───────── Resume viewer ─────────
+// Desktop opens the PDF in a modal using the browser's own PDF viewer.
+// Mobile does not: iOS Safari will not render a PDF in an iframe reliably
+// (blank or a single unscrollable page), and the OS viewer handles a direct
+// navigation far better, with share and save built in. So below the desktop
+// breakpoint the trigger is a plain link and this component never mounts.
+const RESUME_MODAL_MIN_WIDTH = 901;
+
+function ResumeViewer({ href, opener, onClose }) {
+  const dialogRef = useRef(null);
+  const titleId = "resume-viewer-title";
+
+  useModalShell(dialogRef, opener, "#main-content");
+  const handleKeyDown = makeModalKeyHandler(dialogRef, onClose);
+
+  return ReactDOM.createPortal(
+    <div
+      className="pf-resume__backdrop"
+      onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
+    >
+      <section
+        ref={dialogRef}
+        className="pf-resume"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onKeyDown={handleKeyDown}
+      >
+        <header className="pf-resume__bar">
+          <h2 id={titleId} className="pf-resume__title">Résumé</h2>
+          <div className="pf-resume__actions">
+            <a className="pf-resume__action" href={href} download>
+              Download
+            </a>
+            <a
+              className="pf-resume__action"
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open in new tab
+            </a>
+            <button
+              type="button"
+              className="pf-resume__close"
+              onClick={onClose}
+              aria-label="Close résumé"
+            >
+              <span aria-hidden="true">✕</span>
+            </button>
+          </div>
+        </header>
+        <div className="pf-resume__body">
+          {/* #toolbar=0 hides Chrome/Edge's own PDF toolbar, which otherwise
+              stacks a second download and print row directly under ours.
+              Firefox ignores the parameter and keeps its toolbar — harmless.
+              Zoom and page controls are still one click away via Open in
+              new tab. */}
+          <iframe
+            className="pf-resume__frame"
+            src={`${href}#toolbar=0&navpanes=0&view=FitH`}
+            title="Résumé, PDF document"
+          />
+        </div>
+      </section>
+    </div>,
+    document.body
+  );
+}
+
+// Trigger + viewer. Renders a button that opens the modal on desktop, and a
+// plain link to the file on mobile.
+function ResumeLink({ resume, className = "pf-link", children }) {
+  const [open, setOpen] = React.useState(false);
+  const [opener, setOpener] = React.useState(null);
+  const Doc = window.PFIcons?.Document;
+  if (!resume?.href) return null;
+
+  const label = children || "Résumé";
+  const useModal =
+    typeof window !== "undefined" && window.innerWidth >= RESUME_MODAL_MIN_WIDTH;
+
+  if (!useModal) {
+    return (
+      <a className={className} href={resume.href} aria-label="Résumé, PDF document">
+        {Doc ? <Doc /> : null}
+        <span>{label}</span>
+      </a>
+    );
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        className={className}
+        onClick={(e) => { setOpener(e.currentTarget); setOpen(true); }}
+        aria-haspopup="dialog"
+        aria-label="Résumé, PDF document"
+      >
+        {Doc ? <Doc /> : null}
+        <span>{label}</span>
+      </button>
+      {open ? (
+        <ResumeViewer href={resume.href} opener={opener} onClose={() => setOpen(false)} />
+      ) : null}
+    </>
+  );
+}
+
 // ───────── Print-only work list ─────────
 // The on-screen work deck is a sticky horizontal track driven by scroll
 // and inline transforms. Overriding all of that into a vertical stack for
