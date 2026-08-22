@@ -26,7 +26,7 @@ window.PORTFOLIO_DATA = {
 
   now: [
     { role: "Software Developer I", at: "United Wholesale Mortgage", entry: "uwm" },
-    { role: "Algorithm Developer",  at: "Glenbrook Trading",         entry: "glenbrook" },
+    { role: "Quant Algorithm Developer", at: "Glenbrook Trading",   entry: "glenbrook" },
   ],
 
   work: [
@@ -39,27 +39,29 @@ window.PORTFOLIO_DATA = {
       location: "Metro Detroit, MI",
       current: true,
       bullets: [
-        "Currently building 3 greenfield projects across React/TypeScript and .NET, from architecture through deployment.",
-        "Debug and maintain Bolt, UWM's internal AI platform for mortgage workflows: document extraction, workflow automation, and production stability.",
+        "Currently building 3 greenfield servicing applications across React/TypeScript and .NET, using GCP Pub/Sub and Orkes for event-driven processing; sat in user interviews with servicing staff to shape the requirements.",
+        "On Bolt, UWM's internal AI platform for mortgage workflows, built automated data-point extraction from insurance documents to feed auto-underwriting and cut manual review time.",
+        "Contributed to a 4-month team initiative migrating about 800 feature flags from CloudBees to Harness.",
         "Write and run unit and integration tests across the stack, and keep CI/CD pipelines fast and reliable so deploys don't break adjacent services.",
-        "Serve on Bolt's developer council, setting code standards and review expectations for the product.",
+        "Serve on Bolt's developer council, defining and enforcing code standards across the product.",
       ],
-      stack: ["React", "TypeScript", "C#", ".NET Core", "SQL", "Azure", "Apache Kafka", "Docker", "CI/CD"],
+      stack: ["React", "TypeScript", "C#", ".NET Core", "SQL", "Azure", "GCP Pub/Sub", "Orkes", "Apache Kafka", "Docker", "CI/CD"],
     },
     {
       id: "glenbrook",
-      title: "Algorithm Developer",
+      title: "Quant Algorithm Developer",
       org: "Glenbrook Trading",
       logo: "logos/glenbrook.svg",
       date: "Jun 2024 to Present",
       location: "Remote",
       current: true,
       bullets: [
-        "Built a quant engine end to end: cloud infrastructure on AWS S3 through model serving and live monitoring.",
-        "Built data pipelines and backtesting tools to train and optimize trading models.",
-        "Built the integration layer connecting to the Chicago Mercantile Exchange (CME) to place live orders driven by real-time market data.",
-        "Designed multiple Figma mockups for the monitoring dashboard, iterating quickly, then built out the full-stack tooling (React, C#, Python) to match.",
-        "Dockerized and packaged the quant engine for consistent team-wide development.",
+        "Architected the firm's backtesting platform end to end (C#, Python, React/Next.js): replays live market data and runs portfolio simulation, replacing ad-hoc scripts that couldn't compare parameter sets.",
+        "Models slippage, commissions, fees, and latency into reported P&L, so backtests reflect live trading conditions rather than an idealised fill.",
+        "Built the integration layer connecting to the Chicago Mercantile Exchange (CME), so orders placed through the system hit the exchange rather than a simulated venue.",
+        "Built the cloud infrastructure on AWS S3 through model serving and live monitoring; Dockerized the engine for team-wide consistency.",
+        "Designed the monitoring dashboard in Figma, then built the tooling (React, C#, Python) to match.",
+        "Wrote implementation specs so interns could ship smaller features on the platform.",
       ],
       stack: ["Python", "C#", "React", "AWS", "Docker", "Pandas", "Plotly", "Figma", "Cloud Architecture", "Distributed Systems", "WebSockets"],
     },

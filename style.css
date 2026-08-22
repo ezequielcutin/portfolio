@@ -3641,6 +3641,22 @@ html.pf-theme-switching *::after {
   .pf-tl,
   .pf-term { display: none !important; }
 
+  /* The music player's transport, elapsed-time counter and waveform are
+     controls for something that cannot play on paper; the track list and
+     the SoundCloud link are the parts worth printing. */
+  .pf-mh__trans,
+  .pf-mh__transMain,
+  .pf-mh__transSm,
+  .pf-mh__time,
+  .pf-mh__wave,
+  .pf-mh__bars,
+  .pf-mh__cellPlay,
+  .pf-mh__cellChev { display: none !important; }
+
+  /* Copy that describes an interaction the reader cannot perform on paper
+     ("swipe the timeline", "open one to read its file"). */
+  .pf-noPrint { display: none !important; }
+
   .pf-printOnly { display: block !important; }
   .pf-printEntry {
     break-inside: avoid;

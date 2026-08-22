@@ -516,8 +516,8 @@ function LayoutStacked({ data, density }) {
             <RevealTitle text="Work" />
             <p className="pf-blockHead__sub">
               Mortgage tooling, quant trading, autonomy ops, and a few detours in between.{" "}
-              <span className="pf-sub--desktop">Scroll the timeline from now back to Detroit.</span>
-              <span className="pf-sub--mobile">Swipe the timeline from now back to Detroit.</span>
+              <span className="pf-sub--desktop pf-noPrint">Scroll the timeline from now back to Detroit.</span>
+              <span className="pf-sub--mobile pf-noPrint">Swipe the timeline from now back to Detroit.</span>
             </p>
           </header>
           <PrintWork items={data.work} />
@@ -529,7 +529,10 @@ function LayoutStacked({ data, density }) {
         <div className="pf-block__inner">
           <header className="pf-blockHead">
             <RevealTitle text="Projects" />
-            <p className="pf-blockHead__sub">Side projects from PWAs to MapReduce; most still on GitHub. Open one to read its file.</p>
+            <p className="pf-blockHead__sub">
+              Side projects from PWAs to MapReduce; most still on GitHub.{" "}
+              <span className="pf-noPrint">Open one to read its file.</span>
+            </p>
           </header>
           <PrintProjects items={data.projects} />
           <ProjectsTerminal items={data.projects} />
