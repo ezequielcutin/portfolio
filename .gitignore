@@ -14,12 +14,14 @@ docs/carousel-mockups*.html
 node_modules/
 dist/
 .dev-server.pid
+.dev-watch.pid
 
 # Design specs
 .interface-design/
 
-# React/Vite scaffold (lives on react_refactor, not main)
-package.json
+# React/Vite scaffold (lives on react_refactor, not main).
+# package.json is tracked: main has a real build step now (scripts/build.mjs)
+# and a clean clone needs the manifest to install esbuild and rebuild.
 package-lock.json
 vite.config.ts
 eslint.config.js

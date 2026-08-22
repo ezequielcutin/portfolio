@@ -1,0 +1,20 @@
+{
+  "name": "portfolio",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Static portfolio site. JSX is compiled ahead of time into app.bundle.js by scripts/build.mjs; the built bundle is committed and GitHub Pages serves main directly.",
+  "type": "module",
+  "scripts": {
+    "dev": "./scripts/dev-start.sh",
+    "dev:stop": "./scripts/dev-stop.sh",
+    "build": "node scripts/build.mjs",
+    "build:watch": "node scripts/build.mjs --watch"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.5"
+  }
+}
