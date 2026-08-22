@@ -3509,6 +3509,18 @@ html.pf-theme-switching *::after {
   transition: none !important;
 }
 
+/* View-transition theme swap. The default root transition is a crossfade;
+   we replace it with a clip-path circle driven from JS (ThemeToggle), so
+   both snapshots need their own animation switched off and the incoming
+   one has to sit above the outgoing one to clip over it. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-new(root) { z-index: 1; }
+::view-transition-old(root) { z-index: 0; }
+
 /* ═══════════ THEME TOGGLE ═══════════ */
 /* Sits in the hero's top-right, inside the content max-width so it lines
    up with the name rather than the viewport edge. Scrolls away with the

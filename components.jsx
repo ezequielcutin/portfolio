@@ -1458,9 +1458,11 @@ function ThemeToggle() {
   const read = () =>
     document.documentElement.getAttribute("data-theme") === "paper" ? "paper" : "dark";
   const [theme, setTheme] = React.useState(read);
+  const btnRef = React.useRef(null);
 
-  const flip = () => {
-    const next = theme === "dark" ? "paper" : "dark";
+  // Applies the theme. Kept separate so both the plain and the animated
+  // path run identical logic — only the wrapping differs.
+  const apply = (next) => {
     const root = document.documentElement;
 
     // Freeze transitions for the swap frame, otherwise elements that
@@ -1479,8 +1481,60 @@ function ThemeToggle() {
     setTimeout(restore, 250);
 
     try { localStorage.setItem("pf-theme", next); } catch (e) { /* private mode */ }
-    setTheme(next);
     window.dispatchEvent(new CustomEvent("pf:themechange", { detail: { theme: next } }));
+  };
+
+  const flip = () => {
+    // Derived from the DOM, not React state: setTheme is async, so two
+    // fast clicks would both read the same pre-render value and the second
+    // would re-apply the theme instead of toggling back.
+    const next = read() === "dark" ? "paper" : "dark";
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // Progressive enhancement: without View Transitions, or when motion is
+    // unwelcome, the swap is instant — which is the whole effect, minus the
+    // circle.
+    if (reduced || typeof document.startViewTransition !== "function") {
+      apply(next);
+      setTheme(next);
+      return;
+    }
+
+    // Circle grows from the button's centre. The radius reaches the farthest
+    // viewport corner so the reveal always completes, wherever the button is.
+    const r = btnRef.current?.getBoundingClientRect();
+    const x = r ? r.left + r.width / 2 : window.innerWidth - 48;
+    const y = r ? r.top + r.height / 2 : 48;
+    const radius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    );
+
+    const vt = document.startViewTransition(() => {
+      // startViewTransition snapshots synchronously, but React state is
+      // async — without flushSync the "after" snapshot would still show the
+      // button's old label and icon.
+      ReactDOM.flushSync(() => setTheme(next));
+      apply(next);
+    });
+
+    vt.ready
+      .then(() => {
+        document.documentElement.animate(
+          {
+            clipPath: [
+              `circle(0px at ${x}px ${y}px)`,
+              `circle(${radius}px at ${x}px ${y}px)`,
+            ],
+          },
+          {
+            duration: 520,
+            easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+            pseudoElement: "::view-transition-new(root)",
+          }
+        );
+      })
+      .catch(() => { /* transition skipped or interrupted */ });
   };
 
   const Sun = window.PFIcons?.Sun;
@@ -1490,6 +1544,7 @@ function ThemeToggle() {
   return (
     <button
       type="button"
+      ref={btnRef}
       className="pf-themeToggle"
       onClick={flip}
       aria-pressed={theme === "paper"}
