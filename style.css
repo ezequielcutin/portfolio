@@ -3942,6 +3942,7 @@ html.pf-theme-switching *::after {
   }
   .pf-themeToggle[aria-pressed="true"] .pf-themeToggle__thumb { left: 32px; }
 
+  .pf-themeToggle { --pf-tt-lean: 0px; }
   .pf-themeToggle__glyph {
     position: relative;
     z-index: 1;
@@ -3950,7 +3951,8 @@ html.pf-theme-switching *::after {
     place-items: center;
     color: var(--muted);
     opacity: 0.45;
-    transition: color 300ms ease, opacity 300ms ease;
+    /* Matches the thumb's transform timing so the pair moves as one piece. */
+    transition: color 300ms ease, opacity 300ms ease, transform 240ms ease;
   }
   .pf-themeToggle__glyph svg { width: 13px; height: 13px; }
   /* Whichever end is live burns accent; the other sits back in the murk. */
@@ -3965,13 +3967,19 @@ html.pf-theme-switching *::after {
     border-color: color-mix(in srgb, var(--accent) 45%, var(--rule));
   }
   /* Leans toward the end it is about to travel to, and starts to glow —
-     the same ember the connect bar runs, scaled to a 28px thumb. */
+     the same ember the connect bar runs, scaled to a 26px thumb.
+     The thumb and the glyph riding it lean by the SAME amount, off one
+     variable: the glyph sits in a fixed flex cell, so moving the thumb
+     alone would slide the circle off-centre from its own icon. */
+  .pf-themeToggle:hover { --pf-tt-lean: 3px; }
+  .pf-themeToggle[aria-pressed="true"]:hover { --pf-tt-lean: -3px; }
   .pf-themeToggle:hover .pf-themeToggle__thumb {
-    transform: translateX(3px);
+    transform: translateX(var(--pf-tt-lean));
     animation: pf-thumbSimmer 2600ms ease-in-out infinite;
   }
-  .pf-themeToggle[aria-pressed="true"]:hover .pf-themeToggle__thumb {
-    transform: translateX(-3px);
+  .pf-themeToggle:not([aria-pressed="true"]):hover .pf-themeToggle__glyph--moon,
+  .pf-themeToggle[aria-pressed="true"]:hover .pf-themeToggle__glyph--sun {
+    transform: translateX(var(--pf-tt-lean));
   }
   /* Destination glyph lifts out of the murk so the target is legible. */
   .pf-themeToggle:not([aria-pressed="true"]):hover .pf-themeToggle__glyph--sun,
