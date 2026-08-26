@@ -1196,9 +1196,10 @@ img { display: block; max-width: 100%; height: auto; }
     border: 0;
     border-left: 1px solid var(--rule);
     gap: 8px;
+    flex: 1;
     flex-wrap: nowrap;
     align-items: center;
-    flex-shrink: 0;
+    justify-content: flex-end;
   }
   .pf-stacked__heroLinks::before { content: none; }
   .pf-stacked__heroLinksLabel { display: none; }
