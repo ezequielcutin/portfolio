@@ -1160,6 +1160,7 @@ img { display: block; max-width: 100%; height: auto; }
     min-width: 0;
   }
   .pf-stacked__contact {
+    display: inline-flex;
     width: auto;
     max-width: 100%;
     padding: 0;
