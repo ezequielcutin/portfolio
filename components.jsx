@@ -1676,6 +1676,7 @@ function ThemeToggle() {
     document.documentElement.getAttribute("data-theme") === "paper" ? "paper" : "dark";
   const [theme, setTheme] = React.useState(read);
   const btnRef = React.useRef(null);
+  const busyRef = React.useRef(false);
 
   // Applies the theme. Kept separate so both the plain and the animated
   // path run identical logic — only the wrapping differs.
@@ -1701,40 +1702,115 @@ function ThemeToggle() {
     window.dispatchEvent(new CustomEvent("pf:themechange", { detail: { theme: next } }));
   };
 
+  // Slides the desktop thumb across the track, resolving when it lands.
+  //
+  // This runs BEFORE the view transition rather than falling out of a CSS
+  // transition on `left`, because mid-swap neither would ever be seen: the
+  // theme apply freezes transitions for a frame, and the wipe paints from
+  // static snapshots of the page rather than the live DOM. Playing it first
+  // also reads better than racing the wipe — the switch moves, and the theme
+  // follows it.
+  const slideThumb = () => {
+    const root = btnRef.current;
+    const thumb = root?.querySelector(".pf-themeToggle__thumb");
+    const moon = root?.querySelector(".pf-themeToggle__glyph--moon");
+    const sun = root?.querySelector(".pf-themeToggle__glyph--sun");
+    // Mobile renders the single-glyph button, which has no track to cross.
+    if (!thumb || !moon || !sun || !thumb.getClientRects().length) {
+      return Promise.resolve(null);
+    }
+
+    // Measured between the two glyph centres — the thumb's own resting
+    // positions — so the travel stays exact if the track is ever resized.
+    const centre = (el) => {
+      const box = el.getBoundingClientRect();
+      return box.left + box.width / 2;
+    };
+    const travel = centre(sun) - centre(moon);
+    const dir = read() === "dark" ? 1 : -1;
+    // Start from wherever the thumb actually sits, so a hover lean does not
+    // snap back to zero as the animation takes over.
+    const from = new DOMMatrixReadOnly(getComputedStyle(thumb).transform).m41;
+
+    const anim = thumb.animate(
+      [
+        { transform: `translateX(${from}px)` },
+        { transform: `translateX(${dir * travel}px)` },
+      ],
+      {
+        duration: 300,
+        // A whisker of overshoot: the thumb seats itself like a real switch
+        // instead of coasting to a stop.
+        easing: "cubic-bezier(0.34, 1.06, 0.64, 1)",
+        fill: "forwards",
+      }
+    );
+    return anim.finished.then(() => anim, () => anim);
+  };
+
   const flip = () => {
+    // One swap at a time. The gesture now spans the slide plus the wipe, and
+    // without this a click mid-slide would stack a second transition on top.
+    if (busyRef.current) return;
+
     // Derived from the DOM, not React state: setTheme is async, so two
     // fast clicks would both read the same pre-render value and the second
     // would re-apply the theme instead of toggling back.
     const next = read() === "dark" ? "paper" : "dark";
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // Progressive enhancement: without View Transitions, or when motion is
-    // unwelcome, the swap is instant — which is the whole effect, minus the
-    // circle.
-    if (reduced || typeof document.startViewTransition !== "function") {
+    // Progressive enhancement: when motion is unwelcome the swap is instant.
+    if (reduced) {
       apply(next);
       setTheme(next);
       return;
     }
 
-    // Circle grows from the button's centre. The radius reaches the farthest
-    // viewport corner so the reveal always completes, wherever the button is.
-    const r = btnRef.current?.getBoundingClientRect();
-    const x = r ? r.left + r.width / 2 : window.innerWidth - 48;
-    const y = r ? r.top + r.height / 2 : 48;
-    const radius = Math.hypot(
-      Math.max(x, window.innerWidth - x),
-      Math.max(y, window.innerHeight - y)
-    );
+    busyRef.current = true;
+    const release = () => { busyRef.current = false; };
+    // Backstop: never strand the control if a promise below never settles.
+    setTimeout(release, 3000);
 
-    const vt = document.startViewTransition(() => {
-      // startViewTransition snapshots synchronously, but React state is
-      // async — without flushSync the "after" snapshot would still show the
-      // button's old label and icon.
-      ReactDOM.flushSync(() => setTheme(next));
-      apply(next);
+    slideThumb().then((anim) => {
+      // Measured now rather than at click time: the slide takes 300ms, and
+      // the page can be scrolled under the button in that window.
+      // Circle grows from the button's centre. The radius reaches the farthest
+      // viewport corner so the reveal always completes, wherever the button is.
+      const r = btnRef.current?.getBoundingClientRect();
+      const x = r ? r.left + r.width / 2 : window.innerWidth - 48;
+      const y = r ? r.top + r.height / 2 : 48;
+      const radius = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y)
+      );
+
+      const commit = () => {
+        // startViewTransition snapshots synchronously, but React state is
+        // async — without flushSync the "after" snapshot would still show the
+        // button's old label and icon.
+        ReactDOM.flushSync(() => setTheme(next));
+        apply(next);
+        // `left` now holds the landed position, so drop the stand-in
+        // transform before it compounds with it.
+        if (anim) anim.cancel();
+      };
+
+      // Without View Transitions the slide still played; only the circle is
+      // missing.
+      if (typeof document.startViewTransition !== "function") {
+        commit();
+        release();
+        return;
+      }
+
+      const vt = document.startViewTransition(commit);
+      vt.finished.then(release, release);
+      startWipe(vt, x, y, radius);
     });
+  };
 
+  // Drives the circular reveal once the snapshots are ready.
+  const startWipe = (vt, x, y, radius) => {
     vt.ready
       .then(() => {
         document.documentElement.animate(
