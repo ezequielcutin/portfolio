@@ -1738,7 +1738,9 @@ function ThemeToggle() {
         { transform: `translateX(${dir * travel}px)` },
       ],
       {
-        duration: 300,
+        // Anticipation for the wipe, not a feature in itself — kept short so
+        // the pair lands near 600ms total.
+        duration: 180,
         // A whisker of overshoot: the thumb seats itself like a real switch
         // instead of coasting to a stop.
         easing: "cubic-bezier(0.34, 1.06, 0.64, 1)",
@@ -1772,7 +1774,7 @@ function ThemeToggle() {
     setTimeout(release, 3000);
 
     slideThumb().then((anim) => {
-      // Measured now rather than at click time: the slide takes 300ms, and
+      // Measured now rather than at click time: the slide takes 180ms, and
       // the page can be scrolled under the button in that window.
       // Circle grows from the button's centre. The radius reaches the farthest
       // viewport corner so the reveal always completes, wherever the button is.
@@ -1822,9 +1824,9 @@ function ThemeToggle() {
           },
           {
             // Expo-out: most of the travel happens in the first third, so
-            // the wavefront launches decisively and glides to a stop. Reads
-            // calmer than a shorter symmetric curve without feeling slower.
-            duration: 700,
+            // the wavefront launches decisively and glides to a stop. The
+            // curve is what keeps this reading calm at a short duration.
+            duration: 420,
             easing: "cubic-bezier(0.16, 1, 0.3, 1)",
             pseudoElement: "::view-transition-new(root)",
           }
