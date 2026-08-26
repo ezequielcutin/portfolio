@@ -996,279 +996,135 @@ img { display: block; max-width: 100%; height: auto; }
   font-size: 0.96em;
   color: var(--fg-soft);
 }
-.pf-stacked__heroContact {
-  margin-top: 8px;
-  margin-bottom: 20px;
-  padding-top: 20px;
-  border-top: 1px solid var(--rule);
-}
-.pf-stacked__contact {
+/* Connect bar: email + socials + CV, one rounded card. */
+.pf-connectBar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  width: 100%;
-  padding: 16px 20px;
-  min-height: 60px;
+  gap: 20px;
+  margin-top: 8px;
+  padding: 14px 20px;
+  border: 1px solid var(--rule);
+  border-radius: 18px;
+  background: var(--card);
+}
+.pf-connectBar__contact {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
   color: var(--fg);
   text-decoration: none;
-  border: 1px solid var(--rule);
-  background-color: transparent;
-  /* Corner tick marks — 4 L-shapes painted via background gradients */
-  background-image:
-    linear-gradient(var(--accent), var(--accent)),
-    linear-gradient(var(--accent), var(--accent)),
-    linear-gradient(var(--accent), var(--accent)),
-    linear-gradient(var(--accent), var(--accent)),
-    linear-gradient(var(--accent), var(--accent)),
-    linear-gradient(var(--accent), var(--accent)),
-    linear-gradient(var(--accent), var(--accent)),
-    linear-gradient(var(--accent), var(--accent));
-  background-size:
-    8px 1.5px, 1.5px 8px,
-    8px 1.5px, 1.5px 8px,
-    8px 1.5px, 1.5px 8px,
-    8px 1.5px, 1.5px 8px;
-  background-position:
-    0 0,       0 0,
-    100% 0,    100% 0,
-    0 100%,    0 100%,
-    100% 100%, 100% 100%;
-  background-repeat: no-repeat;
-  transition:
-    border-color 300ms,
-    background-color 300ms,
-    background-size 300ms cubic-bezier(0.4, 0, 0.15, 1),
-    color 300ms;
 }
-.pf-stacked__contactIcon {
+.pf-connectBar__icon {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--rule));
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   color: var(--accent);
-  opacity: 0.7;
-  transition: opacity 300ms;
+  transition: background 250ms, border-color 250ms, box-shadow 250ms;
 }
-.pf-stacked__contactText {
-  flex: 1;
-  min-width: 0;
+.pf-connectBar__icon svg { width: 18px; height: 18px; }
+.pf-connectBar__text {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
+  min-width: 0;
 }
-.pf-stacked__contactLabel {
+.pf-connectBar__caption {
   font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.1em;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
   line-height: 1;
 }
-.pf-stacked__contactSep {
-  display: none;
-}
-.pf-stacked__contactHandle {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 500;
+.pf-connectBar__handle {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
   letter-spacing: -0.01em;
-  word-break: break-word;
   line-height: 1.2;
-  transition: color 300ms;
+  word-break: break-word;
+  transition: color 250ms;
 }
-.pf-stacked__contactArrow {
+.pf-connectBar__divider {
   flex-shrink: 0;
-  color: var(--accent);
-  opacity: 0.55;
-  font-size: 15px;
-  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 300ms;
+  width: 1px;
+  height: 32px;
+  background: var(--rule);
 }
-@media (hover: hover) and (pointer: fine) {
-  .pf-stacked__contact:hover {
-    border-color: color-mix(in srgb, var(--accent) 45%, var(--rule));
-    background-color: color-mix(in srgb, var(--accent) 4%, transparent);
-    background-size:
-      18px 1.5px, 1.5px 18px,
-      18px 1.5px, 1.5px 18px,
-      18px 1.5px, 1.5px 18px,
-      18px 1.5px, 1.5px 18px;
-  }
-  .pf-stacked__contact:hover .pf-stacked__contactHandle {
-    color: var(--accent);
-  }
-  .pf-stacked__contact:hover .pf-stacked__contactIcon {
-    opacity: 1;
-    color: var(--accent);
-  }
-  .pf-stacked__contact:hover .pf-stacked__contactArrow {
-    transform: translate(3px, -3px);
-    opacity: 1;
-  }
-}
-
-.pf-stacked__heroLinks {
+.pf-connectBar__socials {
   display: flex;
-  gap: 24px;
-  flex-wrap: wrap;
-  padding-top: 16px;
-  border-top: 1px solid var(--rule);
-}
-.pf-stacked__heroLinksLabel { display: none; }
-.pf-stacked__heroLinksRow { display: contents; }
-.pf-stacked__heroLinks .pf-link.pf-stacked__heroLinksEmail { display: none; }
-.pf-stacked__heroLinks .pf-link {
-  display: inline-flex;
   align-items: center;
   gap: 8px;
-}
-.pf-stacked__heroLinks .pf-link.pf-stacked__resumeLink {
-  margin-left: auto;
-  border-bottom: none;
-  box-shadow: none;
-}
-.pf-stacked__heroLinks .pf-link svg {
-  width: 18px;
-  height: 18px;
-  color: var(--muted);
   flex-shrink: 0;
 }
+.pf-connectBar__social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--fg-soft);
+  transition: border-color 200ms, color 200ms, background 200ms;
+}
+.pf-connectBar__social svg { width: 17px; height: 17px; }
+.pf-connectBar__cv {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 9px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 200ms, color 200ms;
+}
+.pf-connectBar__cv svg { display: none; }
+.pf-connectBar__cv::after { content: "↗"; font-size: 13px; }
 @media (hover: hover) and (pointer: fine) {
-  .pf-stacked__heroLinks .pf-link:hover svg {
+  .pf-connectBar__contact:hover .pf-connectBar__handle { color: var(--accent); }
+  .pf-connectBar__contact:hover .pf-connectBar__icon {
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+  .pf-connectBar__social:hover {
+    border-color: var(--accent);
     color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
   }
-}
-
-/* Desktop: email + socials + résumé share one corner-tick strip.
-   Mobile (≤600px) keeps the existing Connect grid — this wrapper
-   is display:contents there so it does not change stacking. */
-@media (min-width: 601px) {
-  .pf-stacked__connect {
-    display: flex;
-    align-items: center;
-    gap: 12px 16px;
-    margin-top: 8px;
-    padding: 8px 12px 8px 10px;
-    min-height: 60px;
-    border: 1px solid var(--rule);
-    background-color: transparent;
-    background-image:
-      linear-gradient(var(--accent), var(--accent)),
-      linear-gradient(var(--accent), var(--accent)),
-      linear-gradient(var(--accent), var(--accent)),
-      linear-gradient(var(--accent), var(--accent)),
-      linear-gradient(var(--accent), var(--accent)),
-      linear-gradient(var(--accent), var(--accent)),
-      linear-gradient(var(--accent), var(--accent)),
-      linear-gradient(var(--accent), var(--accent));
-    background-size:
-      8px 1.5px, 1.5px 8px,
-      8px 1.5px, 1.5px 8px,
-      8px 1.5px, 1.5px 8px,
-      8px 1.5px, 1.5px 8px;
-    background-position:
-      0 0,       0 0,
-      100% 0,    100% 0,
-      0 100%,    0 100%,
-      100% 100%, 100% 100%;
-    background-repeat: no-repeat;
-    transition:
-      border-color 300ms,
-      background-color 300ms,
-      background-size 300ms cubic-bezier(0.4, 0, 0.15, 1);
-  }
-  .pf-stacked__heroContact {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    flex: 1;
-    min-width: 0;
-  }
-  .pf-stacked__contact {
-    width: auto;
-    max-width: 100%;
-    padding: 4px 6px 4px 4px;
-    min-height: 0;
-    border: 0;
-    background-image: none;
-    gap: 12px;
-  }
-  .pf-stacked__contactArrow { display: none; }
-  .pf-stacked__heroLinks {
-    padding: 0;
-    border: 0;
-    gap: 2px;
-    flex-wrap: nowrap;
-    align-items: center;
-    flex-shrink: 0;
-  }
-  .pf-stacked__heroLinks .pf-stacked__heroLink {
-    border-bottom: none;
-    padding: 8px;
-    min-width: 40px;
-    min-height: 40px;
-    justify-content: center;
-    gap: 0;
-  }
-  .pf-stacked__heroLinks .pf-stacked__heroLink > span {
-    display: none;
-  }
-  /* CV is a named document, not a logo — keep the word, but as a
-     caption in the same mono system as “Get in touch”, stacked above
-     a smaller glyph and ruled off from the socials. */
-  .pf-stacked__heroLinks .pf-link.pf-stacked__resumeLink {
-    flex-direction: column-reverse;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    margin-left: 6px;
-    padding: 4px 8px 4px 14px;
-    min-width: 44px;
-    min-height: 44px;
-    border: 0;
-    border-left: 1px solid var(--rule);
-    border-radius: 0;
-    background: none;
-    box-shadow: none;
-    font-family: var(--font-mono);
-    color: var(--muted);
-  }
-  .pf-stacked__heroLinks .pf-stacked__resumeLink svg {
-    width: 14px;
-    height: 14px;
-    color: var(--muted);
-  }
-  .pf-stacked__heroLinks .pf-stacked__resumeLink span {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 400;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    line-height: 1;
-    color: var(--muted);
-  }
-}
-@media (hover: hover) and (pointer: fine) and (min-width: 601px) {
-  .pf-stacked__connect:hover {
-    border-color: color-mix(in srgb, var(--accent) 45%, var(--rule));
-    background-color: color-mix(in srgb, var(--accent) 4%, transparent);
-    background-size:
-      18px 1.5px, 1.5px 18px,
-      18px 1.5px, 1.5px 18px,
-      18px 1.5px, 1.5px 18px,
-      18px 1.5px, 1.5px 18px;
-  }
-  .pf-stacked__contact:hover {
-    border-color: transparent;
-    background-color: transparent;
-    background-size: 8px 1.5px, 1.5px 8px, 8px 1.5px, 1.5px 8px, 8px 1.5px, 1.5px 8px, 8px 1.5px, 1.5px 8px;
-  }
-  .pf-stacked__heroLinks .pf-stacked__resumeLink:hover,
-  .pf-stacked__heroLinks .pf-stacked__resumeLink:hover span,
-  .pf-stacked__heroLinks .pf-stacked__resumeLink:hover svg {
-    color: var(--accent);
+  .pf-connectBar__cv:hover {
+    background: var(--accent);
+    color: var(--bg);
   }
 }
 @media (max-width: 600px) {
-  .pf-stacked__connect { display: contents; }
+  .pf-connectBar {
+    flex-wrap: wrap;
+    gap: 14px 12px;
+    padding: 14px 16px;
+  }
+  .pf-connectBar__contact { flex: 1 1 100%; }
+  .pf-connectBar__divider { display: none; }
+  .pf-connectBar__socials { flex: 1; }
+  .pf-connectBar__cv { margin-left: 0; }
 }
 
 /* ═══════════ STICKY SECTION NAV ═══════════ */
@@ -1460,16 +1316,6 @@ img { display: block; max-width: 100%; height: auto; }
   50%      { transform: scaleY(1);    }
 }
 
-/* Ouroboros border-chase: a single ember tracing an endless loop around a box */
-@property --ouro-angle {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-@keyframes pf-ouroboros {
-  to { --ouro-angle: 360deg; }
-}
-
 /* ═══════════ MOBILE OPTIMIZATIONS ═══════════ */
 
 /* ───── Stacked layout: tighten block spacing ───── */
@@ -1510,110 +1356,6 @@ img { display: block; max-width: 100%; height: auto; }
   .pf-stacked__nowDash { display: none; }
   .pf-stacked__nowAt { font-size: 14px; line-height: 1.35; }
   .pf-stacked__nowMarker { padding-top: 4px; }
-  .pf-stacked__heroContact {
-    display: none;
-  }
-  .pf-stacked__heroLinks {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    border: 1px solid var(--rule);
-    border-radius: 2px;
-    padding: 16px 14px;
-  }
-  /* Ouroboros: a faint ember chasing its own tail around the box, never resting */
-  .pf-stacked__heroLinks::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: conic-gradient(
-      from var(--ouro-angle, 0deg),
-      transparent 0deg,
-      transparent 265deg,
-      color-mix(in srgb, var(--accent) 55%, transparent) 300deg,
-      var(--accent) 320deg,
-      color-mix(in srgb, var(--accent) 55%, transparent) 340deg,
-      transparent 360deg
-    );
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    opacity: 0.85;
-    pointer-events: none;
-    animation: pf-ouroboros 10s linear infinite;
-  }
-  .pf-stacked__heroLinksLabel {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .pf-stacked__heroLinksLabel::before,
-  .pf-stacked__heroLinksLabel::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: var(--rule);
-  }
-  .pf-stacked__heroLinksRow {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-  }
-  .pf-stacked__heroLinks .pf-link.pf-stacked__resumeLink {
-    margin-left: 0;
-    padding: 10px 0;
-    border: 0;
-    justify-self: stretch;
-  }
-  .pf-stacked__heroLinks .pf-link.pf-stacked__heroLinksEmail {
-    display: flex;
-  }
-  .pf-stacked__heroLinks .pf-link {
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0;
-    min-height: 52px;
-    padding: 10px 0;
-    border-bottom: none;
-    border-right: none;
-    border-radius: 6px;
-  }
-  .pf-stacked__heroLinks .pf-link:active {
-    background-color: color-mix(in srgb, var(--accent) 6%, transparent);
-  }
-  .pf-stacked__heroLinks .pf-link:active svg {
-    color: var(--accent);
-  }
-  .pf-stacked__heroLinks .pf-link svg {
-    width: 22px;
-    height: 22px;
-    color: var(--fg-soft);
-  }
-  .pf-stacked__heroLinks .pf-stacked__heroLinkSc svg {
-    width: 25px;
-    height: 20px;
-  }
-  .pf-stacked__heroLinks .pf-link.pf-stacked__heroLinksEmail svg {
-    color: var(--fg-soft);
-  }
-  .pf-stacked__heroLinks .pf-link span {
-    font-size: 11px;
-    color: var(--fg-soft);
-  }
-  .pf-stacked__heroLinks .pf-link > span:not(.pf-link__arrow) {
-    display: none;
-  }
-  .pf-stacked__heroLinks .pf-link__arrow {
-    display: none;
-  }
   .pf-snav {
     padding: 8px 16px;
   }

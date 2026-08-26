@@ -760,6 +760,26 @@ function WorkTimeline({ items }) {
   const deckRef = useRef(null);
   const dossierOpenerRef = useRef(null);
 
+  // Per-checkpoint hop variance so the cube doesn't bounce identically between
+  // every pair of entries — some hops are higher/snappier, others low and lazy.
+  // `spinAccum[i]` is the rotation already banked before segment i starts, so
+  // scaling each segment's own spin rate never snaps the cube's rotation at
+  // a checkpoint boundary — only the rate between boundaries changes.
+  const segmentMotion = useMemo(() => {
+    const hash = (i, salt) => {
+      const s = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453;
+      return s - Math.floor(s);
+    };
+    const segs = Array.from({ length: Math.max(1, n - 1) }, (_, i) => ({
+      lift: 0.6 + hash(i, 1) * 1.5,      // hop height multiplier
+      ease: 0.55 + hash(i, 2) * 1.65,    // >1 = lazy float, <1 = snappy jump
+      spin: 0.7 + hash(i, 3) * 1.1,      // extra tumble on faster hops
+    }));
+    let acc = 0;
+    const spinAccum = segs.map((m) => { const start = acc; acc += m.spin; return start; });
+    return { segs, spinAccum };
+  }, [n]);
+
   useEffect(() => {
     const pinnedMq = window.matchMedia(
       "(min-width: 901px) and (pointer: fine) and (prefers-reduced-motion: no-preference)"
@@ -806,16 +826,19 @@ function WorkTimeline({ items }) {
       const p = dist > 0 ? Math.min(1, Math.max(0, (window.scrollY - top) / dist)) : 0;
       const x = -p * maxXRef.current;
       const segment = p * Math.max(1, n - 1);
+      const segIndex = Math.min(segmentMotion.segs.length - 1, Math.floor(segment));
       const segmentPhase = segment - Math.floor(segment);
-      const hop = Math.sin(segmentPhase * Math.PI);
+      const motion = segmentMotion.segs[segIndex] || { lift: 1, ease: 1, spin: 1 };
+      const spinProgress = (segmentMotion.spinAccum[segIndex] ?? segIndex) + motion.spin * segmentPhase;
+      const hop = Math.sin(Math.PI * Math.pow(segmentPhase, 1 / motion.ease));
       track.style.transform = `translate3d(${x}px,0,0)`;
       railFill.style.transform = `scaleX(${p})`;
       cubeCursor.style.transform = `translate3d(${p * railWidthRef.current - 22}px,-50%,0)`;
-      cubeCursor.style.setProperty("--pf-cube-lift", `${hop * 11}px`);
-      cubeCursor.style.setProperty("--pf-cube-glow", `${0.45 + hop * 0.45}`);
-      cubeCursor.style.setProperty("--pf-cube-rx", `${24 + segment * 92}deg`);
-      cubeCursor.style.setProperty("--pf-cube-ry", `${-32 + segment * 126}deg`);
-      cubeCursor.style.setProperty("--pf-cube-rz", `${segment * 42}deg`);
+      cubeCursor.style.setProperty("--pf-cube-lift", `${hop * 11 * motion.lift}px`);
+      cubeCursor.style.setProperty("--pf-cube-glow", `${0.45 + hop * 0.45 * motion.lift}`);
+      cubeCursor.style.setProperty("--pf-cube-rx", `${24 + spinProgress * 92}deg`);
+      cubeCursor.style.setProperty("--pf-cube-ry", `${-32 + spinProgress * 126}deg`);
+      cubeCursor.style.setProperty("--pf-cube-rz", `${spinProgress * 42}deg`);
       hint.classList.toggle("is-hidden", p > 0.015);
 
       Array.from(track.children).forEach((card, i) => {
@@ -850,7 +873,7 @@ function WorkTimeline({ items }) {
       track.style.transform = "";
       Array.from(track.children).forEach((card) => { card.style.transform = ""; });
     };
-  }, [pinned, n]);
+  }, [pinned, n, segmentMotion]);
 
   // Deck mode: track which card is snapped so the progress line + counter follow.
   useEffect(() => {
