@@ -1156,6 +1156,7 @@ img { display: block; max-width: 100%; height: auto; }
     margin: 0;
     padding: 0;
     border: 0;
+    flex: 1;
     min-width: 0;
   }
   .pf-stacked__contact {
