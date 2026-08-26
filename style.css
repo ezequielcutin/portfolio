@@ -1168,6 +1168,9 @@ img { display: block; max-width: 100%; height: auto; }
     border: 0;
     background-image: none;
     gap: 14px;
+    /* Grows from the left so the email stays put and the bar edge is unaffected */
+    transform-origin: left center;
+    transition: transform 340ms cubic-bezier(0.2, 0.8, 0.2, 1), color 300ms;
   }
   .pf-stacked__contactIcon {
     align-items: center;
@@ -1182,7 +1185,11 @@ img { display: block; max-width: 100%; height: auto; }
   }
   .pf-stacked__contactIcon svg { width: 18px; height: 18px; }
   .pf-stacked__contactText { gap: 4px; }
-  .pf-stacked__contactLabel { font-size: 10.5px; letter-spacing: 0.12em; }
+  .pf-stacked__contactLabel {
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    transition: color 300ms;
+  }
   .pf-stacked__contactHandle {
     font-family: var(--font-sans);
     font-size: 16px;
@@ -1197,7 +1204,11 @@ img { display: block; max-width: 100%; height: auto; }
     border: 0;
     border-left: 1px solid var(--rule);
     gap: 8px;
+    /* flex:1 splits the bar so the rule lands dead centre, but never let that
+       squeeze the icons + CV pill below their natural width — past that point
+       the divider drifts left rather than the pill wrapping. */
     flex: 1;
+    min-width: max-content;
     flex-wrap: nowrap;
     align-items: center;
     justify-content: flex-end;
@@ -1254,17 +1265,46 @@ img { display: block; max-width: 100%; height: auto; }
     font-weight: 500;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+    white-space: nowrap;
     color: var(--accent);
   }
   .pf-stacked__heroLinks .pf-stacked__resumeLink span::after {
     content: " ↗";
   }
 }
+/* One row needs ~588px of bar (250 email block + 278 icon cluster + gaps),
+   which the hero column only reaches around a 935px viewport. Below 960 the
+   address would break apart, so fold the bar into two rows and turn the
+   divider on its side instead. */
+@media (min-width: 601px) and (max-width: 959px) {
+  .pf-stacked__connect {
+    flex-wrap: wrap;
+    gap: 0;
+  }
+  .pf-stacked__heroContact { flex: 1 1 100%; }
+  .pf-stacked__heroLinks {
+    flex: 1 1 100%;
+    min-width: 0;
+    margin-top: 14px;
+    padding-top: 14px;
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid var(--rule);
+    justify-content: flex-start;
+  }
+  .pf-stacked__heroLinks .pf-link.pf-stacked__resumeLink { margin-left: auto; }
+}
 @media (hover: hover) and (pointer: fine) and (min-width: 601px) {
+  .pf-stacked__contact:hover {
+    transform: scale(1.025);
+  }
+  .pf-stacked__contact:hover .pf-stacked__contactLabel { color: var(--fg-soft); }
   .pf-stacked__contact:hover .pf-stacked__contactHandle { color: var(--accent); }
+  /* Ember under the glass: the tile keeps breathing while the cursor rests
+     on it, so the control reads as live rather than merely lit. */
   .pf-stacked__contact:hover .pf-stacked__contactIcon {
-    background: color-mix(in srgb, var(--accent) 22%, transparent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 70%, var(--rule));
+    animation: pf-contactSimmer 2600ms ease-in-out infinite;
   }
   .pf-stacked__heroLinks .pf-stacked__heroLink:hover {
     border-color: var(--accent);
@@ -1276,6 +1316,30 @@ img { display: block; max-width: 100%; height: auto; }
   }
   .pf-stacked__heroLinks .pf-stacked__resumeLink:hover span {
     color: var(--bg);
+  }
+}
+/* Two offset rhythms — a tight inner ring that swells and a soft outer haze
+   that lags behind it — so the pulse feels like heat, not a blinking light. */
+@keyframes pf-contactSimmer {
+  0%, 100% {
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--accent) 15%, transparent),
+      0 0 10px 0 color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+  50% {
+    background: color-mix(in srgb, var(--accent) 30%, transparent);
+    box-shadow:
+      0 0 0 6px color-mix(in srgb, var(--accent) 7%, transparent),
+      0 0 22px 2px color-mix(in srgb, var(--accent) 34%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-stacked__contact:hover { transform: none; }
+  .pf-stacked__contact:hover .pf-stacked__contactIcon {
+    animation: none;
+    background: color-mix(in srgb, var(--accent) 24%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
   }
 }
 @media (max-width: 600px) {
