@@ -510,8 +510,8 @@ function LayoutStacked({ data, density }) {
             <RevealTitle text="Work" />
             <p className="pf-blockHead__sub">
               Mortgage tooling, quant trading, autonomy ops, and a few detours in between.{" "}
-              <span className="pf-sub--desktop pf-noPrint">Scroll the timeline from now back to Detroit.</span>
-              <span className="pf-sub--mobile pf-noPrint">Swipe the timeline from now back to Detroit.</span>
+              <span className="pf-sub--desktop pf-noPrint">Scroll the timeline.</span>
+              <span className="pf-sub--mobile pf-noPrint">Swipe the timeline.</span>
             </p>
           </header>
           <PrintWork items={data.work} />
