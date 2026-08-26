@@ -437,69 +437,63 @@ function LayoutStacked({ data, density }) {
                   </div>
                 ))}
               </div>
-              <div className="pf-stacked__heroContact">
-                {emailLink ? (
-                  <a
-                    href={emailLink.href}
-                    className="pf-stacked__contact"
-                    aria-label={`Send email to ${emailLink.handle}`}
-                  >
-                    {EmailIcon ? (
-                      <span className="pf-stacked__contactIcon" aria-hidden="true">
-                        <EmailIcon />
+              <div className="pf-stacked__connect">
+                <div className="pf-stacked__heroContact">
+                  {emailLink ? (
+                    <a
+                      href={emailLink.href}
+                      className="pf-stacked__contact"
+                      aria-label={`Send email to ${emailLink.handle}`}
+                    >
+                      {EmailIcon ? (
+                        <span className="pf-stacked__contactIcon" aria-hidden="true">
+                          <EmailIcon />
+                        </span>
+                      ) : null}
+                      <span className="pf-stacked__contactText">
+                        <span className="pf-stacked__contactLabel">Get in touch</span>
+                        <span className="pf-stacked__contactSep" aria-hidden="true">·</span>
+                        <span className="pf-stacked__contactHandle">{emailLink.handle}</span>
                       </span>
+                      <span className="pf-stacked__contactArrow" aria-hidden="true">↗</span>
+                    </a>
+                  ) : null}
+                </div>
+                <div className="pf-stacked__heroLinks" aria-label="Social profiles">
+                  <span className="pf-stacked__heroLinksLabel" aria-hidden="true">Connect</span>
+                  <div className="pf-stacked__heroLinksRow">
+                    {emailLink ? (
+                      <a
+                        href={emailLink.href}
+                        className="pf-link pf-stacked__heroLinksEmail"
+                        aria-label={`Send email to ${emailLink.handle}`}
+                      >
+                        {EmailIcon ? <EmailIcon /> : null}
+                        <span>Email</span>
+                      </a>
                     ) : null}
-                    <span className="pf-stacked__contactText">
-                      <span className="pf-stacked__contactLabel">Get in touch</span>
-                      <span className="pf-stacked__contactSep" aria-hidden="true">·</span>
-                      <span className="pf-stacked__contactHandle">{emailLink.handle}</span>
-                    </span>
-                    <span className="pf-stacked__contactArrow" aria-hidden="true">↗</span>
-                  </a>
-                ) : null}
-                {data.identity.resume ? (
-                  <p className="pf-stacked__heroResume">
+                    {socialLinks.map((l) => {
+                      const Icon = window.PFIcons[l.label];
+                      return (
+                        <a
+                          key={l.label}
+                          href={l.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`pf-link pf-stacked__heroLink${l.label === "SoundCloud" ? " pf-stacked__heroLinkSc" : ""}`}
+                          aria-label={`${l.label} profile (${l.handle}), opens in new tab`}
+                        >
+                          {Icon ? <Icon /> : null}
+                          <span>{l.label}</span>
+                          <span className="pf-link__arrow">↗</span>
+                        </a>
+                      );
+                    })}
                     <ResumeLink
                       resume={data.identity.resume}
                       className="pf-link pf-stacked__resumeLink"
                     />
-                    <span className="pf-stacked__resumeNote">
-                      {data.identity.resume.note}
-                    </span>
-                  </p>
-                ) : null}
-              </div>
-              <div className="pf-stacked__heroLinks" aria-label="Social profiles">
-                <span className="pf-stacked__heroLinksLabel" aria-hidden="true">Connect</span>
-                <div className="pf-stacked__heroLinksRow">
-                  {emailLink ? (
-                    <a
-                      href={emailLink.href}
-                      className="pf-link pf-stacked__heroLinksEmail"
-                      aria-label={`Send email to ${emailLink.handle}`}
-                    >
-                      {EmailIcon ? <EmailIcon /> : null}
-                      <span>Email</span>
-                    </a>
-                  ) : null}
-                  <ResumeLink resume={data.identity.resume} />
-                  {socialLinks.map((l) => {
-                    const Icon = window.PFIcons[l.label];
-                    return (
-                      <a
-                        key={l.label}
-                        href={l.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="pf-link"
-                        aria-label={`${l.label} profile (${l.handle}), opens in new tab`}
-                      >
-                        {Icon ? <Icon /> : null}
-                        <span>{l.label}</span>
-                        <span className="pf-link__arrow">↗</span>
-                      </a>
-                    );
-                  })}
+                  </div>
                 </div>
               </div>
             </div>

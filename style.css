@@ -1119,6 +1119,11 @@ img { display: block; max-width: 100%; height: auto; }
   align-items: center;
   gap: 8px;
 }
+.pf-stacked__heroLinks .pf-link.pf-stacked__resumeLink {
+  margin-left: auto;
+  border-bottom: none;
+  box-shadow: none;
+}
 .pf-stacked__heroLinks .pf-link svg {
   width: 18px;
   height: 18px;
@@ -1129,6 +1134,141 @@ img { display: block; max-width: 100%; height: auto; }
   .pf-stacked__heroLinks .pf-link:hover svg {
     color: var(--accent);
   }
+}
+
+/* Desktop: email + socials + résumé share one corner-tick strip.
+   Mobile (≤600px) keeps the existing Connect grid — this wrapper
+   is display:contents there so it does not change stacking. */
+@media (min-width: 601px) {
+  .pf-stacked__connect {
+    display: flex;
+    align-items: center;
+    gap: 12px 16px;
+    margin-top: 8px;
+    padding: 8px 12px 8px 10px;
+    min-height: 60px;
+    border: 1px solid var(--rule);
+    background-color: transparent;
+    background-image:
+      linear-gradient(var(--accent), var(--accent)),
+      linear-gradient(var(--accent), var(--accent)),
+      linear-gradient(var(--accent), var(--accent)),
+      linear-gradient(var(--accent), var(--accent)),
+      linear-gradient(var(--accent), var(--accent)),
+      linear-gradient(var(--accent), var(--accent)),
+      linear-gradient(var(--accent), var(--accent)),
+      linear-gradient(var(--accent), var(--accent));
+    background-size:
+      8px 1.5px, 1.5px 8px,
+      8px 1.5px, 1.5px 8px,
+      8px 1.5px, 1.5px 8px,
+      8px 1.5px, 1.5px 8px;
+    background-position:
+      0 0,       0 0,
+      100% 0,    100% 0,
+      0 100%,    0 100%,
+      100% 100%, 100% 100%;
+    background-repeat: no-repeat;
+    transition:
+      border-color 300ms,
+      background-color 300ms,
+      background-size 300ms cubic-bezier(0.4, 0, 0.15, 1);
+  }
+  .pf-stacked__heroContact {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    flex: 1;
+    min-width: 0;
+  }
+  .pf-stacked__contact {
+    width: auto;
+    max-width: 100%;
+    padding: 4px 6px 4px 4px;
+    min-height: 0;
+    border: 0;
+    background-image: none;
+    gap: 12px;
+  }
+  .pf-stacked__contactArrow { display: none; }
+  .pf-stacked__heroLinks {
+    padding: 0;
+    border: 0;
+    gap: 2px;
+    flex-wrap: nowrap;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .pf-stacked__heroLinks .pf-stacked__heroLink {
+    border-bottom: none;
+    padding: 8px;
+    min-width: 40px;
+    min-height: 40px;
+    justify-content: center;
+    gap: 0;
+  }
+  .pf-stacked__heroLinks .pf-stacked__heroLink > span {
+    display: none;
+  }
+  /* CV is a named document, not a logo — keep the word, but as a
+     caption in the same mono system as “Get in touch”, stacked above
+     a smaller glyph and ruled off from the socials. */
+  .pf-stacked__heroLinks .pf-link.pf-stacked__resumeLink {
+    flex-direction: column-reverse;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin-left: 6px;
+    padding: 4px 8px 4px 14px;
+    min-width: 44px;
+    min-height: 44px;
+    border: 0;
+    border-left: 1px solid var(--rule);
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    font-family: var(--font-mono);
+    color: var(--muted);
+  }
+  .pf-stacked__heroLinks .pf-stacked__resumeLink svg {
+    width: 14px;
+    height: 14px;
+    color: var(--muted);
+  }
+  .pf-stacked__heroLinks .pf-stacked__resumeLink span {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    line-height: 1;
+    color: var(--muted);
+  }
+}
+@media (hover: hover) and (pointer: fine) and (min-width: 601px) {
+  .pf-stacked__connect:hover {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--rule));
+    background-color: color-mix(in srgb, var(--accent) 4%, transparent);
+    background-size:
+      18px 1.5px, 1.5px 18px,
+      18px 1.5px, 1.5px 18px,
+      18px 1.5px, 1.5px 18px,
+      18px 1.5px, 1.5px 18px;
+  }
+  .pf-stacked__contact:hover {
+    border-color: transparent;
+    background-color: transparent;
+    background-size: 8px 1.5px, 1.5px 8px, 8px 1.5px, 1.5px 8px, 8px 1.5px, 1.5px 8px, 8px 1.5px, 1.5px 8px;
+  }
+  .pf-stacked__heroLinks .pf-stacked__resumeLink:hover,
+  .pf-stacked__heroLinks .pf-stacked__resumeLink:hover span,
+  .pf-stacked__heroLinks .pf-stacked__resumeLink:hover svg {
+    color: var(--accent);
+  }
+}
+@media (max-width: 600px) {
+  .pf-stacked__connect { display: contents; }
 }
 
 /* ═══════════ STICKY SECTION NAV ═══════════ */
@@ -1424,7 +1564,13 @@ img { display: block; max-width: 100%; height: auto; }
   }
   .pf-stacked__heroLinksRow {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
+  }
+  .pf-stacked__heroLinks .pf-link.pf-stacked__resumeLink {
+    margin-left: 0;
+    padding: 10px 0;
+    border: 0;
+    justify-self: stretch;
   }
   .pf-stacked__heroLinks .pf-link.pf-stacked__heroLinksEmail {
     display: flex;
@@ -1451,7 +1597,7 @@ img { display: block; max-width: 100%; height: auto; }
     height: 22px;
     color: var(--fg-soft);
   }
-  .pf-stacked__heroLinksRow .pf-link:last-child svg {
+  .pf-stacked__heroLinks .pf-stacked__heroLinkSc svg {
     width: 25px;
     height: 20px;
   }
@@ -2205,6 +2351,9 @@ img { display: block; max-width: 100%; height: auto; }
     border-right: none;
     border-radius: 10px;
     min-height: 52px;
+    /* LCD phosphor: the menu is a dark screen, so ink stays light even
+       when the page is paper. Inherited --fg is near-black there. */
+    color: #e6ddd2;
   }
   .pf-mh__cellPlay {
     display: inline-flex;
@@ -2242,6 +2391,90 @@ img { display: block; max-width: 100%; height: auto; }
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.2),
       0 2px 8px rgba(0, 0, 0, 0.22);
+  }
+}
+
+/* Paper iPod: cream chassis, tan LCD + clickwheel, dark ink. */
+@media (max-width: 600px) {
+  [data-theme="paper"] .pf-mh {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, transparent 26%),
+      linear-gradient(165deg, #faf6ee 0%, #efe8db 46%, #d8cdb8 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.82),
+      inset 0 -1px 0 rgba(90, 70, 45, 0.1),
+      0 18px 40px -18px rgba(70, 50, 30, 0.32),
+      0 0 0 1px color-mix(in srgb, var(--accent) 20%, var(--rule));
+  }
+  [data-theme="paper"] .pf-mh__art {
+    box-shadow:
+      inset 0 0 0 2px #4a453e,
+      inset 0 0 0 3px #1a1714,
+      inset 0 3px 14px rgba(0, 0, 0, 0.55),
+      0 8px 22px -10px rgba(40, 28, 16, 0.35),
+      0 0 0 1px color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+  [data-theme="paper"] .pf-mh__strip {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, transparent 18%),
+      linear-gradient(180deg, #e6d6be 0%, #d4c19f 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      inset 0 0 0 1px rgba(90, 70, 45, 0.14),
+      inset 0 0 0 2px rgba(255, 255, 255, 0.18),
+      0 0 0 1px color-mix(in srgb, var(--accent) 14%, var(--rule));
+  }
+  [data-theme="paper"] .pf-mh__cell {
+    color: #1a1714;
+  }
+  [data-theme="paper"] .pf-mh__cellChev {
+    opacity: 0.42;
+  }
+  [data-theme="paper"] .pf-mh__cell.is-active .pf-mh__cellChev {
+    opacity: 0.7;
+  }
+  [data-theme="paper"] .pf-mh__cell.is-active {
+    background: color-mix(in srgb, var(--accent) 26%, #d4c19f);
+    color: #1a1714;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.28),
+      0 1px 4px rgba(90, 70, 45, 0.12);
+  }
+  [data-theme="paper"] .pf-mh__trans {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, transparent 38%),
+      linear-gradient(180deg, #e8d7bd 0%, #d2be9c 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      inset 0 -8px 16px rgba(90, 70, 45, 0.12),
+      0 0 0 1px color-mix(in srgb, var(--accent) 16%, #b7aa90),
+      0 6px 16px rgba(70, 50, 30, 0.16);
+  }
+  [data-theme="paper"] .pf-mh__transSm {
+    border-color: color-mix(in srgb, #1a1714 28%, transparent);
+    background: rgba(255, 255, 255, 0.18);
+    color: #1a1714;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+  [data-theme="paper"] .pf-mh__transMain {
+    border-color: #1a1714;
+    background: rgba(26, 23, 20, 0.06);
+    color: #1a1714;
+    box-shadow: none;
+  }
+}
+@media (hover: hover) and (pointer: fine) and (max-width: 600px) {
+  [data-theme="paper"] .pf-mh__transSm:hover {
+    border-color: #1a1714;
+    background: rgba(26, 23, 20, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+  [data-theme="paper"] .pf-mh__transMain:hover {
+    background: #1a1714;
+    color: #f5f1ea;
+  }
+  [data-theme="paper"] .pf-mh__cell:hover {
+    background: color-mix(in srgb, var(--accent) 10%, #d4c19f);
   }
 }
 
@@ -3729,19 +3962,6 @@ html.pf-theme-switching *::after {
 }
 
 /* ═══════════ RESUME VIEWER ═══════════ */
-.pf-stacked__heroResume {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin: 10px 0 0;
-}
-.pf-stacked__resumeNote {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
 /* The trigger is a <button> on desktop and an <a> on mobile; normalise it
    so it sits in the link rows without betraying which element it is. */
 .pf-link:is(button) {
@@ -3749,6 +3969,7 @@ html.pf-theme-switching *::after {
   border: 0;
   padding: 0;
   font: inherit;
+  color: inherit;
   cursor: pointer;
 }
 

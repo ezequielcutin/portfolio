@@ -40,8 +40,9 @@ const Icons = {
   ),
   Document: (props) => (
     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
-      <path d="M14 2.75H7.25a1.5 1.5 0 0 0-1.5 1.5v15.5a1.5 1.5 0 0 0 1.5 1.5h9.5a1.5 1.5 0 0 0 1.5-1.5V7z"/>
-      <path d="M14 2.75V7h4.25M9 12.5h6M9 16h4"/>
+      <path d="M14 3.75H7.5a1.75 1.75 0 0 0-1.75 1.75v13a1.75 1.75 0 0 0 1.75 1.75h9a1.75 1.75 0 0 0 1.75-1.75V8.75z"/>
+      <path d="M14 3.75V8.75h5.25"/>
+      <path d="M9 12.25h6M9 15.5h6M9 18.75h3.5"/>
     </svg>
   ),
 };

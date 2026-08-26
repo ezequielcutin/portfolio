@@ -1492,7 +1492,7 @@ function ResumeViewer({ href, opener, onClose }) {
         onKeyDown={handleKeyDown}
       >
         <header className="pf-resume__bar">
-          <h2 id={titleId} className="pf-resume__title">Résumé</h2>
+          <h2 id={titleId} className="pf-resume__title">CV</h2>
           <div className="pf-resume__actions">
             <a className="pf-resume__action" href={href} download>
               Download
@@ -1509,7 +1509,7 @@ function ResumeViewer({ href, opener, onClose }) {
               type="button"
               className="pf-resume__close"
               onClick={onClose}
-              aria-label="Close résumé"
+              aria-label="Close CV"
             >
               <span aria-hidden="true">✕</span>
             </button>
@@ -1524,7 +1524,7 @@ function ResumeViewer({ href, opener, onClose }) {
           <iframe
             className="pf-resume__frame"
             src={`${href}#toolbar=0&navpanes=0&view=FitH`}
-            title="Résumé, PDF document"
+            title="CV, PDF document"
           />
         </div>
       </section>
@@ -1541,13 +1541,13 @@ function ResumeLink({ resume, className = "pf-link", children }) {
   const Doc = window.PFIcons?.Document;
   if (!resume?.href) return null;
 
-  const label = children || "Résumé";
+  const label = children || "CV";
   const useModal =
     typeof window !== "undefined" && window.innerWidth >= RESUME_MODAL_MIN_WIDTH;
 
   if (!useModal) {
     return (
-      <a className={className} href={resume.href} aria-label="Résumé, PDF document">
+      <a className={className} href={resume.href} aria-label="CV, PDF document">
         {Doc ? <Doc /> : null}
         <span>{label}</span>
       </a>
@@ -1561,7 +1561,7 @@ function ResumeLink({ resume, className = "pf-link", children }) {
         className={className}
         onClick={(e) => { setOpener(e.currentTarget); setOpen(true); }}
         aria-haspopup="dialog"
-        aria-label="Résumé, PDF document"
+        aria-label="View CV"
       >
         {Doc ? <Doc /> : null}
         <span>{label}</span>
