@@ -1771,10 +1771,22 @@ function ThemeToggle() {
       aria-label={goingLight ? "Switch to light theme" : "Switch to dark theme"}
       title={goingLight ? "Light" : "Dark"}
     >
+      {/* Mobile: a single glyph for the destination, per the aria-label.
+          Desktop swaps to the track below, which instead shows the switch's
+          own position \u2014 both ends visible, thumb parked on the live one. */}
       <span className="pf-themeToggle__icon" aria-hidden="true">
         {goingLight ? (Sun ? <Sun /> : "\u2600") : (Moon ? <Moon /> : "\u263e")}
       </span>
       <span className="pf-themeToggle__label">{goingLight ? "Light" : "Dark"}</span>
+      <span className="pf-themeToggle__track" aria-hidden="true">
+        <span className="pf-themeToggle__thumb" />
+        <span className="pf-themeToggle__glyph pf-themeToggle__glyph--moon">
+          {Moon ? <Moon /> : "\u263e"}
+        </span>
+        <span className="pf-themeToggle__glyph pf-themeToggle__glyph--sun">
+          {Sun ? <Sun /> : "\u2600"}
+        </span>
+      </span>
     </button>
   );
 }

@@ -3877,6 +3877,9 @@ html.pf-theme-switching *::after {
   align-items: center;
   justify-content: center;
 }
+/* The track is a desktop-only affordance — mobile keeps the single-glyph
+   button, which is already right for a thumb. */
+.pf-themeToggle__track { display: none; }
 @media (max-width: 600px) {
   /* Label drops on narrow screens; the icon and aria-label carry it.
      Kept at a 44px touch target rather than shrinking with the label. */
@@ -3888,8 +3891,113 @@ html.pf-theme-switching *::after {
     justify-content: center;
   }
 }
+
+/* ── Desktop: an actual switch ──
+   A word-label pill states the destination but never shows the control's
+   own position, so it read as inert next to the rest of the hero. The track
+   gives the toggle two visible ends and a thumb that travels between them. */
+@media (min-width: 601px) {
+  /* The button drops to a bare hit area; the track carries all the chrome,
+     so there is no pill nested inside a pill. */
+  .pf-themeToggle {
+    padding: 0;
+    gap: 0;
+    border: 0;
+    background: none;
+  }
+  .pf-themeToggle__icon,
+  .pf-themeToggle__label { display: none; }
+
+  .pf-themeToggle__track {
+    position: relative;
+    display: inline-flex;
+    width: 62px;
+    height: 30px;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-pill, 999px);
+    background: color-mix(in srgb, var(--card) 70%, transparent);
+    transition: border-color 200ms ease, background 200ms ease;
+  }
+  .pf-themeToggle__thumb {
+    position: absolute;
+    /* Inset a hair so a sliver of track shows all the way around — without it
+       the thumb reads as a filled half rather than something that travels.
+       Centres land on 15/45, exactly the two glyph centres. */
+    top: 1px;
+    left: 2px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--rule));
+    background: color-mix(in srgb, var(--accent) 18%, var(--card));
+    /* `left` carries the long travel and `transform` the short hover lean, so
+       the two can run at their own speeds instead of sharing one duration.
+       The travel borrows the expo-out curve from the view-transition wipe, so
+       the thumb and the circle sweeping the page read as one gesture. */
+    transition:
+      left 620ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 240ms ease,
+      background 300ms ease,
+      box-shadow 300ms ease;
+  }
+  .pf-themeToggle[aria-pressed="true"] .pf-themeToggle__thumb { left: 32px; }
+
+  .pf-themeToggle__glyph {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    opacity: 0.45;
+    transition: color 300ms ease, opacity 300ms ease;
+  }
+  .pf-themeToggle__glyph svg { width: 13px; height: 13px; }
+  /* Whichever end is live burns accent; the other sits back in the murk. */
+  .pf-themeToggle:not([aria-pressed="true"]) .pf-themeToggle__glyph--moon,
+  .pf-themeToggle[aria-pressed="true"] .pf-themeToggle__glyph--sun {
+    color: var(--accent);
+    opacity: 1;
+  }
+}
+@media (hover: hover) and (pointer: fine) and (min-width: 601px) {
+  .pf-themeToggle:hover .pf-themeToggle__track {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--rule));
+  }
+  /* Leans toward the end it is about to travel to, and starts to glow —
+     the same ember the connect bar runs, scaled to a 28px thumb. */
+  .pf-themeToggle:hover .pf-themeToggle__thumb {
+    transform: translateX(3px);
+    animation: pf-thumbSimmer 2600ms ease-in-out infinite;
+  }
+  .pf-themeToggle[aria-pressed="true"]:hover .pf-themeToggle__thumb {
+    transform: translateX(-3px);
+  }
+  /* Destination glyph lifts out of the murk so the target is legible. */
+  .pf-themeToggle:not([aria-pressed="true"]):hover .pf-themeToggle__glyph--sun,
+  .pf-themeToggle[aria-pressed="true"]:hover .pf-themeToggle__glyph--moon {
+    color: var(--fg-soft);
+    opacity: 0.85;
+  }
+}
+@keyframes pf-thumbSimmer {
+  0%, 100% {
+    background: color-mix(in srgb, var(--accent) 18%, var(--card));
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--accent) 14%, transparent),
+      0 0 8px 0 color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  50% {
+    background: color-mix(in srgb, var(--accent) 32%, var(--card));
+    box-shadow:
+      0 0 0 4px color-mix(in srgb, var(--accent) 7%, transparent),
+      0 0 16px 1px color-mix(in srgb, var(--accent) 34%, transparent);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .pf-themeToggle { transition: none; }
+  .pf-themeToggle__thumb { transition: none; }
+  .pf-themeToggle:hover .pf-themeToggle__thumb { animation: none; }
 }
 
 .pf-printOnly { display: none; }
