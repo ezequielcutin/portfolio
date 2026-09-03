@@ -4295,7 +4295,9 @@ html.pf-theme-switching *::after {
   width: min(var(--screen-w), 100%);
   height: var(--screen-h);
   display: block;
-  border: 1px solid var(--rule);
+  /* No border: the display shader already fades its own edges into --bg, so a
+     rule here reads as a hairline box drawn around the fade. */
+  border: 0;
   border-radius: 2px;
   /* Stand-in until the context boots, and what stays if WebGL is
      unavailable — never a broken black rectangle. */

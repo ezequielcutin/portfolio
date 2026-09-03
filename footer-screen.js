@@ -38,6 +38,7 @@ function initFooterScreen() {
     let uResolution = null;
     let uPressed = null;
     let uFeedback = null;
+    let uPageBg = null;
 
     let targets = null;
     let readIndex = 0;
@@ -49,7 +50,28 @@ function initFooterScreen() {
     let bufferH = 0;
 
     let rect = null;
+    let pageBg = [0.063, 0.059, 0.051];
+
     function refreshRect() { rect = canvas.getBoundingClientRect(); }
+
+    function parseCssHexColor(str) {
+        const hex = str.trim().replace(/^#/, '');
+        if (!hex) return null;
+        const full = hex.length === 3
+            ? hex.split('').map((c) => c + c).join('')
+            : hex;
+        if (full.length !== 6) return null;
+        const n = parseInt(full, 16);
+        if (Number.isNaN(n)) return null;
+        return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255];
+    }
+
+    function refreshPageBg() {
+        const parsed = parseCssHexColor(
+            getComputedStyle(document.documentElement).getPropertyValue('--bg')
+        );
+        if (parsed) pageBg = parsed;
+    }
 
     function compile(type, source) {
         const shader = gl.createShader(type);
@@ -227,6 +249,7 @@ function initFooterScreen() {
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, writeTarget.texture);
         gl.uniform1i(uFeedback, 0);
+        gl.uniform3f(uPageBg, pageBg[0], pageBg[1], pageBg[2]);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
         readIndex = writeIndex;
@@ -275,6 +298,7 @@ function initFooterScreen() {
         uResolution = null;
         uPressed = null;
         uFeedback = null;
+        uPageBg = null;
         lastTimestamp = null;
         bufferW = 0;
         bufferH = 0;
@@ -325,8 +349,10 @@ function initFooterScreen() {
         uResolution = gl.getUniformLocation(feedbackProgram, 'u_resolution');
         uPressed = gl.getUniformLocation(feedbackProgram, 'u_pressed');
         uFeedback = gl.getUniformLocation(displayProgram, 'u_feedback');
+        uPageBg = gl.getUniformLocation(displayProgram, 'u_page_bg');
 
         booted = true;
+        refreshPageBg();
         refreshRect();
         if (!resize()) {
             bufferW = canvas.width;
@@ -387,6 +413,20 @@ function initFooterScreen() {
 
     window.addEventListener('scroll', () => { if (booted) refreshRect(); }, { passive: true });
     window.addEventListener('resize', () => { if (booted) refreshRect(); });
+
+    if ('MutationObserver' in window) {
+        const themeObserver = new MutationObserver(() => {
+            refreshPageBg();
+            if (booted && inView) {
+                if (ANIMATE) render(performance.now());
+                else staticRender();
+            }
+        });
+        themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme'],
+        });
+    }
 
     if ('IntersectionObserver' in window) {
         const io = new IntersectionObserver((entries) => {
