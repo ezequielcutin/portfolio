@@ -37,8 +37,23 @@ function initFooterScreen() {
     let uDelta = null;
     let uResolution = null;
     let uPressed = null;
+    let uStamp = null;
+    let uJagged = null;
     let uFeedback = null;
     let uPageBg = null;
+
+    // Ring stamps are queued rather than applied on the spot: a keypress can
+    // land between frames, and the shader only draws one per pass. One is
+    // consumed per render, so pressing Q then W a frame apart keeps both.
+    // Capped because nothing drains the queue while the panel is off-screen.
+    const STAMP_WHITE = 1;
+    const STAMP_BLACK = -1;
+    const STAMP_QUEUE_MAX = 8;
+    const stampQueue = [];
+
+    // Brush outline, toggled by E. A mode rather than a stamp, so it needs no
+    // queue: it just holds until pressed again.
+    let jagged = false;
 
     let targets = null;
     let readIndex = 0;
@@ -238,6 +253,10 @@ function initFooterScreen() {
         gl.uniform1f(uDelta, delta);
         gl.uniform2f(uResolution, bufferW, bufferH);
         gl.uniform1f(uPressed, pointerDown ? 1.0 : 0.0);
+        // Unconditional: leaving a stale non-zero here would re-stamp the
+        // ring on every frame instead of once per keypress.
+        gl.uniform1f(uStamp, stampQueue.length ? stampQueue.shift() : 0);
+        gl.uniform1f(uJagged, jagged ? 1.0 : 0.0);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
         // Pass 2 — composite gradient + feedback to the visible canvas.
@@ -297,6 +316,8 @@ function initFooterScreen() {
         uDelta = null;
         uResolution = null;
         uPressed = null;
+        uStamp = null;
+        uJagged = null;
         uFeedback = null;
         uPageBg = null;
         lastTimestamp = null;
@@ -348,6 +369,8 @@ function initFooterScreen() {
         uDelta = gl.getUniformLocation(feedbackProgram, 'u_delta');
         uResolution = gl.getUniformLocation(feedbackProgram, 'u_resolution');
         uPressed = gl.getUniformLocation(feedbackProgram, 'u_pressed');
+        uStamp = gl.getUniformLocation(feedbackProgram, 'u_stamp');
+        uJagged = gl.getUniformLocation(feedbackProgram, 'u_jagged');
         uFeedback = gl.getUniformLocation(displayProgram, 'u_feedback');
         uPageBg = gl.getUniformLocation(displayProgram, 'u_page_bg');
 
@@ -406,6 +429,34 @@ function initFooterScreen() {
         pointerDown = false;
     }
 
+    function isTypingTarget(target) {
+        if (!target) return false;
+        if (target.isContentEditable) return true;
+        const tag = target.tagName;
+        return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+    }
+
+    function onKeyDown(e) {
+        // e.repeat filters held-key auto-repeat, so one press is one ring.
+        // Modifiers are skipped so browser and OS shortcuts (⌘Q, ⌘W) do not
+        // also stamp on their way out.
+        if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
+        if (isTypingTarget(e.target)) return;
+        const key = e.key ? e.key.toLowerCase() : '';
+        if (key !== 'q' && key !== 'w' && key !== 'e') return;
+        // Nothing renders while the panel is off-screen, so an accepted stamp
+        // would sit in the queue and fire on whatever frame comes next.
+        if (!booted || !inView) return;
+
+        if (key === 'e') {
+            jagged = !jagged;
+        } else if (stampQueue.length < STAMP_QUEUE_MAX) {
+            stampQueue.push(key === 'q' ? STAMP_WHITE : STAMP_BLACK);
+        }
+        if (!ANIMATE) staticRender();
+    }
+
+    document.addEventListener('keydown', onKeyDown);
     document.addEventListener('pointermove', onPointerMove, { passive: true });
     document.addEventListener('pointerdown', onPointerDown, { passive: true });
     document.addEventListener('pointerup', onPointerUp, { passive: true });

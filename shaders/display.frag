@@ -15,7 +15,7 @@ const vec3 colorB = vec3(0.878, 0.502, 0.333);
 // 1/EDGE in UV, so bigger means a tighter band. X is the left/right pair,
 // Y the top/bottom pair. UV is normalized per axis, so equal values give
 // unequal pixel widths on a panel this wide.
-const float FRAME_EDGE_X = 114.0;
+const float FRAME_EDGE_X = 40.0;
 const float FRAME_EDGE_Y = 14.0;
 const float FRAME_POWER_X = 2.2;
 const float FRAME_POWER_Y = 2.2;
