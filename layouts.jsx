@@ -565,6 +565,9 @@ function LayoutStacked({ data, density }) {
             <span className="pf-foot__cursor" aria-hidden="true">█</span>
           </span>
         </div>
+        <div className="pf-screen__wrap">
+          <canvas id="footer-screen" className="pf-screen" aria-hidden="true"></canvas>
+        </div>
       </footer>
 
       <canvas id="audio-visualizer" className="audio-visualizer" aria-hidden="true"></canvas>

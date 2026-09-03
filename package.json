@@ -16,5 +16,8 @@
   },
   "devDependencies": {
     "esbuild": "^0.21.5"
+  },
+  "optionalDependencies": {
+    "gl": "^8.1.6"
   }
 }
