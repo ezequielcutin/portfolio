@@ -39,6 +39,7 @@ function initFooterScreen() {
     let uPressed = null;
     let uStamp = null;
     let uJagged = null;
+    let uPhase = null;
     let uFeedback = null;
     let uPageBg = null;
 
@@ -54,6 +55,18 @@ function initFooterScreen() {
     // Brush outline, toggled by E. A mode rather than a stamp, so it needs no
     // queue: it just holds until pressed again.
     let jagged = false;
+
+    // How fast the noisy outline churns, in radians of phase per second.
+    //
+    // Integrated from delta rather than read off the clock so the motion is
+    // tied to elapsed time, and wrapped to a single turn because the shader
+    // holds this at mediump: an unbounded seconds counter would lose enough
+    // precision within a minute to visibly coarsen the noise. The wrap is
+    // seamless as long as every octave in the shader advances the phase at an
+    // integer rate, since each then crosses a whole number of turns.
+    const JAG_CHURN_RATE = 0.55;
+    const TAU = Math.PI * 2;
+    let noisePhase = 0;
 
     let targets = null;
     let readIndex = 0;
@@ -257,6 +270,8 @@ function initFooterScreen() {
         // ring on every frame instead of once per keypress.
         gl.uniform1f(uStamp, stampQueue.length ? stampQueue.shift() : 0);
         gl.uniform1f(uJagged, jagged ? 1.0 : 0.0);
+        noisePhase = (noisePhase + delta * JAG_CHURN_RATE) % TAU;
+        gl.uniform1f(uPhase, noisePhase);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
         // Pass 2 — composite gradient + feedback to the visible canvas.
@@ -318,6 +333,7 @@ function initFooterScreen() {
         uPressed = null;
         uStamp = null;
         uJagged = null;
+        uPhase = null;
         uFeedback = null;
         uPageBg = null;
         lastTimestamp = null;
@@ -371,6 +387,7 @@ function initFooterScreen() {
         uPressed = gl.getUniformLocation(feedbackProgram, 'u_pressed');
         uStamp = gl.getUniformLocation(feedbackProgram, 'u_stamp');
         uJagged = gl.getUniformLocation(feedbackProgram, 'u_jagged');
+        uPhase = gl.getUniformLocation(feedbackProgram, 'u_phase');
         uFeedback = gl.getUniformLocation(displayProgram, 'u_feedback');
         uPageBg = gl.getUniformLocation(displayProgram, 'u_page_bg');
 

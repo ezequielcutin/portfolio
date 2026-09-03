@@ -13,6 +13,9 @@ uniform float u_pressed;
 uniform float u_stamp;
 // Brush outline mode, toggled by E: 0 is the plain circle, 1 the noisy one.
 uniform float u_jagged;
+// Noise phase in radians, advanced by delta time in JS and wrapped to one
+// turn there so it never grows large enough to lose precision here.
+uniform float u_phase;
 
 // The ring traces the display shader's fade boundary, which reaches full
 // opacity at 1/FRAME_EDGE per axis. These must stay equal to FRAME_EDGE_X
@@ -41,13 +44,20 @@ vec2 aspectSpace(vec2 uv) {
 //
 // 1 - |sin| rather than sin so each octave creases where a plain sine would
 // round off, which is what makes the outline read as torn instead of wavy.
-// The phases are arbitrary and only there to stop the octaves lining up into
-// a symmetric flower.
-float outlineNoise(float angle) {
-    float n = (1.0 - abs(sin(angle *  3.0 + 0.71))) * 0.50
-            + (1.0 - abs(sin(angle *  7.0 + 2.13))) * 0.27
-            + (1.0 - abs(sin(angle * 13.0 + 4.27))) * 0.15
-            + (1.0 - abs(sin(angle * 23.0 + 1.37))) * 0.08;
+// The constant offsets are arbitrary and only there to stop the octaves
+// lining up into a symmetric flower.
+//
+// The phase advances each octave at a different integer rate, with the signs
+// alternating so neighbouring octaves drift against each other and the shape
+// churns rather than rotating as one piece. Integer rates matter: they make
+// every octave advance by a whole number of turns over the phase's own turn,
+// so the wrap JS applies is invisible. Changing one to a fraction puts a
+// visible jump in the motion.
+float outlineNoise(float angle, float phase) {
+    float n = (1.0 - abs(sin(angle *  3.0 + 0.71 + phase       ))) * 0.50
+            + (1.0 - abs(sin(angle *  7.0 + 2.13 - phase * 2.0 ))) * 0.27
+            + (1.0 - abs(sin(angle * 13.0 + 4.27 + phase * 3.0 ))) * 0.15
+            + (1.0 - abs(sin(angle * 23.0 + 1.37 - phase * 5.0 ))) * 0.08;
     // Amplitudes sum to 1 and |sin| averages 2/pi, so n sits near 1 - 2/pi.
     // Recentre on zero so the noise pulls the outline in as often as out.
     return n - 0.3634;
@@ -86,7 +96,7 @@ void main() {
         float angle = distanceToMouse > 0.0005
             ? atan(toMouse.y, toMouse.x)
             : 0.0;
-        brushDistance *= 1.0 + JAG_AMOUNT * outlineNoise(angle);
+        brushDistance *= 1.0 + JAG_AMOUNT * outlineNoise(angle, u_phase);
     }
 
     float core = smoothstep(0.08, 0.0, brushDistance);
