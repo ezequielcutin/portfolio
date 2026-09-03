@@ -36,6 +36,7 @@ function initFooterScreen() {
     let uMouse = null;
     let uDelta = null;
     let uResolution = null;
+    let uPressed = null;
     let uFeedback = null;
 
     let targets = null;
@@ -43,6 +44,7 @@ function initFooterScreen() {
     let lastTimestamp = null;
 
     let mouseU = -1, mouseV = -1;
+    let pointerDown = false;
     let bufferW = 0;
     let bufferH = 0;
 
@@ -213,6 +215,7 @@ function initFooterScreen() {
         gl.uniform2f(uMouse, mouseU, mouseV);
         gl.uniform1f(uDelta, delta);
         gl.uniform2f(uResolution, bufferW, bufferH);
+        gl.uniform1f(uPressed, pointerDown ? 1.0 : 0.0);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
         // Pass 2 — composite gradient + feedback to the visible canvas.
@@ -270,6 +273,7 @@ function initFooterScreen() {
         uMouse = null;
         uDelta = null;
         uResolution = null;
+        uPressed = null;
         uFeedback = null;
         lastTimestamp = null;
         bufferW = 0;
@@ -319,6 +323,7 @@ function initFooterScreen() {
         uMouse = gl.getUniformLocation(feedbackProgram, 'u_mouse');
         uDelta = gl.getUniformLocation(feedbackProgram, 'u_delta');
         uResolution = gl.getUniformLocation(feedbackProgram, 'u_resolution');
+        uPressed = gl.getUniformLocation(feedbackProgram, 'u_pressed');
         uFeedback = gl.getUniformLocation(displayProgram, 'u_feedback');
 
         booted = true;
@@ -353,14 +358,32 @@ function initFooterScreen() {
         boot();
     });
 
-    function onPointerMove(e) {
+    function setPointerFromEvent(e) {
         if (!booted || !rect) return;
         mouseU = (e.clientX - rect.left) / rect.width;
         mouseV = 1 - (e.clientY - rect.top) / rect.height;
+    }
+
+    function onPointerMove(e) {
+        setPointerFromEvent(e);
         if (!ANIMATE && inView) staticRender();
     }
 
+    function onPointerDown(e) {
+        if (e.button !== 0) return;
+        pointerDown = true;
+        setPointerFromEvent(e);
+        if (!ANIMATE && inView) staticRender();
+    }
+
+    function onPointerUp() {
+        pointerDown = false;
+    }
+
     document.addEventListener('pointermove', onPointerMove, { passive: true });
+    document.addEventListener('pointerdown', onPointerDown, { passive: true });
+    document.addEventListener('pointerup', onPointerUp, { passive: true });
+    document.addEventListener('pointercancel', onPointerUp, { passive: true });
 
     window.addEventListener('scroll', () => { if (booted) refreshRect(); }, { passive: true });
     window.addEventListener('resize', () => { if (booted) refreshRect(); });

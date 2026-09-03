@@ -4287,15 +4287,14 @@ html.pf-theme-switching *::after {
   padding: 0 32px 40px;
 }
 .pf-screen {
-  --screen-w: 320px;
+  --screen-w: 100%;
   --screen-h: 180px;
   /* Block layout, not flex: a flex item sized `width: 100%` collapses to
      zero here, which also starves the IntersectionObserver and the panel
-     never boots. margin-left:auto does the right-alignment instead. */
+     never boots. */
   width: min(var(--screen-w), 100%);
   height: var(--screen-h);
   display: block;
-  margin-left: auto;
   border: 1px solid var(--rule);
   border-radius: 2px;
   /* Stand-in until the context boots, and what stays if WebGL is
