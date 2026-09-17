@@ -54,20 +54,26 @@ featured: {
 ```
 
 - `line`: the one-sentence pitch shown beside the stage.
-- `shot`: one desktop screenshot. The stage uses desktop screenshots only;
-  no floating phone layer.
+- `shot`: the main landscape screenshot that fills most of the plate.
 - `chip`: optional short text that floats in front of the screenshot.
+- `inset`: optional second screenshot that floats in front instead of a
+  chip — a portrait view of the same product, shown as a narrow panel. A
+  featured block uses `chip` or `inset`, never both.
 
 The stage renders every project with a `featured` block, in `data.js`
 order. Initial set:
 
-| Project | Shot | Chip |
-| --- | --- | --- |
-| Universal Shader Tool | editor screenshot (existing `shader-tool-editor.png`, re-encoded) | `30 node types · 525 tests` |
-| Quietly Build | quietly.build landing page, desktop, cookie banner dismissed | `Rituals · focus · reflection` |
+| Project | Shot | Front layer | Line |
+| --- | --- | --- | --- |
+| Universal Shader Tool | editor screenshot (existing `shader-tool-editor.png`, re-encoded) | chip: `30 node types · 525 tests` | Wire a node graph, watch WebGL recompile, export standalone code. |
+| Quietly Build | Ideas web, celestial view (`ideas-web.png`, 1082×879) | inset: Hearth intentions (`hearth-intentions.png`, 773×1237) | Daily rituals instead of task lists, with an idea graph that links what you are thinking about. |
 
-Quietly Build's landing-page shot is a placeholder. It gets replaced with an
-in-app desktop screenshot later; that swap is a data and asset change only.
+Both Quietly Build screenshots are real in-app views supplied on
+2026-09-17, so no landing-page placeholder is needed. The Ideas web is the
+widest and most legible view; the Hearth panel is portrait, which makes it
+read as a second surface rather than a duplicate. Two further shots are
+staged and unused for now: `breathe.png` (1007×759) and `session-timer.png`
+(606×837).
 
 ## Scene composition
 
@@ -77,12 +83,23 @@ Each scene is three layers inside a `perspective` container with
 1. **Plate** (`translateZ(0)`): rounded panel with a soft warm radial
    gradient and a hairline border. Colours come from theme tokens so it
    works in light and dark.
-2. **Shot** (`translateZ(~40px)`): the desktop screenshot in a thin frame
-   with a deep, soft shadow. `object-fit: cover`, anchored top-left.
-3. **Chip** (`translateZ(~100px)`): small mono-type HTML label, card
-   background, accent-coloured emphasis. Omitted when `chip` is absent.
+2. **Shot** (`translateZ(~40px)`): the main screenshot in a thin frame with
+   a deep, soft shadow. `object-fit: cover`, anchored top-left.
+3. **Front layer** (`translateZ(~100px)`), one of:
+   - **Chip**: small mono-type HTML label, card background, accent-coloured
+     emphasis.
+   - **Inset**: the portrait screenshot in a narrow rounded frame with its
+     own shadow, overlapping the main shot's right edge and running past
+     the plate's bottom edge so the depth is unmistakable.
+
+   Omitted when the featured block has neither.
 
 Resting pose: roughly `rotateX(8deg) rotateY(-10deg)`.
+
+Both products have dark UIs, so in light theme the screenshots stay dark
+against a light plate. The frame around each shot carries a neutral border
+and the plate tint stays subtle, so the shots read as screens on a surface
+rather than as holes in the page. Contrast is checked in both themes.
 
 Beside the stage (below it on mobile), a text column:
 
@@ -130,14 +147,18 @@ the active item), labelled with the project ids: `shader-tool`,
 
 ## Assets and performance
 
-- Screenshots re-encoded to 1600px wide WebP under `featured/` (the site
-  already ships `headshot_budapest.webp`, so no fallback). This machine has
-  no image tools, so encode with headless Chromium's canvas
-  `toBlob("image/webp")` from the Playwright setup used for screenshots. The current 2880px
-  `shader-tool-editor.png` is replaced by the resized version and the
-  terminal entry points at it too.
-- The first scene's image loads eagerly; the second loads on first hover or
-  focus of its tab, or on first switch.
+- Source screenshots are staged, uncommitted, in `.assets-src/` (gitignored).
+  Only the encoded output ships.
+- Screenshots re-encoded to WebP under `featured/` (the site already ships
+  `headshot_budapest.webp`, so no fallback): main shots at 1600px wide,
+  insets at 700px wide. This machine has no image tools, so encode with
+  headless Chromium's canvas `toBlob("image/webp")` from the Playwright
+  setup used for screenshots. The current 2880px `shader-tool-editor.png` is
+  replaced by the resized version and the terminal entry points at it too.
+- The Quietly Build sources are already small (1082×879 and 773×1237), so
+  they are re-encoded at their native size rather than upscaled.
+- The first scene's images load eagerly; the second scene's load on first
+  hover or focus of its tab, or on first switch.
 - Bump the cache keys on `data.js` and `app.bundle.js` in `index.html`
   (the bundle key is rewritten by `scripts/build.mjs`).
 
@@ -148,6 +169,8 @@ browser (headless Playwright, as for earlier changes):
 
 - Screenshots: desktop 1440×900 and mobile 390×844, dark and light theme,
   each featured project selected.
+- The Quietly Build inset stays legible and does not collide with the text
+  column at any breakpoint.
 - Page height and the terminal's position do not change when switching.
 - Reduced-motion run: no transforms beyond the resting pose, crossfade only.
 - Keyboard: Tab reaches the switcher, ←/→ switches, focus stays visible.
@@ -157,7 +180,8 @@ browser (headless Playwright, as for earlier changes):
 
 ## Out of scope
 
-- In-app Quietly Build screenshots (follow-up asset swap).
+- Using the remaining staged Quietly Build shots (`breathe`,
+  `session-timer`), or any carousel of shots within one scene.
 - More than two featured projects, or any change to the terminal's own
   design.
 - Scroll-driven motion.
