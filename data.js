@@ -145,6 +145,25 @@ window.PORTFOLIO_DATA = {
 
   projects: [
     {
+      id: "shader-tool",
+      title: "Universal Shader Tool",
+      tagline: "Node-based GLSL shader editor",
+      date: "Sep 2026",
+      blurb: "Build GLSL shaders by wiring a graph instead of writing code. Connect typed nodes, watch a live WebGL stage recompile on every edit, then export the result as standalone HTML, JavaScript, or TSX.",
+      bullets: [
+        "Graph compiler: type resolution, topological sort, and GLSL emit via @thi.ng/shader-ast.",
+        "30 node types (noise, feedback, blur, edge detect, blend modes) with ping-pong framebuffers for feedback.",
+        "Exports verified against the editor with pixel-parity tests in a real browser.",
+        "Share by link: the whole project packs into the URL fragment, with no account or server.",
+      ],
+      stack: ["React", "TypeScript", "WebGL", "GLSL", "React Flow", "Vite", "Vitest", "IndexedDB"],
+      images: [{ src: "shader-tool-editor.png", alt: "Universal Shader Tool editor: a node graph beside a live shader stage" }],
+      links: [
+        { label: "Open editor",  href: "https://visuals-generator.vercel.app/" },
+        { label: "Demo project", href: "https://visuals-generator.vercel.app/?p=wiggle-circle" },
+      ],
+    },
+    {
       id: "quietly-build",
       title: "Quietly Build",
       tagline: "Ritual-based productivity PWA for founders",
