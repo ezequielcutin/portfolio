@@ -177,7 +177,7 @@ window.PORTFOLIO_DATA = {
         "Offline-capable PWA with Workbox service worker.",
       ],
       stack: ["Next.js", "TypeScript", "Tailwind", "Framer Motion", "Supabase", "Postgres", "PartyKit", "D3.js", "Web Audio"],
-      links: [{ label: "Live", href: "https://quietly.build" }],
+      links: [{ label: "Visit site", href: "https://quietly.build" }],
     },
     {
       id: "job-tracker",
