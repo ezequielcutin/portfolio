@@ -5,6 +5,7 @@ uniform sampler2D u_feedback;
 uniform vec3 u_page_bg;
 uniform vec3 u_accent;
 uniform vec2 u_resolution;
+uniform vec4 u_card;
 
 // Full-bleed wash. Overflow on .pf-tail clips at the window and at the
 // projects separator — no UV inset, or it lands on the music-column edge.
@@ -15,6 +16,15 @@ const vec3 INDIGO = vec3(0.28, 0.36, 0.62);
 // Dried film: old fragments thin toward this so the page (and a dark red)
 // seeps through instead of the wash fading to empty grey.
 const vec3 DRIED = vec3(0.22, 0.04, 0.05);
+
+float cardDistance(vec2 uv) {
+    if (u_card.z <= u_card.x || u_card.w <= u_card.y) return 1.0e4;
+    vec2 halfUv = 0.5 * (u_card.zw - u_card.xy);
+    vec2 center = 0.5 * (u_card.xy + u_card.zw);
+    vec2 p = (uv - center) * u_resolution;
+    vec2 q = abs(p) - halfUv * u_resolution;
+    return length(max(q, vec2(0.0))) + min(max(q.x, q.y), 0.0);
+}
 
 void main() {
     vec4 feedback = texture2D(u_feedback, v_uv);
@@ -51,6 +61,10 @@ void main() {
     // Fresh cores stay dense; aged wash is a veil — coverage drops so the
     // page and dried red show through the body of the bloom.
     float coverage = mix(wash * 0.34, wash * 0.88, wet);
+    // A light ND filter, not a blackout — the pane should still show stain.
+    float behindGlass = smoothstep(16.0, -8.0, cardDistance(v_uv));
+    pigment = mix(pigment, mix(pigment, DRIED, 0.28), behindGlass * 0.35);
+    coverage *= mix(1.0, 0.78, behindGlass);
     vec3 col = mix(base, pigment, mix(coverage, min(coverage * 1.2, 1.0), rim));
     col = max(col - vec3(feedback.a * 0.85), vec3(0.0));
     col = min(col, 1.0);

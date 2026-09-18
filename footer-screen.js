@@ -40,10 +40,12 @@ function initFooterScreen() {
     let uStamp = null;
     let uJagged = null;
     let uPhase = null;
+    let uCard = null;
     let uFeedback = null;
     let uPageBg = null;
     let uAccent = null;
     let uDisplayResolution = null;
+    let uDisplayCard = null;
 
     // Ring stamps are queued rather than applied on the spot: a keypress can
     // land between frames, and the shader only draws one per pass. One is
@@ -79,12 +81,27 @@ function initFooterScreen() {
     let pointerDown = false;
     let bufferW = 0;
     let bufferH = 0;
+    let cardUv = [0, 0, -1, -1];
 
     let rect = null;
     let pageBg = [0.063, 0.059, 0.051];
     let accent = [0.878, 0.502, 0.333];
 
     function refreshRect() { rect = canvas.getBoundingClientRect(); }
+
+    function refreshCardUv() {
+        cardUv = [0, 0, -1, -1];
+        if (!rect || rect.width < 1 || rect.height < 1) return;
+        const card = document.querySelector('.pf-mh');
+        if (!card) return;
+        const box = card.getBoundingClientRect();
+        if (box.width < 8 || box.height < 8) return;
+        const u0 = (box.left - rect.left) / rect.width;
+        const u1 = (box.right - rect.left) / rect.width;
+        const v1 = 1 - (box.top - rect.top) / rect.height;
+        const v0 = 1 - (box.bottom - rect.top) / rect.height;
+        cardUv = [u0, v0, u1, v1];
+    }
 
     function parseCssHexColor(str) {
         const hex = str.trim().replace(/^#/, '');
@@ -277,6 +294,8 @@ function initFooterScreen() {
         gl.uniform1f(uJagged, jagged ? 1.0 : 0.0);
         noisePhase = (noisePhase + delta * JAG_CHURN_RATE) % TAU;
         gl.uniform1f(uPhase, noisePhase);
+        refreshCardUv();
+        gl.uniform4f(uCard, cardUv[0], cardUv[1], cardUv[2], cardUv[3]);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
         // Pass 2 — composite gradient + feedback to the visible canvas.
@@ -291,6 +310,7 @@ function initFooterScreen() {
         gl.uniform3f(uPageBg, pageBg[0], pageBg[1], pageBg[2]);
         gl.uniform3f(uAccent, accent[0], accent[1], accent[2]);
         gl.uniform2f(uDisplayResolution, bufferW, bufferH);
+        gl.uniform4f(uDisplayCard, cardUv[0], cardUv[1], cardUv[2], cardUv[3]);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
         readIndex = writeIndex;
@@ -341,10 +361,12 @@ function initFooterScreen() {
         uStamp = null;
         uJagged = null;
         uPhase = null;
+        uCard = null;
         uFeedback = null;
         uPageBg = null;
         uAccent = null;
         uDisplayResolution = null;
+        uDisplayCard = null;
         lastTimestamp = null;
         bufferW = 0;
         bufferH = 0;
@@ -397,10 +419,12 @@ function initFooterScreen() {
         uStamp = gl.getUniformLocation(feedbackProgram, 'u_stamp');
         uJagged = gl.getUniformLocation(feedbackProgram, 'u_jagged');
         uPhase = gl.getUniformLocation(feedbackProgram, 'u_phase');
+        uCard = gl.getUniformLocation(feedbackProgram, 'u_card');
         uFeedback = gl.getUniformLocation(displayProgram, 'u_feedback');
         uPageBg = gl.getUniformLocation(displayProgram, 'u_page_bg');
         uAccent = gl.getUniformLocation(displayProgram, 'u_accent');
         uDisplayResolution = gl.getUniformLocation(displayProgram, 'u_resolution');
+        uDisplayCard = gl.getUniformLocation(displayProgram, 'u_card');
 
         booted = true;
         refreshThemeColors();

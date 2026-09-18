@@ -16,6 +16,8 @@ uniform float u_jagged;
 // Noise phase in radians, advanced by delta time in JS and wrapped to one
 // turn there so it never grows large enough to lose precision here.
 uniform float u_phase;
+// iPod card in UV (umin, vmin, umax, vmax). z<=x means none.
+uniform vec4 u_card;
 
 // The ring traces the full wash. No UV inset — a fraction like 1/8 lined
 // up with the music column and read as a clip.
@@ -65,6 +67,16 @@ float ringDistance(vec2 uv) {
     vec2 center = halfExtent;
     vec2 d = abs(uv * u_resolution - center) - halfExtent;
     return min(max(d.x, d.y), 0.0) + length(max(d, vec2(0.0)));
+}
+
+// Signed distance in pixels to the glass card: negative inside.
+float cardDistance(vec2 uv) {
+    if (u_card.z <= u_card.x || u_card.w <= u_card.y) return 1.0e4;
+    vec2 halfUv = 0.5 * (u_card.zw - u_card.xy);
+    vec2 center = 0.5 * (u_card.xy + u_card.zw);
+    vec2 p = (uv - center) * u_resolution;
+    vec2 q = abs(p) - halfUv * u_resolution;
+    return length(max(q, vec2(0.0))) + min(max(q.x, q.y), 0.0);
 }
 
 void main() {
@@ -123,12 +135,19 @@ void main() {
     float halo = smoothstep(0.30, 0.05, brushDistance);
     float injection = 1.0 - exp(-6.5 * u_delta);
 
+    // Behind the glass: same orb, a bit duskier and less of it — still a stain.
+    float underGlass = smoothstep(14.0, -10.0, cardDistance(v_uv));
+    float cursorBehind = smoothstep(14.0, -10.0, cardDistance(u_mouse));
+    float glass = max(underGlass * 0.65, cursorBehind);
+
     if (u_pressed < 0.5) {
-        // Default: stain the paper, history blooms rather than adding light.
         vec3 indigo = vec3(0.26, 0.35, 0.60);
         vec3 accent = vec3(0.878, 0.502, 0.333);
-        vec3 brush = mix(accent, indigo, core * 0.65);
-        history.rgb = mix(history.rgb, brush, halo * injection * 0.50);
+        vec3 shade = mix(accent, vec3(0.42, 0.16, 0.12), 0.40);
+        vec3 wet = mix(accent, indigo, core * 0.65);
+        vec3 brush = mix(wet, shade, glass * 0.55);
+        float strength = halo * injection * mix(0.50, 0.34, glass);
+        history.rgb = mix(history.rgb, brush, strength);
     } else {
         // Pressed: carve darkness into alpha, history flows outward.
         history.a = min(history.a + halo * injection, 1.0);
