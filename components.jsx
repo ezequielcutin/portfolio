@@ -1,5 +1,5 @@
 // Portfolio components — shared atoms used across all layouts
-const { useState, useEffect, useRef, useMemo } = React;
+const { useState, useEffect, useLayoutEffect, useRef, useMemo } = React;
 
 // ───────── Accordion entry ─────────
 function Entry({ id, header, meta, children, current, defaultOpen = false, density = "comfortable", summary, preview }) {
@@ -369,10 +369,14 @@ function runStageWiggle(canvas, opts) {
     ro.disconnect();
     io.disconnect();
     document.removeEventListener("visibilitychange", onVis);
-    try {
-      const lose = gl.getExtension("WEBGL_lose_context");
-      if (lose) lose.loseContext();
-    } catch (e) {}
+    // Keep the context. loseContext() permanently kills WebGL on this
+    // canvas, so switching back to shader-tool could never restart.
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    gl.useProgram(null);
+    gl.deleteBuffer(buf);
+    gl.deleteProgram(prog);
+    gl.deleteShader(vs);
+    gl.deleteShader(fs);
   };
 }
 
@@ -590,7 +594,17 @@ function FeaturedStage({ items, onOpenProject }) {
 // ───────── Projects terminal (~/projects explorer) ─────────
 function _projYear(d) { const m = /(\d{4})/.exec(d || ""); return m ? m[1] : ""; }
 
-function ProjectsTerminal({ items, openId: openIdProp, onOpenChange }) {
+function scrollTermBelowNav(term) {
+  if (!term) return;
+  const snav = document.querySelector(".pf-snav");
+  const pad = (snav ? snav.getBoundingClientRect().bottom : 0) + 12;
+  const y = Math.max(0, window.scrollY + term.getBoundingClientRect().top - pad);
+  if (Math.abs(window.scrollY - y) < 8) return;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.scrollTo({ top: y, behavior: reduce ? "auto" : "smooth" });
+}
+
+function ProjectsTerminal({ items, openId: openIdProp, onOpenChange, focusSeq }) {
   const [openIdOwn, setOpenIdOwn] = useState(items[0] && items[0].id);
   // Controlled only when a parent passes openId; on its own the terminal
   // keeps the behaviour it has always had.
@@ -648,12 +662,20 @@ function ProjectsTerminal({ items, openId: openIdProp, onOpenChange }) {
   // A controlled change means something outside asked to read this entry —
   // on mobile the README has to replace the file list, the same as a tap.
   // The mount pass is not a request: on load the file list has to win.
+  // focusSeq also fires when "read the file" repeats the already-open project.
   const ctlMountRef = useRef(false);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!controlled) return;
     if (!ctlMountRef.current) { ctlMountRef.current = true; return; }
     setMobileView("reading");
-  }, [openIdProp]);
+  }, [openIdProp, focusSeq]);
+
+  // Pin below the sticky nav on each read-the-file click. Skip only when
+  // already at that offset — a peek of the chrome is not "already there".
+  useLayoutEffect(() => {
+    if (!focusSeq) return;
+    scrollTermBelowNav(rootRef.current);
+  }, [focusSeq]);
 
   // First time the terminal scrolls into view this session, briefly draw the
   // eye to the command line so the prompt reads as typeable, not decorative.
