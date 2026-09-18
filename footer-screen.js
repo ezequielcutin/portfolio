@@ -1,4 +1,4 @@
-// Music-section screen — a WebGL wash behind #block-music.
+// Music-section screen — a WebGL wash behind .pf-tail (music + footer).
 //
 // Deliberately NOT the same renderer as header-ambience.js. That one is
 // Canvas 2D because it draws ~80 discrete particles and connecting lines,
@@ -59,6 +59,7 @@ function initFooterScreen() {
     let jagged = false;
 
     // How fast the noisy outline churns, in radians of phase per second.
+    // The rest-state wash also breathes on this clock (sin of the phase).
     //
     // Integrated from delta rather than read off the clock so the motion is
     // tied to elapsed time, and wrapped to a single turn because the shader
@@ -66,7 +67,7 @@ function initFooterScreen() {
     // precision within a minute to visibly coarsen the noise. The wrap is
     // seamless as long as every octave in the shader advances the phase at an
     // integer rate, since each then crosses a whole number of turns.
-    const JAG_CHURN_RATE = 0.55;
+    const JAG_CHURN_RATE = 0.26;
     const TAU = Math.PI * 2;
     let noisePhase = 0;
 

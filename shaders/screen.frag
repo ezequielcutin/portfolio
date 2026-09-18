@@ -17,14 +17,8 @@ uniform float u_jagged;
 // turn there so it never grows large enough to lose precision here.
 uniform float u_phase;
 
-// The ring traces the display shader's solid core, not the old tight
-// frame. Keep these equal to TOP_SOLID / SIDE_EDGE / BOTTOM_FADE in
-// display.frag or the stamp drifts off the visible region.
-const float TOP_SOLID = 0.82;
-const float SIDE_EDGE = 8.0;
-const float BOTTOM_FADE = 0.04;
-// Half-thickness in device pixels rather than UV, so the line reads equally
-// thin on all four sides of a panel that is far wider than it is tall.
+// The ring traces the full wash. No UV inset — a fraction like 1/8 lined
+// up with the music column and read as a clip.
 const float RING_HALF_PX = 2.0;
 
 // How far the noise pushes the brush outline, as a fraction of its radius.
@@ -67,37 +61,48 @@ float outlineNoise(float angle, float phase) {
 // Signed distance in pixels to the solid core the display pass keeps:
 // negative inside, zero on the edge, positive outside.
 float ringDistance(vec2 uv) {
-    vec2 minUv = vec2(1.0 / SIDE_EDGE, BOTTOM_FADE);
-    vec2 maxUv = vec2(1.0 - 1.0 / SIDE_EDGE, TOP_SOLID);
-    vec2 halfExtent = 0.5 * (maxUv - minUv) * u_resolution;
-    vec2 center = 0.5 * (minUv + maxUv) * u_resolution;
+    vec2 halfExtent = 0.5 * u_resolution;
+    vec2 center = halfExtent;
     vec2 d = abs(uv * u_resolution - center) - halfExtent;
     return min(max(d.x, d.y), 0.0) + length(max(d, vec2(0.0)));
 }
 
 void main() {
     float frameScale = u_delta * 60.0;
-    float retention = pow(0.5, u_delta / 1.85);
-    float inwardScale = pow(1.0 - (0.035 / 60.0), frameScale);
-    float outwardScale = pow(1.0 + (0.05 / 60.0), frameScale);
-    float flowScale = mix(inwardScale, outwardScale, u_pressed);
+
+    // Resting field inhales and exhales around identity instead of
+    // constantly shrinking toward the centre. Pressed still carves out.
+    // u_phase is wrapped to one turn in JS, so a plain sin is seamless.
+    float breath = sin(u_phase);
+    float restScale = pow(1.0 + (0.010 * breath / 60.0), frameScale);
+    float outwardScale = pow(1.0 + (0.038 / 60.0), frameScale);
+    float flowScale = mix(restScale, outwardScale, u_pressed);
     vec2 previousUv = (v_uv - 0.5) / flowScale + 0.5;
 
-    // Capillary bleed: a tiny irregular offset plus a 4-neighbour sample so
-    // pigment creeps instead of holding a sharp trail.
+    // Round capillary bleed, not a plus-shaped kernel. The drift turns
+    // with the breath so the orb wanders instead of sitting in a groove.
     vec2 warp = vec2(
-        sin(v_uv.y * 17.0 + v_uv.x * 6.0),
-        sin(v_uv.x * 13.0 - v_uv.y * 9.0)
-    ) * 0.0016;
+        sin(v_uv.y * 4.7 + v_uv.x * 1.9 + u_phase),
+        sin(v_uv.x * 3.9 - v_uv.y * 2.6 - u_phase)
+    ) * 0.00078;
     previousUv += warp;
-    vec2 px = vec2(1.6) / max(u_resolution, vec2(1.0));
-    vec4 history = texture2D(u_previous, previousUv) * 0.36;
-    history += texture2D(u_previous, previousUv + vec2(px.x, 0.0)) * 0.16;
-    history += texture2D(u_previous, previousUv - vec2(px.x, 0.0)) * 0.16;
-    history += texture2D(u_previous, previousUv + vec2(0.0, px.y)) * 0.16;
-    history += texture2D(u_previous, previousUv - vec2(0.0, px.y)) * 0.16;
-    history.rgb *= retention;
-    history.a *= retention;
+    vec2 px = vec2(mix(1.25, 1.85, 0.5 + 0.5 * breath)) / max(u_resolution, vec2(1.0));
+    vec4 history = texture2D(u_previous, previousUv) * 0.28;
+    history += texture2D(u_previous, previousUv + vec2(px.x, 0.0)) * 0.12;
+    history += texture2D(u_previous, previousUv - vec2(px.x, 0.0)) * 0.12;
+    history += texture2D(u_previous, previousUv + vec2(0.0, px.y)) * 0.12;
+    history += texture2D(u_previous, previousUv - vec2(0.0, px.y)) * 0.12;
+    history += texture2D(u_previous, previousUv + px) * 0.06;
+    history += texture2D(u_previous, previousUv - px) * 0.06;
+    history += texture2D(u_previous, previousUv + vec2(px.x, -px.y)) * 0.06;
+    history += texture2D(u_previous, previousUv + vec2(-px.x, px.y)) * 0.06;
+
+    // Older, fainter pigment dies faster than the wet core, so a bloom
+    // thins into a veil instead of shrinking as a solid disc.
+    float dens = length(history.rgb);
+    float age = 1.0 - smoothstep(0.05, 0.48, dens);
+    history.rgb *= pow(0.5, u_delta / mix(1.45, 4.2, 1.0 - age));
+    history.a *= pow(0.5, u_delta / 3.4);
 
     // Warping the distance rather than the thresholds keeps core and halo on
     // the same deformed outline, so the brush stays one shape instead of two.
@@ -114,16 +119,16 @@ void main() {
         brushDistance *= 1.0 + JAG_AMOUNT * outlineNoise(angle, u_phase);
     }
 
-    float core = smoothstep(0.10, 0.0, brushDistance);
-    float halo = smoothstep(0.22, 0.04, brushDistance);
-    float injection = 1.0 - exp(-11.0 * u_delta);
+    float core = smoothstep(0.11, 0.0, brushDistance);
+    float halo = smoothstep(0.30, 0.05, brushDistance);
+    float injection = 1.0 - exp(-6.5 * u_delta);
 
     if (u_pressed < 0.5) {
         // Default: stain the paper, history blooms rather than adding light.
         vec3 indigo = vec3(0.26, 0.35, 0.60);
         vec3 accent = vec3(0.878, 0.502, 0.333);
         vec3 brush = mix(accent, indigo, core * 0.65);
-        history.rgb = mix(history.rgb, brush, halo * injection * 0.48);
+        history.rgb = mix(history.rgb, brush, halo * injection * 0.50);
     } else {
         // Pressed: carve darkness into alpha, history flows outward.
         history.a = min(history.a + halo * injection, 1.0);

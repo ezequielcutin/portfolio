@@ -715,7 +715,7 @@ img { display: block; max-width: 100%; height: auto; }
 }
 
 .pf-foot--stacked {
-  margin-top: -72px;
+  margin-top: auto;
   padding: 0;
   border-top: none;
   background: transparent;
@@ -727,7 +727,7 @@ img { display: block; max-width: 100%; height: auto; }
   z-index: 1;
   max-width: var(--max-w-wide);
   margin: 0 auto;
-  padding: 24px 32px 32px;
+  padding: 24px 32px max(32px, calc(env(safe-area-inset-bottom, 0px) + 16px));
   border-top: none;
   display: flex;
   justify-content: space-between;
@@ -863,9 +863,18 @@ img { display: block; max-width: 100%; height: auto; }
 /* ═══════════ STACKED LAYOUT ═══════════ */
 .pf-shell--stacked {
   width: 100%;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: 0;
+}
+.pf-shell--stacked #main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 .pf-block {
   padding: 96px 32px;
@@ -879,11 +888,19 @@ img { display: block; max-width: 100%; height: auto; }
 
 .pf-block--music {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   border-bottom: none;
-  padding-bottom: 128px;
+  padding-bottom: 48px;
 }
 .pf-block--music .pf-block__inner { position: relative; z-index: 1; }
+
+.pf-tail {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
 .pf-header-ambience {
   position: absolute;
@@ -4544,8 +4561,8 @@ html.pf-theme-switching *::after {
 }
 
 /* ═══════════ Music screen — WebGL wash behind the section ═══════════ */
-/* Sized from the music block: footer-screen.js matches the CSS box, so
-   this fills #block-music instead of a fixed footer strip. */
+/* Sized from .pf-tail (music + footer). footer-screen.js matches the
+   CSS box, so the wash runs under the copyright to the page bottom. */
 .pf-screen {
   position: absolute;
   inset: 0;
@@ -4558,15 +4575,6 @@ html.pf-theme-switching *::after {
   transition: opacity 0.6s ease;
   pointer-events: none;
   z-index: 0;
-  /* Only the canvas lip is masked. The wet edge itself lives in the
-     shader so it can scallop instead of cutting a straight band. */
-  mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 100%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 100%);
 }
 .pf-screen.is-live { opacity: 1; }
 .pf-screen.is-unsupported { display: none; }
-
-@media (max-width: 720px) {
-  .pf-block--music { padding-bottom: 104px; }
-  .pf-foot--stacked { margin-top: -56px; }
-}

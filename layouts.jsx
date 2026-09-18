@@ -548,40 +548,41 @@ function LayoutStacked({ data, density }) {
         </div>
       </section>
 
-      <section className="pf-block pf-block--music" id="block-music">
+      <div className="pf-tail">
         <canvas id="footer-screen" className="pf-screen" aria-hidden="true"></canvas>
-        <div className="pf-block__inner">
-          <header className="pf-blockHead pf-blockHead--music">
-            <div>
-              <RevealTitle text="Music" />
-              <p className="pf-blockHead__sub">Techno, house, and ambient, all under my own name.</p>
-            </div>
-            <button
-              id="visualizer-toggle"
-              className="visualizer-toggle"
-              type="button"
-              aria-pressed="false"
-              aria-describedby="visualizer-status"
-            >
-              <span className="visualizer-toggle__dot" aria-hidden="true" />
-              <span className="visualizer-toggle-text">Audio visualizer</span>
-            </button>
-          </header>
-          <p id="visualizer-status" className="pf-sr-only" aria-live="polite" />
-          <NowPlayingHero data={data.music} />
-        </div>
-      </section>
+        <section className="pf-block pf-block--music" id="block-music">
+          <div className="pf-block__inner">
+            <header className="pf-blockHead pf-blockHead--music">
+              <div>
+                <RevealTitle text="Music" />
+                <p className="pf-blockHead__sub">Techno, house, and ambient, all under my own name.</p>
+              </div>
+              <button
+                id="visualizer-toggle"
+                className="visualizer-toggle"
+                type="button"
+                aria-pressed="false"
+                aria-describedby="visualizer-status"
+              >
+                <span className="visualizer-toggle__dot" aria-hidden="true" />
+                <span className="visualizer-toggle-text">Audio visualizer</span>
+              </button>
+            </header>
+            <p id="visualizer-status" className="pf-sr-only" aria-live="polite" />
+            <NowPlayingHero data={data.music} />
+          </div>
+        </section>
+        <footer className="pf-foot pf-foot--stacked">
+          <div className="pf-foot__inner">
+            <span className="pf-mono pf-muted">© {new Date().getFullYear()} {data.identity.name}<span className="pf-mark">.</span></span>
+            <span className="pf-mono pf-muted">
+              All bugs were harmed in the making of this site.
+              <span className="pf-foot__cursor" aria-hidden="true">█</span>
+            </span>
+          </div>
+        </footer>
+      </div>
       </main>
-
-      <footer className="pf-foot pf-foot--stacked">
-        <div className="pf-foot__inner">
-          <span className="pf-mono pf-muted">© {new Date().getFullYear()} {data.identity.name}<span className="pf-mark">.</span></span>
-          <span className="pf-mono pf-muted">
-            All bugs were harmed in the making of this site.
-            <span className="pf-foot__cursor" aria-hidden="true">█</span>
-          </span>
-        </div>
-      </footer>
 
       <canvas id="audio-visualizer" className="audio-visualizer" aria-hidden="true"></canvas>
       <div id="visualizer-controls" className="visualizer-controls" aria-hidden="true">
