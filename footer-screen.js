@@ -42,6 +42,8 @@ function initFooterScreen() {
     let uPhase = null;
     let uFeedback = null;
     let uPageBg = null;
+    let uAccent = null;
+    let uDisplayResolution = null;
 
     // Ring stamps are queued rather than applied on the spot: a keypress can
     // land between frames, and the shader only draws one per pass. One is
@@ -79,6 +81,7 @@ function initFooterScreen() {
 
     let rect = null;
     let pageBg = [0.063, 0.059, 0.051];
+    let accent = [0.878, 0.502, 0.333];
 
     function refreshRect() { rect = canvas.getBoundingClientRect(); }
 
@@ -94,11 +97,12 @@ function initFooterScreen() {
         return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255];
     }
 
-    function refreshPageBg() {
-        const parsed = parseCssHexColor(
-            getComputedStyle(document.documentElement).getPropertyValue('--bg')
-        );
-        if (parsed) pageBg = parsed;
+    function refreshThemeColors() {
+        const styles = getComputedStyle(document.documentElement);
+        const parsedBg = parseCssHexColor(styles.getPropertyValue('--bg'));
+        const parsedAccent = parseCssHexColor(styles.getPropertyValue('--accent'));
+        if (parsedBg) pageBg = parsedBg;
+        if (parsedAccent) accent = parsedAccent;
     }
 
     function compile(type, source) {
@@ -284,6 +288,8 @@ function initFooterScreen() {
         gl.bindTexture(gl.TEXTURE_2D, writeTarget.texture);
         gl.uniform1i(uFeedback, 0);
         gl.uniform3f(uPageBg, pageBg[0], pageBg[1], pageBg[2]);
+        gl.uniform3f(uAccent, accent[0], accent[1], accent[2]);
+        gl.uniform2f(uDisplayResolution, bufferW, bufferH);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
         readIndex = writeIndex;
@@ -336,6 +342,8 @@ function initFooterScreen() {
         uPhase = null;
         uFeedback = null;
         uPageBg = null;
+        uAccent = null;
+        uDisplayResolution = null;
         lastTimestamp = null;
         bufferW = 0;
         bufferH = 0;
@@ -390,9 +398,11 @@ function initFooterScreen() {
         uPhase = gl.getUniformLocation(feedbackProgram, 'u_phase');
         uFeedback = gl.getUniformLocation(displayProgram, 'u_feedback');
         uPageBg = gl.getUniformLocation(displayProgram, 'u_page_bg');
+        uAccent = gl.getUniformLocation(displayProgram, 'u_accent');
+        uDisplayResolution = gl.getUniformLocation(displayProgram, 'u_resolution');
 
         booted = true;
-        refreshPageBg();
+        refreshThemeColors();
         refreshRect();
         if (!resize()) {
             bufferW = canvas.width;
@@ -484,7 +494,7 @@ function initFooterScreen() {
 
     if ('MutationObserver' in window) {
         const themeObserver = new MutationObserver(() => {
-            refreshPageBg();
+            refreshThemeColors();
             if (booted && inView) {
                 if (ANIMATE) render(performance.now());
                 else staticRender();

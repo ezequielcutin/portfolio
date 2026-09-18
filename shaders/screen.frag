@@ -17,11 +17,12 @@ uniform float u_jagged;
 // turn there so it never grows large enough to lose precision here.
 uniform float u_phase;
 
-// The ring traces the display shader's fade boundary, which reaches full
-// opacity at 1/FRAME_EDGE per axis. These must stay equal to FRAME_EDGE_X
-// and FRAME_EDGE_Y in display.frag or the ring drifts off the fade.
-const float FRAME_EDGE_X = 40.0;
-const float FRAME_EDGE_Y = 14.0;
+// The ring traces the display shader's solid core, not the old tight
+// frame. Keep these equal to TOP_SOLID / SIDE_EDGE / BOTTOM_FADE in
+// display.frag or the stamp drifts off the visible region.
+const float TOP_SOLID = 0.70;
+const float SIDE_EDGE = 8.0;
+const float BOTTOM_FADE = 0.04;
 // Half-thickness in device pixels rather than UV, so the line reads equally
 // thin on all four sides of a panel that is far wider than it is tall.
 const float RING_HALF_PX = 2.0;
@@ -63,24 +64,38 @@ float outlineNoise(float angle, float phase) {
     return n - 0.3634;
 }
 
-// Signed distance in pixels to the rectangle the fade boundary traces:
+// Signed distance in pixels to the solid core the display pass keeps:
 // negative inside, zero on the edge, positive outside.
 float ringDistance(vec2 uv) {
-    vec2 halfExtent =
-        (vec2(0.5) - vec2(1.0 / FRAME_EDGE_X, 1.0 / FRAME_EDGE_Y)) * u_resolution;
-    vec2 d = abs(uv * u_resolution - 0.5 * u_resolution) - halfExtent;
+    vec2 minUv = vec2(1.0 / SIDE_EDGE, BOTTOM_FADE);
+    vec2 maxUv = vec2(1.0 - 1.0 / SIDE_EDGE, TOP_SOLID);
+    vec2 halfExtent = 0.5 * (maxUv - minUv) * u_resolution;
+    vec2 center = 0.5 * (minUv + maxUv) * u_resolution;
+    vec2 d = abs(uv * u_resolution - center) - halfExtent;
     return min(max(d.x, d.y), 0.0) + length(max(d, vec2(0.0)));
 }
 
 void main() {
     float frameScale = u_delta * 60.0;
-    float retention = pow(0.5, u_delta / 1.5);
-    float inwardScale = pow(1.0 - (0.06 / 60.0), frameScale);
-    float outwardScale = pow(1.0 + (0.06 / 60.0), frameScale);
+    float retention = pow(0.5, u_delta / 1.85);
+    float inwardScale = pow(1.0 - (0.035 / 60.0), frameScale);
+    float outwardScale = pow(1.0 + (0.05 / 60.0), frameScale);
     float flowScale = mix(inwardScale, outwardScale, u_pressed);
     vec2 previousUv = (v_uv - 0.5) / flowScale + 0.5;
 
-    vec4 history = texture2D(u_previous, previousUv);
+    // Capillary bleed: a tiny irregular offset plus a 4-neighbour sample so
+    // pigment creeps instead of holding a sharp trail.
+    vec2 warp = vec2(
+        sin(v_uv.y * 17.0 + v_uv.x * 6.0),
+        sin(v_uv.x * 13.0 - v_uv.y * 9.0)
+    ) * 0.0016;
+    previousUv += warp;
+    vec2 px = vec2(1.6) / max(u_resolution, vec2(1.0));
+    vec4 history = texture2D(u_previous, previousUv) * 0.36;
+    history += texture2D(u_previous, previousUv + vec2(px.x, 0.0)) * 0.16;
+    history += texture2D(u_previous, previousUv - vec2(px.x, 0.0)) * 0.16;
+    history += texture2D(u_previous, previousUv + vec2(0.0, px.y)) * 0.16;
+    history += texture2D(u_previous, previousUv - vec2(0.0, px.y)) * 0.16;
     history.rgb *= retention;
     history.a *= retention;
 
@@ -99,16 +114,16 @@ void main() {
         brushDistance *= 1.0 + JAG_AMOUNT * outlineNoise(angle, u_phase);
     }
 
-    float core = smoothstep(0.08, 0.0, brushDistance);
-    float halo = smoothstep(0.16, 0.03, brushDistance);
-    float injection = 1.0 - exp(-18.0 * u_delta);
+    float core = smoothstep(0.10, 0.0, brushDistance);
+    float halo = smoothstep(0.22, 0.04, brushDistance);
+    float injection = 1.0 - exp(-11.0 * u_delta);
 
     if (u_pressed < 0.5) {
-        // Default: bright additive brush, history flows inward.
-        vec3 blue = vec3(0.08, 0.28, 1.0);
+        // Default: stain the paper, history blooms rather than adding light.
+        vec3 indigo = vec3(0.26, 0.35, 0.60);
         vec3 accent = vec3(0.878, 0.502, 0.333);
-        vec3 brush = mix(accent, blue, core);
-        history.rgb = mix(history.rgb, max(history.rgb, brush), halo * injection);
+        vec3 brush = mix(accent, indigo, core * 0.65);
+        history.rgb = mix(history.rgb, brush, halo * injection * 0.48);
     } else {
         // Pressed: carve darkness into alpha, history flows outward.
         history.a = min(history.a + halo * injection, 1.0);

@@ -719,12 +719,15 @@ img { display: block; max-width: 100%; height: auto; }
   padding: 0;
   border-top: none;
   background: var(--bg);
+  position: relative;
 }
 .pf-foot--stacked .pf-foot__inner {
+  position: relative;
+  z-index: 1;
   max-width: var(--max-w-wide);
   margin: 0 auto;
-  padding: 32px;
-  border-top: 1px solid var(--rule);
+  padding: 40px 32px 28px;
+  border-top: none;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -4537,42 +4540,49 @@ html.pf-theme-switching *::after {
 .pf-screen__wrap {
   /* .pf-foot is display:flex, so this would sit beside .pf-foot__inner as a
      squeezed sibling. The footer already sets flex-wrap:wrap, so claiming a
-     full basis drops it onto its own row without touching the rest. */
+     full basis drops it onto its own row without touching the rest. Full
+     bleed, pulled up under the copyright row, so the dissolve starts in
+     the page instead of as a second inset rectangle. */
   flex: 0 0 100%;
   box-sizing: border-box;
-  max-width: var(--max-w-wide);
-  margin: 0 auto;
-  padding: 0 32px 40px;
+  width: 100%;
+  max-width: none;
+  margin: -120px 0 0;
+  padding: 0;
+  position: relative;
+  z-index: 0;
+  pointer-events: none;
 }
 .pf-screen {
   --screen-w: 100%;
-  --screen-h: 180px;
+  --screen-h: 280px;
   /* Block layout, not flex: a flex item sized `width: 100%` collapses to
      zero here, which also starves the IntersectionObserver and the panel
      never boots. */
   width: min(var(--screen-w), 100%);
   height: var(--screen-h);
   display: block;
-  /* No border: the display shader already fades its own edges into --bg, so a
-     rule here reads as a hairline box drawn around the fade. */
   border: 0;
-  border-radius: 2px;
-  /* Stand-in until the context boots, and what stays if WebGL is
-     unavailable — never a broken black rectangle. */
-  background: var(--bg-soft, rgba(127, 127, 127, 0.06));
+  border-radius: 0;
+  background: transparent;
   opacity: 0;
   transition: opacity 0.6s ease;
+  pointer-events: auto;
+  /* Only the canvas lip is masked. The wet edge itself lives in the
+     shader so it can scallop instead of cutting a straight band. */
+  mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 100%);
 }
 .pf-screen.is-live { opacity: 1; }
 .pf-screen.is-unsupported { display: none; }
 
 @media (max-width: 720px) {
   .pf-screen__wrap {
-    padding: 0 24px 32px;
+    margin-top: -96px;
   }
   .pf-screen {
     --screen-w: 100%;
-    --screen-h: 150px;
+    --screen-h: 240px;
     margin-left: 0;
   }
 }
