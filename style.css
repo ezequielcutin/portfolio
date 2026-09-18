@@ -3839,6 +3839,163 @@ html.pf-theme-switching *::after {
 }
 ::view-transition-old(root) { z-index: 0; }
 
+/* ═══════════ Featured projects stage (layered 3D showcase) ═══════════ */
+.pf-stage { margin-top: 34px; }
+
+.pf-stage__tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.pf-stage__tab {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--fg-soft);
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: border-color 160ms ease, color 160ms ease, background-color 160ms ease;
+}
+.pf-stage__tab:hover { color: var(--accent); border-color: var(--accent); }
+.pf-stage__tab.is-active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.pf-stage__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 30px;
+  align-items: center;
+}
+
+/* The scene's box is reserved by aspect-ratio so switching scenes cannot
+   move the terminal below it. */
+.pf-stage__scene { perspective: 1100px; }
+.pf-stage__deck {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--pf-rx, 8deg)) rotateY(var(--pf-ry, -10deg));
+  transition: transform 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.pf-stage__card {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: translateZ(-120px);
+  opacity: 0;
+  filter: blur(4px);
+  pointer-events: none;
+  transition:
+    transform 500ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity 500ms ease,
+    filter 500ms ease;
+}
+.pf-stage__card.is-active { transform: translateZ(0); opacity: 1; filter: none; }
+
+.pf-stage__plate {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  border: 1px solid var(--rule);
+  background: radial-gradient(
+    120% 90% at 30% 15%,
+    color-mix(in srgb, var(--accent) 14%, var(--bg-alt)),
+    var(--bg-alt) 70%
+  );
+  transform: translateZ(0);
+}
+
+/* Both products have dark UIs, so the frame keeps the shot reading as a
+   screen on a surface rather than a hole in a light page. */
+.pf-stage__shot {
+  position: absolute;
+  left: 6%;
+  top: 13%;
+  width: 79%;
+  height: 72%;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  background: var(--card);
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.55);
+  transform: translateZ(40px);
+}
+.pf-stage__shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+}
+
+.pf-stage__chip {
+  position: absolute;
+  right: 4%;
+  bottom: 6%;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--fg-soft);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 8px 11px;
+  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.6);
+  transform: translateZ(100px);
+}
+
+.pf-stage__inset {
+  position: absolute;
+  right: 4%;
+  top: 20%;
+  width: 21%;
+  height: 84%;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  background: var(--card);
+  box-shadow: 0 22px 46px -14px rgba(0, 0, 0, 0.65);
+  transform: translateZ(100px);
+}
+.pf-stage__inset img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.pf-stage__panel[hidden] { display: none; }
+.pf-stage__meta {
+  margin: 0 0 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.pf-stage__title { margin: 0 0 8px; font-size: 22px; font-weight: 600; color: var(--fg); }
+.pf-stage__line { margin: 0; color: var(--fg-soft); font-size: 14px; line-height: 1.55; }
+.pf-stage__links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.pf-stage__read {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+.pf-stage__read:hover { color: var(--accent); }
+
 /* ═══════════ THEME TOGGLE ═══════════ */
 /* Sits in the hero's top-right, inside the content max-width so it lines
    up with the name rather than the viewport edge. Scrolls away with the

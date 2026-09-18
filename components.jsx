@@ -236,6 +236,144 @@ function ProjectBody({ item }) {
   );
 }
 
+// ───────── Featured projects stage (layered 3D showcase) ─────────
+// Depth here is in service of the screenshots: a plate, the shot, and one
+// front layer, separated with translateZ inside a shared perspective box.
+// Every scene is absolutely positioned in the same reserved box, so
+// switching moves pixels and never reflows (see 9270de9).
+function FeaturedStage({ items, onOpenProject }) {
+  const featured = items.filter((p) => p.featured);
+  const [activeId, setActiveId] = useState(featured[0] ? featured[0].id : null);
+  const [prevId, setPrevId] = useState(null);
+  // Only the first scene's images load up front; the rest wait for intent.
+  const [loaded, setLoaded] = useState(featured[0] ? [featured[0].id] : []);
+  const tabsRef = useRef(null);
+
+  const preload = (id) => setLoaded((l) => (l.indexOf(id) < 0 ? l.concat(id) : l));
+  const select = (id) => {
+    if (id === activeId) return;
+    setPrevId(activeId);
+    setActiveId(id);
+    preload(id);
+  };
+
+  const activeIdx = Math.max(0, featured.findIndex((p) => p.id === activeId));
+
+  const onTabKeyDown = (e) => {
+    const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+    let next = null;
+    if (step) next = (activeIdx + step + featured.length) % featured.length;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = featured.length - 1;
+    if (next === null) return;
+    e.preventDefault();
+    select(featured[next].id);
+    const rows = tabsRef.current && tabsRef.current.querySelectorAll(".pf-stage__tab");
+    if (rows && rows[next]) rows[next].focus();
+  };
+
+  if (!featured.length) return null;
+
+  return (
+    <div className="pf-stage">
+      <div
+        className="pf-stage__tabs"
+        role="tablist"
+        aria-label="Featured projects"
+        ref={tabsRef}
+        onKeyDown={onTabKeyDown}
+      >
+        {featured.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            role="tab"
+            id={`pf-stage-tab-${p.id}`}
+            aria-selected={p.id === activeId ? "true" : "false"}
+            aria-controls={`pf-stage-panel-${p.id}`}
+            tabIndex={p.id === activeId ? 0 : -1}
+            className={`pf-stage__tab ${p.id === activeId ? "is-active" : ""}`}
+            onClick={() => select(p.id)}
+            onMouseEnter={() => preload(p.id)}
+            onFocus={() => preload(p.id)}
+          >
+            {p.id}
+          </button>
+        ))}
+      </div>
+
+      <div className="pf-stage__body">
+        {/* Decorative: the panel carries the same information as text. */}
+        <div className="pf-stage__scene" aria-hidden="true">
+          <div className="pf-stage__deck">
+            {featured.map((p) => {
+              const state = p.id === activeId ? "is-active" : p.id === prevId ? "is-prev" : "";
+              const show = loaded.indexOf(p.id) >= 0;
+              return (
+                <div key={p.id} className={`pf-stage__card ${state}`}>
+                  <div className="pf-stage__plate" />
+                  <div className="pf-stage__shot">
+                    {show && <img src={p.featured.shot.src} alt="" decoding="async" />}
+                  </div>
+                  {p.featured.chip && <p className="pf-stage__chip">{p.featured.chip}</p>}
+                  {p.featured.inset && (
+                    <div className="pf-stage__inset">
+                      {show && <img src={p.featured.inset.src} alt="" decoding="async" />}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {featured.map((p, i) => (
+          <div
+            key={p.id}
+            className="pf-stage__panel"
+            id={`pf-stage-panel-${p.id}`}
+            role="tabpanel"
+            aria-labelledby={`pf-stage-tab-${p.id}`}
+            tabIndex={0}
+            hidden={p.id !== activeId}
+          >
+            <p className="pf-stage__meta">featured · {i + 1} / {featured.length}</p>
+            <h3 className="pf-stage__title">{p.title}</h3>
+            <p className="pf-stage__line">{p.featured.line}</p>
+            {/* The scene is aria-hidden, so the shot is described once here. */}
+            <p className="pf-sr-only">{p.featured.shot.alt}</p>
+            {p.links && (
+              <div className="pf-stage__links">
+                {p.links.map((l, li) => (
+                  <a
+                    key={li}
+                    href={l.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="pf-term__link"
+                  >
+                    <span>{l.label}</span>
+                    <span className="pf-term__link__arrow" aria-hidden="true">↗</span>
+                  </a>
+                ))}
+              </div>
+            )}
+            {onOpenProject && (
+              <button
+                type="button"
+                className="pf-stage__read"
+                onClick={() => onOpenProject(p.id)}
+              >
+                read the file <span aria-hidden="true">↓</span>
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ───────── Projects terminal (~/projects explorer) ─────────
 function _projYear(d) { const m = /(\d{4})/.exec(d || ""); return m ? m[1] : ""; }
 

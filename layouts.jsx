@@ -529,6 +529,7 @@ function LayoutStacked({ data, density }) {
             </p>
           </header>
           <PrintProjects items={data.projects} />
+          <FeaturedStage items={data.projects} />
           <ProjectsTerminal items={data.projects} />
         </div>
       </section>
