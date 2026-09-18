@@ -241,14 +241,150 @@ function ProjectBody({ item }) {
 // front layer, separated with translateZ inside a shared perspective box.
 // Every scene is absolutely positioned in the same reserved box, so
 // switching moves pixels and never reflows (see 9270de9).
+
+// Tiny WebGL pass that sits in the shader-tool screenshot's STAGE pane
+// and plays a wiggle-circle so the preview is actually live. Fails open:
+// if context creation or compile fails, the frozen screenshot stays.
+function runStageWiggle(canvas, opts) {
+  const freeze = !!(opts && opts.static);
+  const gl = canvas.getContext("webgl", {
+    alpha: false,
+    antialias: false,
+    depth: false,
+    stencil: false,
+    premultipliedAlpha: false,
+    powerPreference: "low-power",
+  });
+  if (!gl) return function () {};
+
+  const compile = (type, src) => {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      gl.deleteShader(s);
+      return null;
+    }
+    return s;
+  };
+  const vs = compile(gl.VERTEX_SHADER, "attribute vec2 a;void main(){gl_Position=vec4(a,0,1);}");
+  const fs = compile(gl.FRAGMENT_SHADER, [
+    "precision highp float;",
+    "uniform vec2 uR;uniform float uT;",
+    "void main(){",
+    "  vec2 uv=gl_FragCoord.xy/uR;",
+    "  uv=uv*2.0-1.0;",
+    "  uv.x*=uR.x/max(uR.y,1.0);",
+    "  vec2 p=uv-vec2(0.50,0.02);",
+    "  float t=uT;",
+    "  float a=atan(p.y,p.x);",
+    "  float r=length(p);",
+    "  p+=0.09*vec2(sin(t*0.85+a*2.0),cos(t*0.62+r*5.5));",
+    "  p+=0.04*vec2(sin(t*1.4+p.y*3.0),sin(t*1.1-p.x*3.2));",
+    "  a=atan(p.y,p.x);",
+    "  r=length(p);",
+    "  float rad=0.38+0.08*sin(a*3.0+t*1.15)+0.05*sin(a*5.0-t*0.92)+0.03*sin(t*2.05);",
+    "  float fill=smoothstep(rad+0.02,rad-0.10,r);",
+    "  float ring=smoothstep(rad+0.06,rad-0.015,r)*smoothstep(rad*0.12,rad*0.50,r);",
+    "  float glow=smoothstep(rad+0.28,rad*0.30,r);",
+    "  vec3 col=vec3(0.0);",
+    "  col+=vec3(0.9,0.02,0.0)*fill*0.42;",
+    "  col+=vec3(1.0,0.06,0.01)*ring;",
+    "  col+=vec3(0.75,0.0,0.0)*glow*0.28;",
+    "  col+=vec3(1.0,0.28,0.05)*ring*smoothstep(-0.2,0.9,p.x);",
+    "  gl_FragColor=vec4(col,1.0);",
+    "}",
+  ].join("\n"));
+  if (!vs || !fs) return function () {};
+  const prog = gl.createProgram();
+  gl.attachShader(prog, vs);
+  gl.attachShader(prog, fs);
+  gl.bindAttribLocation(prog, 0, "a");
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return function () {};
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  const uR = gl.getUniformLocation(prog, "uR");
+  const uT = gl.getUniformLocation(prog, "uT");
+
+  let raf = 0;
+  let visible = true;
+  let pageHidden = document.hidden;
+  const t0 = performance.now();
+
+  const size = () => {
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+    const w = Math.max(1, Math.round(canvas.clientWidth * dpr));
+    const h = Math.max(1, Math.round(canvas.clientHeight * dpr));
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+      gl.viewport(0, 0, w, h);
+    }
+  };
+
+  const draw = (now) => {
+    size();
+    gl.uniform2f(uR, canvas.width, canvas.height);
+    gl.uniform1f(uT, freeze ? 0.85 : (now - t0) / 1000);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  };
+
+  const tick = (now) => {
+    raf = 0;
+    if (!visible || pageHidden) return;
+    draw(now);
+    if (!freeze) raf = requestAnimationFrame(tick);
+  };
+
+  const kick = () => {
+    if (freeze) { draw(t0); return; }
+    if (!raf && visible && !pageHidden) raf = requestAnimationFrame(tick);
+  };
+
+  const onVis = () => {
+    pageHidden = document.hidden;
+    if (pageHidden) {
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    } else kick();
+  };
+
+  const ro = new ResizeObserver(kick);
+  ro.observe(canvas);
+  const io = new IntersectionObserver((entries) => {
+    visible = entries.some((e) => e.isIntersecting);
+    if (visible) kick();
+    else if (raf) { cancelAnimationFrame(raf); raf = 0; }
+  }, { threshold: 0.15 });
+  io.observe(canvas);
+  document.addEventListener("visibilitychange", onVis);
+  kick();
+
+  return function () {
+    if (raf) cancelAnimationFrame(raf);
+    ro.disconnect();
+    io.disconnect();
+    document.removeEventListener("visibilitychange", onVis);
+    try {
+      const lose = gl.getExtension("WEBGL_lose_context");
+      if (lose) lose.loseContext();
+    } catch (e) {}
+  };
+}
+
 function FeaturedStage({ items, onOpenProject }) {
   const featured = items.filter((p) => p.featured);
   const [activeId, setActiveId] = useState(featured[0] ? featured[0].id : null);
   const [prevId, setPrevId] = useState(null);
-  // Only the first scene's images load up front; the rest wait for intent.
-  const [loaded, setLoaded] = useState(featured[0] ? [featured[0].id] : []);
+  // Two small WebPs; decode them up front so the first switch is not a hitch.
+  const [loaded, setLoaded] = useState(featured.map((p) => p.id));
   const tabsRef = useRef(null);
   const deckRef = useRef(null);
+  const liveRef = useRef(null);
   const frameRef = useRef(0);
   const touchRef = useRef(null);
 
@@ -299,6 +435,14 @@ function FeaturedStage({ items, onOpenProject }) {
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
     };
   }, []);
+
+  const liveId = featured.find((p) => p.featured.live);
+  useEffect(() => {
+    const canvas = liveRef.current;
+    if (!canvas || !liveId || activeId !== liveId.id) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    return runStageWiggle(canvas, { static: reduce });
+  }, [activeId]);
 
   const activeIdx = Math.max(0, featured.findIndex((p) => p.id === activeId));
 
@@ -380,6 +524,9 @@ function FeaturedStage({ items, onOpenProject }) {
                   <div className="pf-stage__plate" />
                   <div className="pf-stage__shot">
                     {show && <img src={p.featured.shot.src} alt="" decoding="async" />}
+                    {p.featured.live && (
+                      <canvas className="pf-stage__live" ref={liveRef} aria-hidden="true" />
+                    )}
                   </div>
                   {p.featured.chip && <p className="pf-stage__chip">{p.featured.chip}</p>}
                   {p.featured.inset && (
@@ -487,8 +634,14 @@ function ProjectsTerminal({ items, openId: openIdProp, onOpenChange }) {
         if (top < 0) rootRef.current.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
       }
     } else {
-      const row = listRef.current && listRef.current.querySelector(".pf-term__item.is-open");
-      if (row && row.scrollIntoView) row.scrollIntoView({ block: "nearest" });
+      const list = listRef.current;
+      const row = list && list.querySelector(".pf-term__item.is-open");
+      if (!list || !row) return;
+      const listR = list.getBoundingClientRect();
+      const rowR = row.getBoundingClientRect();
+      if (rowR.top < listR.top || rowR.bottom > listR.bottom) {
+        list.scrollTop += rowR.top - listR.top - 8;
+      }
     }
   }, [openId]);
 

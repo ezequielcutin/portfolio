@@ -162,6 +162,7 @@ window.PORTFOLIO_DATA = {
         line: "Wire a node graph, watch WebGL recompile, export standalone code.",
         shot: { src: "featured/shader-tool.webp", alt: "Universal Shader Tool editor: a node graph beside a live shader stage" },
         chip: "30 node types · 525 tests",
+        live: true,
       },
       links: [
         { label: "Open editor",  href: "https://visuals-generator.vercel.app/" },
@@ -189,8 +190,8 @@ window.PORTFOLIO_DATA = {
           alt: "Quietly Build's idea web: eleven ideas as glowing nodes, grouped and linked",
         },
         inset: {
-          src: "featured/quietly-build-hearth.webp",
-          alt: "Quietly Build's hearth screen asking what matters today, with an intentions field",
+          src: "featured/quietly-build-hearth.webp?v=phone",
+          alt: "Quietly Build's hearth: one-day streak, day complete, both rituals done",
         },
       },
       links: [{ label: "Visit site", href: "https://quietly.build" }],

@@ -373,10 +373,25 @@ function LayoutStacked({ data, density }) {
   const [termOpenId, setTermOpenId] = useStateL(data.projects[0] && data.projects[0].id);
   const openInTerminal = (id) => {
     setTermOpenId(id);
-    const term = document.querySelector(".pf-term");
-    if (!term) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    term.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    // Wait for the terminal to paint the new entry (and, on mobile, to
+    // swap list → README) before measuring.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const term = document.querySelector(".pf-term");
+        if (!term) return;
+        const snav = document.querySelector(".pf-snav");
+        const pad = (snav ? snav.getBoundingClientRect().bottom : 0) + 12;
+        const rect = term.getBoundingClientRect();
+        const viewH = window.innerHeight;
+        // If the frame is already on screen below the nav, leave the stage
+        // where it is. Pinning to the top was scrolling far past the file.
+        const onScreen = rect.top < viewH - 64 && rect.bottom > pad + 48;
+        if (onScreen && rect.top >= pad) return;
+        const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const y = window.scrollY + rect.top - pad;
+        window.scrollTo({ top: Math.max(0, y), behavior: reduce ? "auto" : "smooth" });
+      });
+    });
   };
 
   return (
