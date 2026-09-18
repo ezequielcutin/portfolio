@@ -466,11 +466,20 @@ function initFooterScreen() {
     }
 
     function onPointerMove(e) {
+        // Touch has no hover concept — a scroll swipe fires pointermove with
+        // rapidly changing coordinates and reads as the mouse painting across
+        // the canvas. Mouse/pen only; the canvas is pointer-events: none, so
+        // it was never meant to take touch input directly.
+        if (e.pointerType === 'touch') return;
         setPointerFromEvent(e);
         if (!ANIMATE && inView) staticRender();
     }
 
     function onPointerDown(e) {
+        // Same reasoning as onPointerMove: a scroll gesture starts with a
+        // touch pointerdown, which would otherwise flip the shader into its
+        // pressed/carving mode for the duration of the scroll.
+        if (e.pointerType === 'touch') return;
         if (e.button !== 0) return;
         pointerDown = true;
         setPointerFromEvent(e);
