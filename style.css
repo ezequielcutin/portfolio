@@ -3996,6 +3996,17 @@ html.pf-theme-switching *::after {
 }
 .pf-stage__read:hover { color: var(--accent); }
 
+@media (max-width: 760px) {
+  .pf-stage { margin-top: 26px; }
+  .pf-stage__body { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .pf-stage__scene { perspective: 900px; }
+  /* Fixed angle on touch: there is no pointer to follow. */
+  .pf-stage__deck { transform: rotateX(6deg) rotateY(-7deg); }
+  .pf-stage__inset { width: 25%; }
+  .pf-stage__chip { font-size: 10px; padding: 6px 9px; }
+  .pf-stage__title { font-size: 19px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* Flat stack, plain crossfade: the layering survives as overlap, the
      depth motion does not. */
@@ -4232,11 +4243,13 @@ html.pf-theme-switching *::after {
   }
 
   /* Neither interactive surface prints. The work deck is a sticky
-     horizontal track and the projects browser is a terminal that expands
-     one entry at a time; PrintWork and PrintProjects render the same data
-     as plain lists instead. See the component comments for why overriding
-     these layouts was abandoned. */
+     horizontal track, the projects browser is a terminal that expands one
+     entry at a time, and the featured stage is a pointer-driven 3D
+     showcase; PrintWork and PrintProjects render the same data as plain
+     lists instead. See the component comments for why overriding these
+     layouts was abandoned. */
   .pf-tl,
+  .pf-stage,
   .pf-term { display: none !important; }
 
   /* The music player's transport, elapsed-time counter and waveform are
