@@ -443,8 +443,16 @@ function FeaturedStage({ items, onOpenProject }) {
 // ───────── Projects terminal (~/projects explorer) ─────────
 function _projYear(d) { const m = /(\d{4})/.exec(d || ""); return m ? m[1] : ""; }
 
-function ProjectsTerminal({ items }) {
-  const [openId, setOpenId] = useState(items[0] && items[0].id);
+function ProjectsTerminal({ items, openId: openIdProp, onOpenChange }) {
+  const [openIdOwn, setOpenIdOwn] = useState(items[0] && items[0].id);
+  // Controlled only when a parent passes openId; on its own the terminal
+  // keeps the behaviour it has always had.
+  const controlled = openIdProp != null;
+  const openId = controlled ? openIdProp : openIdOwn;
+  const setOpenId = (id) => {
+    setOpenIdOwn(id);
+    if (onOpenChange) onOpenChange(id);
+  };
   const [cmd, setCmd] = useState("");
   const [msg, setMsg] = useState(null);
   const [err, setErr] = useState(false);
@@ -483,6 +491,16 @@ function ProjectsTerminal({ items }) {
       if (row && row.scrollIntoView) row.scrollIntoView({ block: "nearest" });
     }
   }, [openId]);
+
+  // A controlled change means something outside asked to read this entry —
+  // on mobile the README has to replace the file list, the same as a tap.
+  // The mount pass is not a request: on load the file list has to win.
+  const ctlMountRef = useRef(false);
+  useEffect(() => {
+    if (!controlled) return;
+    if (!ctlMountRef.current) { ctlMountRef.current = true; return; }
+    setMobileView("reading");
+  }, [openIdProp]);
 
   // First time the terminal scrolls into view this session, briefly draw the
   // eye to the command line so the prompt reads as typeable, not decorative.

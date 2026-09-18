@@ -370,6 +370,14 @@ function LayoutStacked({ data, density }) {
   const emailLink = data.identity.links.find((l) => l.label === "Email");
   const socialLinks = data.identity.links.filter((l) => l.label !== "Email");
   const EmailIcon = window.PFIcons?.Email;
+  const [termOpenId, setTermOpenId] = useStateL(data.projects[0] && data.projects[0].id);
+  const openInTerminal = (id) => {
+    setTermOpenId(id);
+    const term = document.querySelector(".pf-term");
+    if (!term) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    term.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  };
 
   return (
     <div className="pf-shell pf-shell--stacked">
@@ -529,8 +537,8 @@ function LayoutStacked({ data, density }) {
             </p>
           </header>
           <PrintProjects items={data.projects} />
-          <FeaturedStage items={data.projects} />
-          <ProjectsTerminal items={data.projects} />
+          <FeaturedStage items={data.projects} onOpenProject={openInTerminal} />
+          <ProjectsTerminal items={data.projects} openId={termOpenId} onOpenChange={setTermOpenId} />
         </div>
       </section>
 
