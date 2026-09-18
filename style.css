@@ -1351,9 +1351,9 @@ img { display: block; max-width: 100%; height: auto; }
   position: sticky;
   top: 0;
   z-index: 50;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(62px, 1fr) auto minmax(62px, 1fr);
   align-items: center;
-  justify-content: center;
   padding: 10px 24px;
   background: color-mix(in srgb, var(--bg) 82%, transparent);
   backdrop-filter: blur(14px) saturate(1.6);
@@ -1368,12 +1368,32 @@ img { display: block; max-width: 100%; height: auto; }
 
 .pf-snav__track {
   position: relative;
+  grid-column: 2;
   display: inline-flex;
   align-items: center;
   gap: 2px;
   padding: 3px;
   border-radius: 10px;
   background: color-mix(in srgb, var(--fg) 6%, transparent);
+}
+.pf-snav__theme {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 280ms ease;
+}
+.pf-snav.is-stuck .pf-snav__theme {
+  opacity: 1;
+  pointer-events: auto;
+}
+.pf-snav .pf-themeToggle {
+  position: static;
+  top: auto;
+  right: auto;
+  z-index: 1;
 }
 
 .pf-snav__indicator {
@@ -1691,12 +1711,18 @@ img { display: block; max-width: 100%; height: auto; }
   }
   .pf-snav {
     padding: 8px 16px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 8px;
   }
   .pf-snav__track {
+    grid-column: 1;
     width: 100%;
     justify-content: center;
     gap: 0;
     padding: 3px;
+  }
+  .pf-snav__theme {
+    grid-column: 2;
   }
   .pf-snav__link {
     flex: 1;
@@ -3839,11 +3865,240 @@ html.pf-theme-switching *::after {
 }
 ::view-transition-old(root) { z-index: 0; }
 
+/* ═══════════ Featured projects stage (layered 3D showcase) ═══════════ */
+.pf-stage { margin-top: 34px; }
+
+.pf-stage__tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.pf-stage__tab {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--fg-soft);
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: border-color 160ms ease, color 160ms ease, background-color 160ms ease;
+}
+.pf-stage__tab:hover { color: var(--accent); border-color: var(--accent); }
+.pf-stage__tab.is-active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.pf-stage__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 44px;
+  align-items: center;
+}
+
+/* The scene's box is reserved by aspect-ratio so switching scenes cannot
+   move the terminal below it. */
+.pf-stage__scene { perspective: 1100px; }
+.pf-stage__deck {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--pf-rx, 8deg)) rotateY(var(--pf-ry, -10deg));
+  transition: transform 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.pf-stage__card {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: translate3d(0, 0, -120px);
+  opacity: 0;
+  pointer-events: none;
+  /* Transform + opacity only: animating filter:blur rasterizes the
+     3D screenshots every frame and is what made the switch hitch. */
+  transition:
+    transform 420ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  will-change: transform, opacity;
+}
+.pf-stage__card.is-active { transform: translate3d(0, 0, 0); opacity: 1; }
+
+.pf-stage__plate {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  border: 1px solid var(--rule);
+  background: radial-gradient(
+    120% 90% at 30% 15%,
+    color-mix(in srgb, var(--accent) 14%, var(--bg-alt)),
+    var(--bg-alt) 70%
+  );
+  transform: translateZ(0);
+}
+
+/* Dark product UIs sit in a charcoal device bezel so they read as screens
+   on the plate, not as holes in paper theme. The bezel is box-shadow, not
+   padding/border growth: the live shader overlay is calibrated to this box. */
+.pf-stage__shot {
+  position: absolute;
+  left: 6%;
+  top: 13%;
+  width: 79%;
+  height: 72%;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, #000 45%, var(--rule));
+  background: #12100e;
+  box-shadow:
+    0 0 0 6px #1a1714,
+    0 0 0 7px color-mix(in srgb, #fff 14%, #1a1714),
+    0 30px 60px -20px rgba(0, 0, 0, 0.55);
+  transform: translateZ(40px);
+}
+.pf-stage__shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+}
+
+/* Live WebGL in the shader-tool preview pane. Percentages are of the
+   shot frame after object-fit: cover / top-left on the 1600×1000 file
+   (visible height is the top 91.14%). Source box in image space:
+   left 58.69% top 37.5% 26.69×23.7. */
+.pf-stage__live {
+  position: absolute;
+  left: 58.69%;
+  top: 41.15%;
+  width: 26.69%;
+  height: 26%;
+  display: block;
+  pointer-events: none;
+  border: 0;
+}
+
+.pf-stage__chip {
+  position: absolute;
+  right: 4%;
+  bottom: 6%;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--fg-soft);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 8px 11px;
+  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.6);
+  transform: translateZ(100px);
+}
+
+/* Hearth capture is 700×1522. Matching that ratio (and contain) keeps the
+   side bezels; a % height that was a hair taller than the file is what
+   cover was shaving. Parked on the plate's right so it overlaps the
+   laptop less and stops eating the idea web. */
+.pf-stage__inset {
+  position: absolute;
+  right: 0;
+  top: 14%;
+  width: 18.5%;
+  height: auto;
+  aspect-ratio: 700 / 1522;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, #000 45%, var(--rule));
+  background: #0e0c0b;
+  box-shadow:
+    0 0 0 6px #1a1714,
+    0 0 0 7px color-mix(in srgb, #fff 14%, #1a1714),
+    0 22px 46px -14px rgba(0, 0, 0, 0.65);
+  transform: translateZ(100px);
+}
+.pf-stage__inset img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.pf-stage__panel[hidden] { display: none; }
+.pf-stage__meta {
+  margin: 0 0 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.pf-stage__title { margin: 0 0 8px; font-size: 22px; font-weight: 600; color: var(--fg); }
+.pf-stage__line { margin: 0; color: var(--fg-soft); font-size: 14px; line-height: 1.55; }
+.pf-stage__links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.pf-stage__read {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+.pf-stage__read:hover { color: var(--accent); }
+
+@media (min-width: 1100px) {
+  .pf-stage__body { gap: 56px; }
+  .pf-stage__meta { margin-bottom: 12px; }
+  .pf-stage__title { margin-bottom: 12px; }
+  .pf-stage__line { line-height: 1.65; }
+  .pf-stage__links { margin-top: 24px; }
+  .pf-stage__read { margin-top: 18px; }
+}
+
+@media (max-width: 760px) {
+  .pf-stage { margin-top: 26px; }
+  .pf-stage__body { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .pf-stage__scene { perspective: 900px; }
+  /* Fixed angle on touch: there is no pointer to follow. */
+  .pf-stage__deck { transform: rotateX(6deg) rotateY(-7deg); }
+  /* Narrower than desktop so perspective doesn't swallow the Features
+     cluster. height: auto keeps the 700×1522 ratio (an 80% height was
+     cropping the sides). */
+  .pf-stage__inset {
+    width: 20%;
+    right: 2%;
+    top: 12%;
+    height: auto;
+  }
+  .pf-stage__chip { font-size: 10px; padding: 6px 9px; }
+  .pf-stage__title { font-size: 19px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Flat stack, plain crossfade: the layering survives as overlap, the
+     depth motion does not. */
+  .pf-stage__deck { transform: none; transition: none; }
+  .pf-stage__card {
+    transform: none;
+    transition: opacity 180ms linear;
+    will-change: auto;
+  }
+  .pf-stage__card.is-active { transform: none; }
+  .pf-stage__plate,
+  .pf-stage__shot,
+  .pf-stage__chip,
+  .pf-stage__inset { transform: none; }
+}
+
 /* ═══════════ THEME TOGGLE ═══════════ */
-/* Sits in the hero's top-right, inside the content max-width so it lines
-   up with the name rather than the viewport edge. Scrolls away with the
-   hero on purpose — theme is a first-impression decision, and a fixed
-   control would be permanent chrome. */
+/* Hero: top-right of the inner column. Sticky nav: same control on the
+   right of the Work / Projects / Music track so it stays reachable. */
 .pf-themeToggle {
   position: absolute;
   top: 0;
@@ -4004,6 +4259,7 @@ html.pf-theme-switching *::after {
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .pf-snav__theme { transition: none; }
   .pf-themeToggle { transition: none; }
   .pf-themeToggle__thumb { transition: none; }
   .pf-themeToggle:hover .pf-themeToggle__thumb { animation: none; }
@@ -4060,11 +4316,13 @@ html.pf-theme-switching *::after {
   }
 
   /* Neither interactive surface prints. The work deck is a sticky
-     horizontal track and the projects browser is a terminal that expands
-     one entry at a time; PrintWork and PrintProjects render the same data
-     as plain lists instead. See the component comments for why overriding
-     these layouts was abandoned. */
+     horizontal track, the projects browser is a terminal that expands one
+     entry at a time, and the featured stage is a pointer-driven 3D
+     showcase; PrintWork and PrintProjects render the same data as plain
+     lists instead. See the component comments for why overriding these
+     layouts was abandoned. */
   .pf-tl,
+  .pf-stage,
   .pf-term { display: none !important; }
 
   /* The music player's transport, elapsed-time counter and waveform are

@@ -41,3 +41,6 @@ public/*
 
 # Brainstorm companion mockups
 .superpowers/
+
+# Source screenshots staged for re-encoding (only the encoded webp ships)
+.assets-src/
