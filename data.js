@@ -302,6 +302,7 @@ window.PORTFOLIO_DATA = {
     // Real titles/artwork usually come from oEmbed + the hidden SC widget on mount.
     // titleLocked: keep exact spelling when oEmbed/SC use different casing (or "Title by X" strips badly).
     tracks: [
+      { url: "https://soundcloud.com/ezequiel-cutin-187993918/utopia", title: "Utopia", kind: "Techno", titleLocked: true },
       { url: "https://soundcloud.com/goblin-lore/ezedusit", title: "EzeDusIt", kind: "Techno", titleLocked: true },
       { url: "https://soundcloud.com/ezequiel-cutin-187993918/hardcore-mf",          title: "Hardcore MF",         kind: "Techno"  },
       { url: "https://soundcloud.com/ezequiel-cutin-187993918/solace",               title: "Solace",              kind: "Ambient" },
