@@ -715,18 +715,19 @@ img { display: block; max-width: 100%; height: auto; }
 }
 
 .pf-foot--stacked {
-  margin-top: 0;
+  margin-top: -72px;
   padding: 0;
   border-top: none;
-  background: var(--bg);
+  background: transparent;
   position: relative;
+  z-index: 1;
 }
 .pf-foot--stacked .pf-foot__inner {
   position: relative;
   z-index: 1;
   max-width: var(--max-w-wide);
   margin: 0 auto;
-  padding: 40px 32px 28px;
+  padding: 24px 32px 32px;
   border-top: none;
   display: flex;
   justify-content: space-between;
@@ -875,6 +876,14 @@ img { display: block; max-width: 100%; height: auto; }
 
 .pf-block--hero { padding: 80px 32px 64px; position: relative; overflow: hidden; }
 .pf-block--hero .pf-block__inner { position: relative; z-index: 1; }
+
+.pf-block--music {
+  position: relative;
+  overflow: hidden;
+  border-bottom: none;
+  padding-bottom: 128px;
+}
+.pf-block--music .pf-block__inner { position: relative; z-index: 1; }
 
 .pf-header-ambience {
   position: absolute;
@@ -4300,7 +4309,7 @@ html.pf-theme-switching *::after {
 
   /* Decorative, interactive, or unprintable. */
   .pf-header-ambience,
-  .pf-screen__wrap,
+  .pf-screen,
   .pf-snav,
   .pf-themeToggle,
   .pf-skip,
@@ -4534,55 +4543,30 @@ html.pf-theme-switching *::after {
   .pf-resume__close { transition: none; }
 }
 
-/* ═══════════ Footer screen — WebGL panel ═══════════ */
-/* Size lives here, not in JS: footer-screen.js sizes the drawing buffer
-   from the CSS box, so changing these two vars is the whole knob. */
-.pf-screen__wrap {
-  /* .pf-foot is display:flex, so this would sit beside .pf-foot__inner as a
-     squeezed sibling. The footer already sets flex-wrap:wrap, so claiming a
-     full basis drops it onto its own row without touching the rest. Full
-     bleed, pulled up under the copyright row, so the dissolve starts in
-     the page instead of as a second inset rectangle. */
-  flex: 0 0 100%;
-  box-sizing: border-box;
-  width: 100%;
-  max-width: none;
-  margin: -120px 0 0;
-  padding: 0;
-  position: relative;
-  z-index: 0;
-  pointer-events: none;
-}
+/* ═══════════ Music screen — WebGL wash behind the section ═══════════ */
+/* Sized from the music block: footer-screen.js matches the CSS box, so
+   this fills #block-music instead of a fixed footer strip. */
 .pf-screen {
-  --screen-w: 100%;
-  --screen-h: 280px;
-  /* Block layout, not flex: a flex item sized `width: 100%` collapses to
-     zero here, which also starves the IntersectionObserver and the panel
-     never boots. */
-  width: min(var(--screen-w), 100%);
-  height: var(--screen-h);
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   display: block;
   border: 0;
-  border-radius: 0;
   background: transparent;
   opacity: 0;
   transition: opacity 0.6s ease;
-  pointer-events: auto;
+  pointer-events: none;
+  z-index: 0;
   /* Only the canvas lip is masked. The wet edge itself lives in the
      shader so it can scallop instead of cutting a straight band. */
-  mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 100%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 100%);
 }
 .pf-screen.is-live { opacity: 1; }
 .pf-screen.is-unsupported { display: none; }
 
 @media (max-width: 720px) {
-  .pf-screen__wrap {
-    margin-top: -96px;
-  }
-  .pf-screen {
-    --screen-w: 100%;
-    --screen-h: 240px;
-    margin-left: 0;
-  }
+  .pf-block--music { padding-bottom: 104px; }
+  .pf-foot--stacked { margin-top: -56px; }
 }

@@ -1,9 +1,9 @@
-// Footer screen — a small WebGL panel at the very bottom of the page.
+// Music-section screen — a WebGL wash behind #block-music.
 //
 // Deliberately NOT the same renderer as header-ambience.js. That one is
 // Canvas 2D because it draws ~80 discrete particles and connecting lines,
 // which is geometry work. This one is per-pixel work — a fragment shader
-// running over every pixel of a small rect — which is what a GPU is for.
+// running over every pixel of the section — which is what a GPU is for.
 // No library: one quad, two shader programs, ping-pong framebuffers.
 //
 // Lazy by construction. The GL context is not created until the canvas

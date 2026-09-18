@@ -20,7 +20,7 @@ uniform float u_phase;
 // The ring traces the display shader's solid core, not the old tight
 // frame. Keep these equal to TOP_SOLID / SIDE_EDGE / BOTTOM_FADE in
 // display.frag or the stamp drifts off the visible region.
-const float TOP_SOLID = 0.70;
+const float TOP_SOLID = 0.82;
 const float SIDE_EDGE = 8.0;
 const float BOTTOM_FADE = 0.04;
 // Half-thickness in device pixels rather than UV, so the line reads equally

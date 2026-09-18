@@ -549,6 +549,7 @@ function LayoutStacked({ data, density }) {
       </section>
 
       <section className="pf-block pf-block--music" id="block-music">
+        <canvas id="footer-screen" className="pf-screen" aria-hidden="true"></canvas>
         <div className="pf-block__inner">
           <header className="pf-blockHead pf-blockHead--music">
             <div>
@@ -579,9 +580,6 @@ function LayoutStacked({ data, density }) {
             All bugs were harmed in the making of this site.
             <span className="pf-foot__cursor" aria-hidden="true">█</span>
           </span>
-        </div>
-        <div className="pf-screen__wrap">
-          <canvas id="footer-screen" className="pf-screen" aria-hidden="true"></canvas>
         </div>
       </footer>
 

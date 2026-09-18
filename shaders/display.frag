@@ -8,11 +8,11 @@ uniform vec2 u_resolution;
 
 // Dissolve into the page instead of drawing a framed rectangle.
 // v_uv.y is 0 at the bottom, 1 at the top — so the long falloff is
-// from the top, where this panel meets the HTML footer.
+// from the top, where this wash meets the projects section.
 //
 // These bounds are shared with the Q/W ring in screen.frag. If you
 // retune the dissolve, retune the ring to match.
-const float TOP_SOLID = 0.70;
+const float TOP_SOLID = 0.82;
 const float SIDE_EDGE = 8.0;
 const float SIDE_POWER = 1.25;
 const float BOTTOM_FADE = 0.04;
