@@ -1,31 +1,36 @@
 #!/usr/bin/env bash
-# Refuses a commit whose app.bundle.js does not match the JSX sources.
+# Refuses a commit whose generated files do not match their sources:
+# app.bundle.js against the JSX, and shaders.js against shaders/.
 #
-# app.bundle.js is committed rather than built in CI, so nothing else stops
-# "edited .jsx, forgot to rebuild" from shipping stale code to production.
+# Both are committed rather than built in CI, so nothing else stops
+# "edited a source, forgot to rebuild" from shipping stale code.
 set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
 
-# Only relevant when JSX is part of this commit.
-if ! git diff --cached --name-only | grep -qE '\.jsx$'; then
+# Only relevant when a build input is part of this commit.
+if ! git diff --cached --name-only | grep -qE '\.jsx$|^shaders/'; then
   exit 0
 fi
 
-before="$(md5 -q app.bundle.js 2>/dev/null || echo none)"
-node scripts/build.mjs >/dev/null
-after="$(md5 -q app.bundle.js 2>/dev/null || echo none)"
+sum() { md5 -q "$1" 2>/dev/null || echo none; }
 
-if [[ "$before" != "$after" ]]; then
+bundle_before="$(sum app.bundle.js)"
+shaders_before="$(sum shaders.js)"
+node scripts/build.mjs >/dev/null
+bundle_after="$(sum app.bundle.js)"
+shaders_after="$(sum shaders.js)"
+
+if [[ "$bundle_before" != "$bundle_after" || "$shaders_before" != "$shaders_after" ]]; then
   cat <<'MSG'
 
-  app.bundle.js was out of date and has been rebuilt.
+  Generated files were out of date and have been rebuilt.
 
-  JSX changes are staged but the bundle was stale — committing would have
-  shipped the old code. The rebuilt bundle and index.html are not staged.
+  Sources are staged but their build output was stale — committing would
+  have shipped the old code. The rebuilt files are not staged.
 
-    git add app.bundle.js index.html
+    git add app.bundle.js shaders.js index.html
 
   then commit again.
 

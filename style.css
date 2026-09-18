@@ -715,16 +715,20 @@ img { display: block; max-width: 100%; height: auto; }
 }
 
 .pf-foot--stacked {
-  margin-top: 0;
+  margin-top: auto;
   padding: 0;
   border-top: none;
-  background: var(--bg);
+  background: transparent;
+  position: relative;
+  z-index: 1;
 }
 .pf-foot--stacked .pf-foot__inner {
+  position: relative;
+  z-index: 1;
   max-width: var(--max-w-wide);
   margin: 0 auto;
-  padding: 32px;
-  border-top: 1px solid var(--rule);
+  padding: 24px 32px max(32px, calc(env(safe-area-inset-bottom, 0px) + 16px));
+  border-top: none;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -859,9 +863,18 @@ img { display: block; max-width: 100%; height: auto; }
 /* ═══════════ STACKED LAYOUT ═══════════ */
 .pf-shell--stacked {
   width: 100%;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: 0;
+}
+.pf-shell--stacked #main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 .pf-block {
   padding: 96px 32px;
@@ -872,6 +885,22 @@ img { display: block; max-width: 100%; height: auto; }
 
 .pf-block--hero { padding: 80px 32px 64px; position: relative; overflow: hidden; }
 .pf-block--hero .pf-block__inner { position: relative; z-index: 1; }
+
+.pf-block--music {
+  position: relative;
+  overflow: visible;
+  border-bottom: none;
+  padding-bottom: 48px;
+}
+.pf-block--music .pf-block__inner { position: relative; z-index: 1; }
+
+.pf-tail {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
 .pf-header-ambience {
   position: absolute;
@@ -1898,11 +1927,37 @@ img { display: block; max-width: 100%; height: auto; }
 }
 
 /* ═══════════ MUSIC: Now-Playing Hero ═══════════ */
+/* Liquid glass over the watercolor: the chassis is a lens, not a plate.
+   Inner controls skip a second blur — nested backdrop-filter is expensive
+   and muddies the pigment. */
 .pf-mh {
-  background: var(--bg-alt);
-  border: 1px solid var(--rule);
-  padding: 36px 36px 28px;
   position: relative;
+  background: color-mix(in srgb, var(--bg-alt) 26%, transparent);
+  backdrop-filter: blur(28px) saturate(1.55) brightness(1.06);
+  -webkit-backdrop-filter: blur(28px) saturate(1.55) brightness(1.06);
+  border: 1px solid color-mix(in srgb, var(--fg) 14%, transparent);
+  border-radius: 20px;
+  padding: 36px 36px 28px;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--fg) 22%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--bg) 35%, transparent),
+    0 28px 60px -32px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+.pf-mh::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(165deg, color-mix(in srgb, var(--fg) 16%, transparent) 0%, transparent 38%),
+    radial-gradient(120% 70% at 8% -20%, color-mix(in srgb, var(--fg) 20%, transparent), transparent 48%);
+}
+.pf-mh > *:not(.pf-mh__iframe) {
+  position: relative;
+  z-index: 1;
 }
 .pf-mh__stage {
   display: grid;
@@ -1920,10 +1975,13 @@ img { display: block; max-width: 100%; height: auto; }
 
 .pf-mh__art {
   aspect-ratio: 1 / 1;
-  border-radius: 4px;
+  border-radius: 12px;
   overflow: hidden;
   position: relative;
   background: #1a1411;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--fg) 16%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--fg) 10%, transparent);
 }
 .pf-mh__artImg { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pf-mh__artGrad { position: absolute; inset: 0; background: radial-gradient(circle at 60% 40%, var(--accent) 0%, #6b3a2a 35%, #1a1411 80%); }
@@ -1961,6 +2019,7 @@ img { display: block; max-width: 100%; height: auto; }
   line-height: 1.05;
   margin: 0 0 18px;
   color: var(--fg);
+  text-shadow: 0 1px 18px color-mix(in srgb, var(--bg) 78%, transparent);
 }
 .pf-mh__wave { width: 100%; height: 56px; display: block; margin-bottom: 6px; }
 .pf-mh__time {
@@ -1980,9 +2039,8 @@ img { display: block; max-width: 100%; height: auto; }
   flex-shrink: 0;
   padding: 0;
   border-radius: 50%;
-  border: 1px solid rgba(224, 128, 85, 0.4);
-  background:
-    linear-gradient(165deg, rgba(224, 128, 85, 0.12) 0%, rgba(224, 128, 85, 0.04) 55%, transparent 100%);
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
   color: var(--accent);
   font-family: var(--font-mono);
   font-size: 15px;
@@ -1993,8 +2051,8 @@ img { display: block; max-width: 100%; height: auto; }
   align-items: center;
   justify-content: center;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    0 2px 5px rgba(0, 0, 0, 0.18);
+    inset 0 1px 0 color-mix(in srgb, var(--fg) 18%, transparent),
+    0 2px 8px rgba(0, 0, 0, 0.12);
   transition: border-color 180ms, background 180ms, box-shadow 180ms, transform 140ms ease;
 }
 .pf-mh__transSm:active {
@@ -2004,11 +2062,12 @@ img { display: block; max-width: 100%; height: auto; }
   width: 56px; height: 56px;
   border: 1.5px solid var(--accent);
   border-radius: 50%;
-  background: none;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   color: var(--accent);
   font-size: 14px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 16%, transparent);
   transition: background 180ms, color 180ms, transform 140ms ease;
 }
 .pf-mh__transMain:active {
@@ -2019,32 +2078,37 @@ img { display: block; max-width: 100%; height: auto; }
   align-items: center;
   gap: 12px;
   padding: 12px 20px;
-  border: 1px solid var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
   color: var(--accent);
   font-family: var(--font-mono);
   font-size: 13px;
   letter-spacing: 0.02em;
   text-decoration: none;
-  transition: background 180ms, color 180ms;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 14%, transparent);
+  transition: background 180ms, color 180ms, border-color 180ms;
 }
 @media (hover: hover) and (pointer: fine) {
   .pf-mh__transSm:hover {
-    border-color: rgba(224, 128, 85, 0.62);
-    background:
-      linear-gradient(165deg, rgba(224, 128, 85, 0.2) 0%, rgba(224, 128, 85, 0.08) 50%, rgba(20, 17, 14, 0.15) 100%);
+    border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.09),
-      0 2px 8px rgba(0, 0, 0, 0.22);
+      inset 0 1px 0 color-mix(in srgb, var(--fg) 22%, transparent),
+      0 2px 10px rgba(0, 0, 0, 0.16);
   }
   .pf-mh__transMain:hover { background: var(--accent); color: var(--bg); }
-  .pf-mh__cta:hover { background: var(--accent); color: var(--bg); }
-  .pf-mh__cell:hover { background: rgba(224, 128, 85, 0.08); }
+  .pf-mh__cta:hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .pf-mh__cell:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
 }
 
 .pf-mh__strip {
   display: grid;
   grid-template-columns: repeat(var(--pf-strip-cols, 8), 1fr);
-  border: 1px solid var(--rule);
+  border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--fg) 5%, transparent);
+  overflow: hidden;
 }
 @media (max-width: 900px) {
   .pf-mh__strip { grid-template-columns: repeat(4, 1fr); }
@@ -2057,7 +2121,7 @@ img { display: block; max-width: 100%; height: auto; }
 .pf-mh__cell {
   background: transparent;
   border: none;
-  border-right: 1px solid var(--rule);
+  border-right: 1px solid color-mix(in srgb, var(--fg) 10%, transparent);
   padding: 14px 14px 16px;
   cursor: pointer;
   text-align: left;
@@ -2071,7 +2135,7 @@ img { display: block; max-width: 100%; height: auto; }
   transition: background 180ms;
 }
 .pf-mh__cell:last-child { border-right: none; }
-.pf-mh__cell.is-active { background: var(--accent); color: var(--bg); }
+.pf-mh__cell.is-active { background: color-mix(in srgb, var(--accent) 58%, transparent); color: var(--bg); }
 .pf-mh__cellPlay {
   display: inline-flex;
   align-items: flex-end;
@@ -2096,7 +2160,7 @@ img { display: block; max-width: 100%; height: auto; }
   align-items: center;
   margin-top: 22px;
   padding-top: 18px;
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.02em;
@@ -2147,6 +2211,22 @@ img { display: block; max-width: 100%; height: auto; }
   opacity: 0;
   pointer-events: none;
   border: 0;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .pf-mh {
+    background: color-mix(in srgb, var(--bg-alt) 88%, transparent);
+    backdrop-filter: blur(10px) saturate(1.2);
+    -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  }
+  .pf-mh__strip,
+  .pf-mh__cell.is-active,
+  .pf-mh__trans,
+  .pf-mh__transSm,
+  .pf-mh__transMain,
+  .pf-mh__cta {
+    background: color-mix(in srgb, var(--bg-alt) 82%, var(--accent) 8%);
+  }
 }
 
 /* ---- Mini-player: docked bar while music plays off-screen (mobile) ---- */
@@ -2319,17 +2399,13 @@ img { display: block; max-width: 100%; height: auto; }
   }
 
   .pf-mh {
-    /* Silhouette nods to handheld players — layered “chassis”, no glass */
     padding: 20px 16px 18px;
-    border-radius: 14px;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.055) 0%, transparent 18%),
-      linear-gradient(165deg, #24211c 0%, var(--bg-alt) 42%, #100e0c 100%);
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--bg-alt) 22%, transparent);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.1),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.35),
-      0 22px 48px -16px rgba(0, 0, 0, 0.78),
-      0 0 0 1px rgba(224, 128, 85, 0.16);
+      inset 0 1px 0 color-mix(in srgb, var(--fg) 18%, transparent),
+      inset 0 -1px 0 color-mix(in srgb, var(--bg) 30%, transparent),
+      0 22px 48px -16px rgba(0, 0, 0, 0.55);
   }
   .pf-mh__stage {
     gap: 20px;
@@ -2339,14 +2415,12 @@ img { display: block; max-width: 100%; height: auto; }
     width: 100%;
     max-width: min(320px, 88vw);
     margin-inline: auto;
-    border-radius: 11px;
+    border-radius: 12px;
     background: #070605;
     box-shadow:
-      inset 0 0 0 2px #3f3b36,
-      inset 0 0 0 3px #12100e,
-      inset 0 3px 14px rgba(0, 0, 0, 0.75),
-      0 10px 28px -10px rgba(0, 0, 0, 0.7),
-      0 0 0 1px rgba(224, 128, 85, 0.14);
+      inset 0 1px 0 color-mix(in srgb, var(--fg) 14%, transparent),
+      0 10px 28px -10px rgba(0, 0, 0, 0.45),
+      0 0 0 1px color-mix(in srgb, var(--fg) 10%, transparent);
   }
   .pf-mh__artLabel {
     left: 14px;
@@ -2385,14 +2459,11 @@ img { display: block; max-width: 100%; height: auto; }
     padding: 20px 26px 18px;
     max-width: min(300px, 100%);
     border-radius: 999px;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 22%, transparent 48%),
-      radial-gradient(ellipse 125% 95% at 50% 5%, rgba(48, 45, 40, 0.95) 0%, rgba(12, 11, 9, 1) 58%);
+    background: color-mix(in srgb, var(--fg) 8%, transparent);
     box-shadow:
-      inset 0 2px 5px rgba(255, 255, 255, 0.07),
-      inset 0 -10px 22px rgba(0, 0, 0, 0.52),
-      0 0 0 1px rgba(224, 128, 85, 0.14),
-      0 6px 20px rgba(0, 0, 0, 0.38);
+      inset 0 1px 0 color-mix(in srgb, var(--fg) 16%, transparent),
+      inset 0 -8px 18px color-mix(in srgb, var(--bg) 35%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--fg) 10%, transparent);
   }
   .pf-mh__trans > * {
     position: relative;
@@ -2402,8 +2473,8 @@ img { display: block; max-width: 100%; height: auto; }
     width: 56px;
     height: 56px;
     font-size: 15px;
-    background: rgba(224, 128, 85, 0.14);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 14%, transparent);
   }
   .pf-mh__cta {
     width: 100%;
@@ -2411,7 +2482,7 @@ img { display: block; max-width: 100%; height: auto; }
     min-height: 48px;
     padding: 14px 16px;
     font-size: 11px;
-    border-radius: 4px;
+    border-radius: 999px;
   }
   .pf-mh__foot {
     flex-direction: column;
@@ -2422,24 +2493,20 @@ img { display: block; max-width: 100%; height: auto; }
   }
 }
 
-/* iPod-style vertical menu: single column + “LCD” frame (matches music card breakpoint) */
+/* iPod-style vertical menu: single column, still a glass pane */
 @media (max-width: 600px) {
   .pf-mh__strip {
     display: flex;
     flex-direction: column;
     gap: 0;
     padding: 10px;
-    border: none;
+    border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
     border-radius: 14px;
     overflow: visible;
-    background:
-      linear-gradient(180deg, rgba(84, 78, 70, 0.2) 0%, transparent 14%),
-      linear-gradient(180deg, #151311 0%, #060504 100%);
+    background: color-mix(in srgb, var(--fg) 6%, transparent);
     box-shadow:
-      inset 0 2px 4px rgba(0, 0, 0, 0.45),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.05),
-      inset 0 0 0 2px rgba(0, 0, 0, 0.55),
-      0 0 0 1px rgba(224, 128, 85, 0.1);
+      inset 0 1px 0 color-mix(in srgb, var(--fg) 14%, transparent),
+      inset 0 -1px 0 color-mix(in srgb, var(--bg) 25%, transparent);
   }
   .pf-mh__cell {
     flex-direction: row;
@@ -2452,9 +2519,7 @@ img { display: block; max-width: 100%; height: auto; }
     border-right: none;
     border-radius: 10px;
     min-height: 52px;
-    /* LCD phosphor: the menu is a dark screen, so ink stays light even
-       when the page is paper. Inherited --fg is near-black there. */
-    color: #e6ddd2;
+    color: var(--fg);
   }
   .pf-mh__cellPlay {
     display: inline-flex;
@@ -2489,41 +2554,30 @@ img { display: block; max-width: 100%; height: auto; }
     opacity: 0.85;
   }
   .pf-mh__cell.is-active {
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.2),
-      0 2px 8px rgba(0, 0, 0, 0.22);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 18%, transparent);
   }
 }
 
-/* Paper iPod: cream chassis, tan LCD + clickwheel, dark ink. */
+/* Paper iPod: tan-tinted glass, dark ink. */
 @media (max-width: 600px) {
   [data-theme="paper"] .pf-mh {
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, transparent 26%),
-      linear-gradient(165deg, #faf6ee 0%, #efe8db 46%, #d8cdb8 100%);
+    background: color-mix(in srgb, #faf6ee 32%, transparent);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.82),
-      inset 0 -1px 0 rgba(90, 70, 45, 0.1),
-      0 18px 40px -18px rgba(70, 50, 30, 0.32),
-      0 0 0 1px color-mix(in srgb, var(--accent) 20%, var(--rule));
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      inset 0 -1px 0 rgba(90, 70, 45, 0.08),
+      0 18px 40px -18px rgba(70, 50, 30, 0.22);
   }
   [data-theme="paper"] .pf-mh__art {
     box-shadow:
-      inset 0 0 0 2px #4a453e,
-      inset 0 0 0 3px #1a1714,
-      inset 0 3px 14px rgba(0, 0, 0, 0.55),
-      0 8px 22px -10px rgba(40, 28, 16, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      0 8px 22px -10px rgba(40, 28, 16, 0.28),
       0 0 0 1px color-mix(in srgb, var(--accent) 16%, transparent);
   }
   [data-theme="paper"] .pf-mh__strip {
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, transparent 18%),
-      linear-gradient(180deg, #e6d6be 0%, #d4c19f 100%);
+    background: color-mix(in srgb, #e6d6be 28%, transparent);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.5),
-      inset 0 0 0 1px rgba(90, 70, 45, 0.14),
-      inset 0 0 0 2px rgba(255, 255, 255, 0.18),
-      0 0 0 1px color-mix(in srgb, var(--accent) 14%, var(--rule));
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      inset 0 0 0 1px rgba(90, 70, 45, 0.1);
   }
   [data-theme="paper"] .pf-mh__cell {
     color: #1a1714;
@@ -2535,31 +2589,25 @@ img { display: block; max-width: 100%; height: auto; }
     opacity: 0.7;
   }
   [data-theme="paper"] .pf-mh__cell.is-active {
-    background: color-mix(in srgb, var(--accent) 26%, #d4c19f);
+    background: color-mix(in srgb, var(--accent) 28%, transparent);
     color: #1a1714;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.28),
-      0 1px 4px rgba(90, 70, 45, 0.12);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
   }
   [data-theme="paper"] .pf-mh__trans {
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, transparent 38%),
-      linear-gradient(180deg, #e8d7bd 0%, #d2be9c 100%);
+    background: color-mix(in srgb, #e8d7bd 30%, transparent);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.55),
-      inset 0 -8px 16px rgba(90, 70, 45, 0.12),
-      0 0 0 1px color-mix(in srgb, var(--accent) 16%, #b7aa90),
-      0 6px 16px rgba(70, 50, 30, 0.16);
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      inset 0 -8px 16px rgba(90, 70, 45, 0.08);
   }
   [data-theme="paper"] .pf-mh__transSm {
     border-color: color-mix(in srgb, #1a1714 28%, transparent);
-    background: rgba(255, 255, 255, 0.18);
+    background: color-mix(in srgb, #ffffff 22%, transparent);
     color: #1a1714;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
   }
   [data-theme="paper"] .pf-mh__transMain {
     border-color: #1a1714;
-    background: rgba(26, 23, 20, 0.06);
+    background: color-mix(in srgb, #1a1714 8%, transparent);
     color: #1a1714;
     box-shadow: none;
   }
@@ -2575,7 +2623,7 @@ img { display: block; max-width: 100%; height: auto; }
     color: #f5f1ea;
   }
   [data-theme="paper"] .pf-mh__cell:hover {
-    background: color-mix(in srgb, var(--accent) 10%, #d4c19f);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
   }
 }
 
@@ -4297,6 +4345,7 @@ html.pf-theme-switching *::after {
 
   /* Decorative, interactive, or unprintable. */
   .pf-header-ambience,
+  .pf-screen,
   .pf-snav,
   .pf-themeToggle,
   .pf-skip,
@@ -4529,3 +4578,22 @@ html.pf-theme-switching *::after {
   .pf-resume__action,
   .pf-resume__close { transition: none; }
 }
+
+/* ═══════════ Music screen — WebGL wash behind the section ═══════════ */
+/* Sized from .pf-tail (music + footer). footer-screen.js matches the
+   CSS box, so the wash runs under the copyright to the page bottom. */
+.pf-screen {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+  background: transparent;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.pf-screen.is-live { opacity: 1; }
+.pf-screen.is-unsupported { display: none; }
