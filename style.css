@@ -3996,6 +3996,22 @@ html.pf-theme-switching *::after {
 }
 .pf-stage__read:hover { color: var(--accent); }
 
+@media (prefers-reduced-motion: reduce) {
+  /* Flat stack, plain crossfade: the layering survives as overlap, the
+     depth motion does not. */
+  .pf-stage__deck { transform: none; transition: none; }
+  .pf-stage__card {
+    transform: none;
+    filter: none;
+    transition: opacity 180ms linear;
+  }
+  .pf-stage__card.is-active { transform: none; }
+  .pf-stage__plate,
+  .pf-stage__shot,
+  .pf-stage__chip,
+  .pf-stage__inset { transform: none; }
+}
+
 /* ═══════════ THEME TOGGLE ═══════════ */
 /* Sits in the hero's top-right, inside the content max-width so it lines
    up with the name rather than the viewport edge. Scrolls away with the

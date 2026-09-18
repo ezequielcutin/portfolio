@@ -248,6 +248,9 @@ function FeaturedStage({ items, onOpenProject }) {
   // Only the first scene's images load up front; the rest wait for intent.
   const [loaded, setLoaded] = useState(featured[0] ? [featured[0].id] : []);
   const tabsRef = useRef(null);
+  const deckRef = useRef(null);
+  const frameRef = useRef(0);
+  const touchRef = useRef(null);
 
   const preload = (id) => setLoaded((l) => (l.indexOf(id) < 0 ? l.concat(id) : l));
   const select = (id) => {
@@ -256,6 +259,46 @@ function FeaturedStage({ items, onOpenProject }) {
     setActiveId(id);
     preload(id);
   };
+
+  // Tilt toward the pointer, capped at 8deg from the resting pose on each
+  // axis, and only where a real pointer exists. Writes go through rAF so a
+  // burst of pointermove events costs one style write per frame.
+  useEffect(() => {
+    const deck = deckRef.current;
+    const scene = deck && deck.parentElement;
+    if (!scene) return;
+    if (!window.matchMedia("(pointer: fine)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let pending = null;
+    const apply = () => {
+      frameRef.current = 0;
+      if (!pending) return;
+      deck.style.setProperty("--pf-rx", pending.rx.toFixed(2) + "deg");
+      deck.style.setProperty("--pf-ry", pending.ry.toFixed(2) + "deg");
+    };
+    const onMove = (e) => {
+      const r = scene.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      pending = { rx: 8 - y * 16, ry: -10 + x * 16 };
+      if (!frameRef.current) frameRef.current = requestAnimationFrame(apply);
+    };
+    const onLeave = () => {
+      pending = null;
+      if (frameRef.current) { cancelAnimationFrame(frameRef.current); frameRef.current = 0; }
+      deck.style.removeProperty("--pf-rx");
+      deck.style.removeProperty("--pf-ry");
+    };
+
+    scene.addEventListener("pointermove", onMove);
+    scene.addEventListener("pointerleave", onLeave);
+    return () => {
+      scene.removeEventListener("pointermove", onMove);
+      scene.removeEventListener("pointerleave", onLeave);
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    };
+  }, []);
 
   const activeIdx = Math.max(0, featured.findIndex((p) => p.id === activeId));
 
@@ -270,6 +313,24 @@ function FeaturedStage({ items, onOpenProject }) {
     select(featured[next].id);
     const rows = tabsRef.current && tabsRef.current.querySelectorAll(".pf-stage__tab");
     if (rows && rows[next]) rows[next].focus();
+  };
+
+  // Swipe is an enhancement; the tabs stay the primary control.
+  const onTouchStart = (e) => {
+    const t = e.touches[0];
+    touchRef.current = t ? { x: t.clientX, y: t.clientY } : null;
+  };
+  const onTouchEnd = (e) => {
+    const start = touchRef.current;
+    touchRef.current = null;
+    const t = e.changedTouches && e.changedTouches[0];
+    if (!start || !t) return;
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    // Ignore taps and anything closer to a vertical scroll than a swipe.
+    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const step = dx < 0 ? 1 : -1;
+    select(featured[(activeIdx + step + featured.length) % featured.length].id);
   };
 
   if (!featured.length) return null;
@@ -304,8 +365,13 @@ function FeaturedStage({ items, onOpenProject }) {
 
       <div className="pf-stage__body">
         {/* Decorative: the panel carries the same information as text. */}
-        <div className="pf-stage__scene" aria-hidden="true">
-          <div className="pf-stage__deck">
+        <div
+          className="pf-stage__scene"
+          aria-hidden="true"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          <div className="pf-stage__deck" ref={deckRef}>
             {featured.map((p) => {
               const state = p.id === activeId ? "is-active" : p.id === prevId ? "is-prev" : "";
               const show = loaded.indexOf(p.id) >= 0;
