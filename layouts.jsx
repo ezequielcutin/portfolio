@@ -273,6 +273,7 @@ const STACKED_SECTIONS = [
 function StickyNav() {
   const [activeId, setActiveId] = React.useState(null);
   const [scrolled, setScrolled] = React.useState(false);
+  const [stuck, setStuck] = React.useState(false);
   const navRef = React.useRef(null);
   const indicatorRef = React.useRef(null);
 
@@ -292,7 +293,11 @@ function StickyNav() {
     );
     els.forEach((el) => observer.observe(el));
 
-    const onScroll = () => setScrolled(window.scrollY > 200);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 200);
+      const nav = navRef.current;
+      if (nav) setStuck(nav.getBoundingClientRect().top < 2);
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
 
@@ -345,7 +350,7 @@ function StickyNav() {
   return (
     <nav
       ref={navRef}
-      className={`pf-snav ${scrolled ? "is-scrolled" : ""}`}
+      className={`pf-snav ${scrolled ? "is-scrolled" : ""} ${stuck ? "is-stuck" : ""}`}
       aria-label="Page sections"
     >
       <div className="pf-snav__track">
@@ -361,6 +366,9 @@ function StickyNav() {
             {s.label}
           </a>
         ))}
+      </div>
+      <div className="pf-snav__theme">
+        <ThemeToggle available={stuck} />
       </div>
     </nav>
   );

@@ -2068,12 +2068,23 @@ function PrintProjects({ items }) {
 // first paint by the inline script in index.html; this only flips it and
 // persists the choice. Canvas work (ambience, visualizer) listens for the
 // pf:themechange event, since those read CSS variables into JS.
-function ThemeToggle() {
+function ThemeToggle({ available = true }) {
   const read = () =>
     document.documentElement.getAttribute("data-theme") === "paper" ? "paper" : "dark";
   const [theme, setTheme] = React.useState(read);
   const btnRef = React.useRef(null);
   const busyRef = React.useRef(false);
+
+  // Hero and sticky-nav each mount a toggle. Stay in lockstep when the
+  // other instance flips the theme.
+  React.useEffect(() => {
+    const onChange = (e) => {
+      const next = e.detail && e.detail.theme;
+      if (next === "paper" || next === "dark") setTheme(next);
+    };
+    window.addEventListener("pf:themechange", onChange);
+    return () => window.removeEventListener("pf:themechange", onChange);
+  }, []);
 
   // Applies the theme. Kept separate so both the plain and the animated
   // path run identical logic — only the wrapping differs.
@@ -2242,6 +2253,8 @@ function ThemeToggle() {
       ref={btnRef}
       className="pf-themeToggle"
       onClick={flip}
+      tabIndex={available ? 0 : -1}
+      aria-hidden={available ? undefined : true}
       aria-pressed={theme === "paper"}
       aria-label={goingLight ? "Switch to light theme" : "Switch to dark theme"}
       title={goingLight ? "Light" : "Dark"}

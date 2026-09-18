@@ -1351,9 +1351,9 @@ img { display: block; max-width: 100%; height: auto; }
   position: sticky;
   top: 0;
   z-index: 50;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(62px, 1fr) auto minmax(62px, 1fr);
   align-items: center;
-  justify-content: center;
   padding: 10px 24px;
   background: color-mix(in srgb, var(--bg) 82%, transparent);
   backdrop-filter: blur(14px) saturate(1.6);
@@ -1368,12 +1368,32 @@ img { display: block; max-width: 100%; height: auto; }
 
 .pf-snav__track {
   position: relative;
+  grid-column: 2;
   display: inline-flex;
   align-items: center;
   gap: 2px;
   padding: 3px;
   border-radius: 10px;
   background: color-mix(in srgb, var(--fg) 6%, transparent);
+}
+.pf-snav__theme {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 280ms ease;
+}
+.pf-snav.is-stuck .pf-snav__theme {
+  opacity: 1;
+  pointer-events: auto;
+}
+.pf-snav .pf-themeToggle {
+  position: static;
+  top: auto;
+  right: auto;
+  z-index: 1;
 }
 
 .pf-snav__indicator {
@@ -1691,12 +1711,18 @@ img { display: block; max-width: 100%; height: auto; }
   }
   .pf-snav {
     padding: 8px 16px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 8px;
   }
   .pf-snav__track {
+    grid-column: 1;
     width: 100%;
     justify-content: center;
     gap: 0;
     padding: 3px;
+  }
+  .pf-snav__theme {
+    grid-column: 2;
   }
   .pf-snav__link {
     flex: 1;
@@ -4071,10 +4097,8 @@ html.pf-theme-switching *::after {
 }
 
 /* ═══════════ THEME TOGGLE ═══════════ */
-/* Sits in the hero's top-right, inside the content max-width so it lines
-   up with the name rather than the viewport edge. Scrolls away with the
-   hero on purpose — theme is a first-impression decision, and a fixed
-   control would be permanent chrome. */
+/* Hero: top-right of the inner column. Sticky nav: same control on the
+   right of the Work / Projects / Music track so it stays reachable. */
 .pf-themeToggle {
   position: absolute;
   top: 0;
@@ -4235,6 +4259,7 @@ html.pf-theme-switching *::after {
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .pf-snav__theme { transition: none; }
   .pf-themeToggle { transition: none; }
   .pf-themeToggle__thumb { transition: none; }
   .pf-themeToggle:hover .pf-themeToggle__thumb { animation: none; }
