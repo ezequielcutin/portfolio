@@ -1,5 +1,5 @@
 // Portfolio components — shared atoms used across all layouts
-const { useState, useEffect, useRef, useMemo } = React;
+const { useState, useEffect, useLayoutEffect, useRef, useMemo } = React;
 
 // ───────── Accordion entry ─────────
 function Entry({ id, header, meta, children, current, defaultOpen = false, density = "comfortable", summary, preview }) {
@@ -236,11 +236,384 @@ function ProjectBody({ item }) {
   );
 }
 
+// ───────── Featured projects stage (layered 3D showcase) ─────────
+// Depth here is in service of the screenshots: a plate, the shot, and one
+// front layer, separated with translateZ inside a shared perspective box.
+// Every scene is absolutely positioned in the same reserved box, so
+// switching moves pixels and never reflows (see 9270de9).
+
+// Tiny WebGL pass that sits in the shader-tool screenshot's STAGE pane
+// and plays a wiggle-circle so the preview is actually live. Fails open:
+// if context creation or compile fails, the frozen screenshot stays.
+function runStageWiggle(canvas, opts) {
+  const freeze = !!(opts && opts.static);
+  const gl = canvas.getContext("webgl", {
+    alpha: false,
+    antialias: false,
+    depth: false,
+    stencil: false,
+    premultipliedAlpha: false,
+    powerPreference: "low-power",
+  });
+  if (!gl) return function () {};
+
+  const compile = (type, src) => {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      gl.deleteShader(s);
+      return null;
+    }
+    return s;
+  };
+  const vs = compile(gl.VERTEX_SHADER, "attribute vec2 a;void main(){gl_Position=vec4(a,0,1);}");
+  const fs = compile(gl.FRAGMENT_SHADER, [
+    "precision highp float;",
+    "uniform vec2 uR;uniform float uT;",
+    "void main(){",
+    "  vec2 uv=gl_FragCoord.xy/uR;",
+    "  uv=uv*2.0-1.0;",
+    "  uv.x*=uR.x/max(uR.y,1.0);",
+    "  vec2 p=uv-vec2(0.50,0.02);",
+    "  float t=uT;",
+    "  float a=atan(p.y,p.x);",
+    "  float r=length(p);",
+    "  p+=0.09*vec2(sin(t*0.85+a*2.0),cos(t*0.62+r*5.5));",
+    "  p+=0.04*vec2(sin(t*1.4+p.y*3.0),sin(t*1.1-p.x*3.2));",
+    "  a=atan(p.y,p.x);",
+    "  r=length(p);",
+    "  float rad=0.38+0.08*sin(a*3.0+t*1.15)+0.05*sin(a*5.0-t*0.92)+0.03*sin(t*2.05);",
+    "  float fill=smoothstep(rad+0.02,rad-0.10,r);",
+    "  float ring=smoothstep(rad+0.06,rad-0.015,r)*smoothstep(rad*0.12,rad*0.50,r);",
+    "  float glow=smoothstep(rad+0.28,rad*0.30,r);",
+    "  vec3 col=vec3(0.0);",
+    "  col+=vec3(0.9,0.02,0.0)*fill*0.42;",
+    "  col+=vec3(1.0,0.06,0.01)*ring;",
+    "  col+=vec3(0.75,0.0,0.0)*glow*0.28;",
+    "  col+=vec3(1.0,0.28,0.05)*ring*smoothstep(-0.2,0.9,p.x);",
+    "  gl_FragColor=vec4(col,1.0);",
+    "}",
+  ].join("\n"));
+  if (!vs || !fs) return function () {};
+  const prog = gl.createProgram();
+  gl.attachShader(prog, vs);
+  gl.attachShader(prog, fs);
+  gl.bindAttribLocation(prog, 0, "a");
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return function () {};
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  const uR = gl.getUniformLocation(prog, "uR");
+  const uT = gl.getUniformLocation(prog, "uT");
+
+  let raf = 0;
+  let visible = true;
+  let pageHidden = document.hidden;
+  const t0 = performance.now();
+
+  const size = () => {
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+    const w = Math.max(1, Math.round(canvas.clientWidth * dpr));
+    const h = Math.max(1, Math.round(canvas.clientHeight * dpr));
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+      gl.viewport(0, 0, w, h);
+    }
+  };
+
+  const draw = (now) => {
+    size();
+    gl.uniform2f(uR, canvas.width, canvas.height);
+    gl.uniform1f(uT, freeze ? 0.85 : (now - t0) / 1000);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  };
+
+  const tick = (now) => {
+    raf = 0;
+    if (!visible || pageHidden) return;
+    draw(now);
+    if (!freeze) raf = requestAnimationFrame(tick);
+  };
+
+  const kick = () => {
+    if (freeze) { draw(t0); return; }
+    if (!raf && visible && !pageHidden) raf = requestAnimationFrame(tick);
+  };
+
+  const onVis = () => {
+    pageHidden = document.hidden;
+    if (pageHidden) {
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    } else kick();
+  };
+
+  const ro = new ResizeObserver(kick);
+  ro.observe(canvas);
+  const io = new IntersectionObserver((entries) => {
+    visible = entries.some((e) => e.isIntersecting);
+    if (visible) kick();
+    else if (raf) { cancelAnimationFrame(raf); raf = 0; }
+  }, { threshold: 0.15 });
+  io.observe(canvas);
+  document.addEventListener("visibilitychange", onVis);
+  kick();
+
+  return function () {
+    if (raf) cancelAnimationFrame(raf);
+    ro.disconnect();
+    io.disconnect();
+    document.removeEventListener("visibilitychange", onVis);
+    // Keep the context. loseContext() permanently kills WebGL on this
+    // canvas, so switching back to shader-tool could never restart.
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    gl.useProgram(null);
+    gl.deleteBuffer(buf);
+    gl.deleteProgram(prog);
+    gl.deleteShader(vs);
+    gl.deleteShader(fs);
+  };
+}
+
+function FeaturedStage({ items, onOpenProject }) {
+  const featured = items.filter((p) => p.featured);
+  const [activeId, setActiveId] = useState(featured[0] ? featured[0].id : null);
+  const [prevId, setPrevId] = useState(null);
+  // Two small WebPs; decode them up front so the first switch is not a hitch.
+  const [loaded, setLoaded] = useState(featured.map((p) => p.id));
+  const tabsRef = useRef(null);
+  const deckRef = useRef(null);
+  const liveRef = useRef(null);
+  const frameRef = useRef(0);
+  const touchRef = useRef(null);
+
+  const preload = (id) => setLoaded((l) => (l.indexOf(id) < 0 ? l.concat(id) : l));
+  const select = (id) => {
+    if (id === activeId) return;
+    setPrevId(activeId);
+    setActiveId(id);
+    preload(id);
+  };
+
+  // Tilt toward the pointer, capped at 8deg from the resting pose on each
+  // axis, and only where a real pointer exists. Writes go through rAF so a
+  // burst of pointermove events costs one style write per frame.
+  useEffect(() => {
+    const deck = deckRef.current;
+    const scene = deck && deck.parentElement;
+    if (!scene) return;
+    if (!window.matchMedia("(pointer: fine)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let pending = null;
+    const apply = () => {
+      frameRef.current = 0;
+      if (!pending) return;
+      deck.style.setProperty("--pf-rx", pending.rx.toFixed(2) + "deg");
+      deck.style.setProperty("--pf-ry", pending.ry.toFixed(2) + "deg");
+    };
+    const onMove = (e) => {
+      const r = scene.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      pending = { rx: 8 - y * 16, ry: -10 + x * 16 };
+      if (!frameRef.current) frameRef.current = requestAnimationFrame(apply);
+    };
+    const onLeave = () => {
+      pending = null;
+      if (frameRef.current) { cancelAnimationFrame(frameRef.current); frameRef.current = 0; }
+      deck.style.removeProperty("--pf-rx");
+      deck.style.removeProperty("--pf-ry");
+    };
+
+    scene.addEventListener("pointermove", onMove);
+    scene.addEventListener("pointerleave", onLeave);
+    return () => {
+      scene.removeEventListener("pointermove", onMove);
+      scene.removeEventListener("pointerleave", onLeave);
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    };
+  }, []);
+
+  const liveId = featured.find((p) => p.featured.live);
+  useEffect(() => {
+    const canvas = liveRef.current;
+    if (!canvas || !liveId || activeId !== liveId.id) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    return runStageWiggle(canvas, { static: reduce });
+  }, [activeId]);
+
+  const activeIdx = Math.max(0, featured.findIndex((p) => p.id === activeId));
+
+  const onTabKeyDown = (e) => {
+    const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+    let next = null;
+    if (step) next = (activeIdx + step + featured.length) % featured.length;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = featured.length - 1;
+    if (next === null) return;
+    e.preventDefault();
+    select(featured[next].id);
+    const rows = tabsRef.current && tabsRef.current.querySelectorAll(".pf-stage__tab");
+    if (rows && rows[next]) rows[next].focus();
+  };
+
+  // Swipe is an enhancement; the tabs stay the primary control.
+  const onTouchStart = (e) => {
+    const t = e.touches[0];
+    touchRef.current = t ? { x: t.clientX, y: t.clientY } : null;
+  };
+  const onTouchEnd = (e) => {
+    const start = touchRef.current;
+    touchRef.current = null;
+    const t = e.changedTouches && e.changedTouches[0];
+    if (!start || !t) return;
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    // Ignore taps and anything closer to a vertical scroll than a swipe.
+    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const step = dx < 0 ? 1 : -1;
+    select(featured[(activeIdx + step + featured.length) % featured.length].id);
+  };
+
+  if (!featured.length) return null;
+
+  return (
+    <div className="pf-stage">
+      <div
+        className="pf-stage__tabs"
+        role="tablist"
+        aria-label="Featured projects"
+        ref={tabsRef}
+        onKeyDown={onTabKeyDown}
+      >
+        {featured.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            role="tab"
+            id={`pf-stage-tab-${p.id}`}
+            aria-selected={p.id === activeId ? "true" : "false"}
+            aria-controls={`pf-stage-panel-${p.id}`}
+            tabIndex={p.id === activeId ? 0 : -1}
+            className={`pf-stage__tab ${p.id === activeId ? "is-active" : ""}`}
+            onClick={() => select(p.id)}
+            onMouseEnter={() => preload(p.id)}
+            onFocus={() => preload(p.id)}
+          >
+            {p.id}
+          </button>
+        ))}
+      </div>
+
+      <div className="pf-stage__body">
+        {/* Decorative: the panel carries the same information as text. */}
+        <div
+          className="pf-stage__scene"
+          aria-hidden="true"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          <div className="pf-stage__deck" ref={deckRef}>
+            {featured.map((p) => {
+              const state = p.id === activeId ? "is-active" : p.id === prevId ? "is-prev" : "";
+              const show = loaded.indexOf(p.id) >= 0;
+              return (
+                <div key={p.id} className={`pf-stage__card ${state}`}>
+                  <div className="pf-stage__plate" />
+                  <div className="pf-stage__shot">
+                    {show && <img src={p.featured.shot.src} alt="" decoding="async" />}
+                    {p.featured.live && (
+                      <canvas className="pf-stage__live" ref={liveRef} aria-hidden="true" />
+                    )}
+                  </div>
+                  {p.featured.chip && <p className="pf-stage__chip">{p.featured.chip}</p>}
+                  {p.featured.inset && (
+                    <div className="pf-stage__inset">
+                      {show && <img src={p.featured.inset.src} alt="" decoding="async" />}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {featured.map((p, i) => (
+          <div
+            key={p.id}
+            className="pf-stage__panel"
+            id={`pf-stage-panel-${p.id}`}
+            role="tabpanel"
+            aria-labelledby={`pf-stage-tab-${p.id}`}
+            tabIndex={0}
+            hidden={p.id !== activeId}
+          >
+            <p className="pf-stage__meta">featured · {i + 1} / {featured.length}</p>
+            <h3 className="pf-stage__title">{p.title}</h3>
+            <p className="pf-stage__line">{p.featured.line}</p>
+            {/* The scene is aria-hidden, so the shot is described once here. */}
+            <p className="pf-sr-only">{p.featured.shot.alt}</p>
+            {p.links && (
+              <div className="pf-stage__links">
+                {p.links.map((l, li) => (
+                  <a
+                    key={li}
+                    href={l.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="pf-term__link"
+                  >
+                    <span>{l.label}</span>
+                    <span className="pf-term__link__arrow" aria-hidden="true">↗</span>
+                  </a>
+                ))}
+              </div>
+            )}
+            {onOpenProject && (
+              <button
+                type="button"
+                className="pf-stage__read"
+                onClick={() => onOpenProject(p.id)}
+              >
+                read the file <span aria-hidden="true">↓</span>
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ───────── Projects terminal (~/projects explorer) ─────────
 function _projYear(d) { const m = /(\d{4})/.exec(d || ""); return m ? m[1] : ""; }
 
-function ProjectsTerminal({ items }) {
-  const [openId, setOpenId] = useState(items[0] && items[0].id);
+function scrollTermBelowNav(term) {
+  if (!term) return;
+  const snav = document.querySelector(".pf-snav");
+  const pad = (snav ? snav.getBoundingClientRect().bottom : 0) + 12;
+  const y = Math.max(0, window.scrollY + term.getBoundingClientRect().top - pad);
+  if (Math.abs(window.scrollY - y) < 8) return;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.scrollTo({ top: y, behavior: reduce ? "auto" : "smooth" });
+}
+
+function ProjectsTerminal({ items, openId: openIdProp, onOpenChange, focusSeq }) {
+  const [openIdOwn, setOpenIdOwn] = useState(items[0] && items[0].id);
+  // Controlled only when a parent passes openId; on its own the terminal
+  // keeps the behaviour it has always had.
+  const controlled = openIdProp != null;
+  const openId = controlled ? openIdProp : openIdOwn;
+  const setOpenId = (id) => {
+    setOpenIdOwn(id);
+    if (onOpenChange) onOpenChange(id);
+  };
   const [cmd, setCmd] = useState("");
   const [msg, setMsg] = useState(null);
   const [err, setErr] = useState(false);
@@ -275,10 +648,34 @@ function ProjectsTerminal({ items }) {
         if (top < 0) rootRef.current.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
       }
     } else {
-      const row = listRef.current && listRef.current.querySelector(".pf-term__item.is-open");
-      if (row && row.scrollIntoView) row.scrollIntoView({ block: "nearest" });
+      const list = listRef.current;
+      const row = list && list.querySelector(".pf-term__item.is-open");
+      if (!list || !row) return;
+      const listR = list.getBoundingClientRect();
+      const rowR = row.getBoundingClientRect();
+      if (rowR.top < listR.top || rowR.bottom > listR.bottom) {
+        list.scrollTop += rowR.top - listR.top - 8;
+      }
     }
   }, [openId]);
+
+  // A controlled change means something outside asked to read this entry —
+  // on mobile the README has to replace the file list, the same as a tap.
+  // The mount pass is not a request: on load the file list has to win.
+  // focusSeq also fires when "read the file" repeats the already-open project.
+  const ctlMountRef = useRef(false);
+  useLayoutEffect(() => {
+    if (!controlled) return;
+    if (!ctlMountRef.current) { ctlMountRef.current = true; return; }
+    setMobileView("reading");
+  }, [openIdProp, focusSeq]);
+
+  // Pin below the sticky nav on each read-the-file click. Skip only when
+  // already at that offset — a peek of the chrome is not "already there".
+  useLayoutEffect(() => {
+    if (!focusSeq) return;
+    scrollTermBelowNav(rootRef.current);
+  }, [focusSeq]);
 
   // First time the terminal scrolls into view this session, briefly draw the
   // eye to the command line so the prompt reads as typeable, not decorative.
@@ -1671,12 +2068,23 @@ function PrintProjects({ items }) {
 // first paint by the inline script in index.html; this only flips it and
 // persists the choice. Canvas work (ambience, visualizer) listens for the
 // pf:themechange event, since those read CSS variables into JS.
-function ThemeToggle() {
+function ThemeToggle({ available = true }) {
   const read = () =>
     document.documentElement.getAttribute("data-theme") === "paper" ? "paper" : "dark";
   const [theme, setTheme] = React.useState(read);
   const btnRef = React.useRef(null);
   const busyRef = React.useRef(false);
+
+  // Hero and sticky-nav each mount a toggle. Stay in lockstep when the
+  // other instance flips the theme.
+  React.useEffect(() => {
+    const onChange = (e) => {
+      const next = e.detail && e.detail.theme;
+      if (next === "paper" || next === "dark") setTheme(next);
+    };
+    window.addEventListener("pf:themechange", onChange);
+    return () => window.removeEventListener("pf:themechange", onChange);
+  }, []);
 
   // Applies the theme. Kept separate so both the plain and the animated
   // path run identical logic — only the wrapping differs.
@@ -1845,6 +2253,8 @@ function ThemeToggle() {
       ref={btnRef}
       className="pf-themeToggle"
       onClick={flip}
+      tabIndex={available ? 0 : -1}
+      aria-hidden={available ? undefined : true}
       aria-pressed={theme === "paper"}
       aria-label={goingLight ? "Switch to light theme" : "Switch to dark theme"}
       title={goingLight ? "Light" : "Dark"}

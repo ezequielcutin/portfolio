@@ -273,6 +273,7 @@ const STACKED_SECTIONS = [
 function StickyNav() {
   const [activeId, setActiveId] = React.useState(null);
   const [scrolled, setScrolled] = React.useState(false);
+  const [stuck, setStuck] = React.useState(false);
   const navRef = React.useRef(null);
   const indicatorRef = React.useRef(null);
 
@@ -292,7 +293,11 @@ function StickyNav() {
     );
     els.forEach((el) => observer.observe(el));
 
-    const onScroll = () => setScrolled(window.scrollY > 200);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 200);
+      const nav = navRef.current;
+      if (nav) setStuck(nav.getBoundingClientRect().top < 2);
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
 
@@ -345,7 +350,7 @@ function StickyNav() {
   return (
     <nav
       ref={navRef}
-      className={`pf-snav ${scrolled ? "is-scrolled" : ""}`}
+      className={`pf-snav ${scrolled ? "is-scrolled" : ""} ${stuck ? "is-stuck" : ""}`}
       aria-label="Page sections"
     >
       <div className="pf-snav__track">
@@ -362,6 +367,9 @@ function StickyNav() {
           </a>
         ))}
       </div>
+      <div className="pf-snav__theme">
+        <ThemeToggle available={stuck} />
+      </div>
     </nav>
   );
 }
@@ -370,6 +378,12 @@ function LayoutStacked({ data, density }) {
   const emailLink = data.identity.links.find((l) => l.label === "Email");
   const socialLinks = data.identity.links.filter((l) => l.label !== "Email");
   const EmailIcon = window.PFIcons?.Email;
+  const [termOpenId, setTermOpenId] = useStateL(data.projects[0] && data.projects[0].id);
+  const [termFocusSeq, setTermFocusSeq] = useStateL(0);
+  const openInTerminal = (id) => {
+    setTermOpenId(id);
+    setTermFocusSeq((n) => n + 1);
+  };
 
   return (
     <div className="pf-shell pf-shell--stacked">
@@ -529,7 +543,8 @@ function LayoutStacked({ data, density }) {
             </p>
           </header>
           <PrintProjects items={data.projects} />
-          <ProjectsTerminal items={data.projects} />
+          <FeaturedStage items={data.projects} onOpenProject={openInTerminal} />
+          <ProjectsTerminal items={data.projects} openId={termOpenId} onOpenChange={setTermOpenId} focusSeq={termFocusSeq} />
         </div>
       </section>
 

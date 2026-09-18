@@ -157,7 +157,13 @@ window.PORTFOLIO_DATA = {
         "Share by link: the whole project packs into the URL fragment, with no account or server.",
       ],
       stack: ["React", "TypeScript", "WebGL", "GLSL", "React Flow", "Vite", "Vitest", "IndexedDB"],
-      images: [{ src: "shader-tool-editor.png", alt: "Universal Shader Tool editor: a node graph beside a live shader stage" }],
+      images: [{ src: "featured/shader-tool.webp", alt: "Universal Shader Tool editor: a node graph beside a live shader stage" }],
+      featured: {
+        line: "Wire a node graph, watch WebGL recompile, export standalone code.",
+        shot: { src: "featured/shader-tool.webp", alt: "Universal Shader Tool editor: a node graph beside a live shader stage" },
+        chip: "30 node types · 525 tests",
+        live: true,
+      },
       links: [
         { label: "Open editor",  href: "https://visuals-generator.vercel.app/" },
         { label: "Demo project", href: "https://visuals-generator.vercel.app/?p=wiggle-circle" },
@@ -177,6 +183,17 @@ window.PORTFOLIO_DATA = {
         "Offline-capable PWA with Workbox service worker.",
       ],
       stack: ["Next.js", "TypeScript", "Tailwind", "Framer Motion", "Supabase", "Postgres", "PartyKit", "D3.js", "Web Audio"],
+      featured: {
+        line: "Daily rituals instead of task lists, with an idea graph that links what you are thinking about.",
+        shot: {
+          src: "featured/quietly-build.webp",
+          alt: "Quietly Build's idea web: eleven ideas as glowing nodes, grouped and linked",
+        },
+        inset: {
+          src: "featured/quietly-build-hearth.webp?v=phone",
+          alt: "Quietly Build's hearth: one-day streak, day complete, both rituals done",
+        },
+      },
       links: [{ label: "Visit site", href: "https://quietly.build" }],
     },
     {
@@ -285,6 +302,7 @@ window.PORTFOLIO_DATA = {
     // Real titles/artwork usually come from oEmbed + the hidden SC widget on mount.
     // titleLocked: keep exact spelling when oEmbed/SC use different casing (or "Title by X" strips badly).
     tracks: [
+      { url: "https://soundcloud.com/ezequiel-cutin-187993918/utopia", title: "Utopia", kind: "Techno", titleLocked: true },
       { url: "https://soundcloud.com/goblin-lore/ezedusit", title: "EzeDusIt", kind: "Techno", titleLocked: true },
       { url: "https://soundcloud.com/ezequiel-cutin-187993918/hardcore-mf",          title: "Hardcore MF",         kind: "Techno"  },
       { url: "https://soundcloud.com/ezequiel-cutin-187993918/solace",               title: "Solace",              kind: "Ambient" },
