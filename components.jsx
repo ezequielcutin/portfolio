@@ -1184,11 +1184,13 @@ function WorkTimeline({ items }) {
   const maxXRef = useRef(0);
   const railLineRef = useRef(null);
   const railFillRef = useRef(null);
+  const railTicksRef = useRef(null);
   const cubeCursorRef = useRef(null);
   const hintRef = useRef(null);
-  const railWidthRef = useRef(0);
+  const tickXsRef = useRef([]);
   const deckRef = useRef(null);
   const dossierOpenerRef = useRef(null);
+  const glideUntilRef = useRef(0);
 
   // Per-checkpoint hop variance so the cube doesn't bounce identically between
   // every pair of entries — some hops are higher/snappier, others low and lazy.
@@ -1230,8 +1232,11 @@ function WorkTimeline({ items }) {
     if (mode !== "deck") setDossierId(null);
   }, [mode]);
 
-  // Pinned scroll-jack: translate the track from NATIVE scroll position.
-  // We never capture the wheel, so keyboard / trackpad / scrollbar all keep working.
+  // Pinned scroll-jack: native scroll is the target, the track eases toward
+  // it. We still never capture the wheel — keyboard, trackpad, scrollbar and
+  // jumpTo keep driving window.scrollY. Trackpads already emit pixel-precise
+  // deltas so the follow stays tight; a mouse wheel emits one big notch and
+  // stops, and the ease is what fills that gap instead of teleporting cards.
   useEffect(() => {
     if (!pinned) return;
     const section = sectionRef.current;
@@ -1239,21 +1244,48 @@ function WorkTimeline({ items }) {
     const viewport = viewportRef.current;
     const railLine = railLineRef.current;
     const railFill = railFillRef.current;
+    const railTicks = railTicksRef.current;
     const cubeCursor = cubeCursorRef.current;
     const hint = hintRef.current;
-    if (!section || !track || !viewport || !railLine || !railFill || !cubeCursor || !hint) return;
+    if (!section || !track || !viewport || !railLine || !railFill || !railTicks || !cubeCursor || !hint) return;
 
     let raf = 0;
-    const measure = () => {
-      maxXRef.current = Math.max(0, track.scrollWidth - viewport.clientWidth);
-      railWidthRef.current = railLine.clientWidth;
-    };
-    const render = () => {
-      raf = 0;
+    let visualP = 0;
+    let seeded = false;
+    let lastNow = 0;
+    const SETTLE = 0.00018;
+
+    const targetP = () => {
       const vh = window.innerHeight;
       const top = section.offsetTop;
-      const dist = section.offsetHeight - vh; // scrollable budget while pinned
-      const p = dist > 0 ? Math.min(1, Math.max(0, (window.scrollY - top) / dist)) : 0;
+      const dist = section.offsetHeight - vh;
+      return dist > 0 ? Math.min(1, Math.max(0, (window.scrollY - top) / dist)) : 0;
+    };
+
+    const measure = () => {
+      maxXRef.current = Math.max(0, track.scrollWidth - viewport.clientWidth);
+      // Cube and fill follow the tick dots, not the rail line's raw edges.
+      // space-between ticks are as wide as their year labels, so the first
+      // dot sits about half a label inboard of the line. Mapping p=0 to x=0
+      // parked the cube left of the opening year.
+      const lineLeft = railLine.getBoundingClientRect().left;
+      const dots = railTicks.querySelectorAll(".pf-tl__tickDot");
+      const xs = Array.from(dots, (dot) => {
+        const r = dot.getBoundingClientRect();
+        return r.left + r.width / 2 - lineLeft;
+      });
+      tickXsRef.current = xs.length ? xs : [0, railLine.clientWidth];
+    };
+
+    const cubeXAt = (p) => {
+      const xs = tickXsRef.current;
+      if (xs.length < 2) return xs[0] || 0;
+      const pos = Math.min(xs.length - 1, Math.max(0, p * (xs.length - 1)));
+      const i = Math.min(xs.length - 2, Math.floor(pos));
+      return xs[i] + (xs[i + 1] - xs[i]) * (pos - i);
+    };
+
+    const paint = (p) => {
       const x = -p * maxXRef.current;
       const segment = p * Math.max(1, n - 1);
       const segIndex = Math.min(segmentMotion.segs.length - 1, Math.floor(segment));
@@ -1261,9 +1293,16 @@ function WorkTimeline({ items }) {
       const motion = segmentMotion.segs[segIndex] || { lift: 1, ease: 1, spin: 1 };
       const spinProgress = (segmentMotion.spinAccum[segIndex] ?? segIndex) + motion.spin * segmentPhase;
       const hop = Math.sin(Math.PI * Math.pow(segmentPhase, 1 / motion.ease));
+      const xs = tickXsRef.current;
+      const x0 = xs[0] || 0;
+      const x1 = xs.length > 1 ? xs[xs.length - 1] : railLine.clientWidth;
+      const cx = cubeXAt(p);
+      const half = cubeCursor.offsetWidth / 2;
       track.style.transform = `translate3d(${x}px,0,0)`;
+      railFill.style.left = `${x0}px`;
+      railFill.style.width = `${Math.max(0, x1 - x0)}px`;
       railFill.style.transform = `scaleX(${p})`;
-      cubeCursor.style.transform = `translate3d(${p * railWidthRef.current - 22}px,-50%,0)`;
+      cubeCursor.style.transform = `translate3d(${cx - half}px,-50%,0)`;
       cubeCursor.style.setProperty("--pf-cube-lift", `${hop * 11 * motion.lift}px`);
       cubeCursor.style.setProperty("--pf-cube-glow", `${0.45 + hop * 0.45 * motion.lift}`);
       cubeCursor.style.setProperty("--pf-cube-rx", `${24 + spinProgress * 92}deg`);
@@ -1287,17 +1326,66 @@ function WorkTimeline({ items }) {
         setActive(nextActive);
       }
     };
-    const onScroll = () => { if (!raf) raf = requestAnimationFrame(render); };
+
+    const tick = (now) => {
+      const t = targetP();
+      if (!seeded) {
+        visualP = t;
+        seeded = true;
+        lastNow = now;
+        paint(visualP);
+        raf = 0;
+        return;
+      }
+      const dt = Math.min(0.048, Math.max(0.001, (now - lastNow) / 1000));
+      lastNow = now;
+      const err = Math.abs(t - visualP);
+      // Notch wheels (and page-down sized jumps) keep the softer tau for the
+      // whole catch-up so the last pixels do not suddenly snap. Trackpad
+      // pixel streams stay on the tight tau.
+      const tau = now < glideUntilRef.current || err > 0.02 ? 0.11 : 0.045;
+      visualP += (t - visualP) * (1 - Math.exp(-dt / tau));
+      if (err < SETTLE) {
+        visualP = t;
+        paint(visualP);
+        raf = 0;
+        return;
+      }
+      paint(visualP);
+      raf = requestAnimationFrame(tick);
+    };
+    const kick = () => {
+      if (raf) return;
+      lastNow = performance.now();
+      raf = requestAnimationFrame(tick);
+    };
+    const onWheel = (e) => {
+      const ay = Math.abs(e.deltaY);
+      // LINE/PAGE modes, or a pixel burst that is a round >=80 step: mouse
+      // notch. Trackpads send varying, often fractional, pixel deltas.
+      if (e.deltaMode !== 0 || (ay >= 80 && ay === Math.round(ay))) {
+        glideUntilRef.current = performance.now() + 180;
+        kick();
+      }
+    };
 
     measure();
-    render();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    const ro = new ResizeObserver(() => { measure(); render(); });
+    kick();
+    window.addEventListener("scroll", kick, { passive: true });
+    window.addEventListener("wheel", onWheel, { passive: true });
+    const ro = new ResizeObserver(() => {
+      measure();
+      visualP = targetP();
+      seeded = true;
+      paint(visualP);
+    });
     ro.observe(track);
     ro.observe(viewport);
     ro.observe(railLine);
+    ro.observe(railTicks);
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scroll", kick);
+      window.removeEventListener("wheel", onWheel);
       ro.disconnect();
       if (raf) cancelAnimationFrame(raf);
       track.style.transform = "";
@@ -1328,14 +1416,17 @@ function WorkTimeline({ items }) {
     return () => io.disconnect();
   }, [mode, n]);
 
-  // Jump to a panel by scrolling the page (pinned) — keeps native scroll authoritative.
+  // Jump by rewriting window.scrollY. Instant on the scroll axis so the
+  // interpolator can ease the track the same way it eases a mouse notch —
+  // native smooth-scroll plus the lerp would double-ease and feel sluggish.
   const jumpTo = (i) => {
     const section = sectionRef.current;
     if (!section) return;
     if (pinned && n > 1) {
       const dist = section.offsetHeight - window.innerHeight;
       const top = section.offsetTop + (i / (n - 1)) * dist;
-      window.scrollTo({ top, behavior: "smooth" });
+      glideUntilRef.current = performance.now() + 420;
+      window.scrollTo({ top, behavior: "auto" });
     } else {
       document
         .getElementById(`tl-panel-${ordered[i].id}`)
@@ -1343,12 +1434,19 @@ function WorkTimeline({ items }) {
     }
   };
 
+  const onPanelActivate = (i) => {
+    const sel = typeof window.getSelection === "function" ? window.getSelection() : null;
+    if (sel && !sel.isCollapsed && String(sel).trim()) return;
+    jumpTo(i);
+  };
+
   const Panels = ordered.map((w, i) => (
       <article
         key={w.id}
         id={`tl-panel-${w.id}`}
-        className={`pf-tl__panel ${w.current ? "is-current" : ""} ${pinned && i === active ? "is-active" : ""}`}
+        className={`pf-tl__panel ${w.current ? "is-current" : ""} ${pinned && i === active ? "is-active" : ""} ${pinned ? "is-jumpable" : ""}`}
         aria-current={w.current ? "true" : undefined}
+        onClick={pinned ? () => onPanelActivate(i) : undefined}
       >
       <div className="pf-tl__panelTop">
         <span className={`pf-tl__logo ${w.logoBleed ? "is-bleed" : ""}`}>
@@ -1486,7 +1584,7 @@ function WorkTimeline({ items }) {
               </span>
             </div>
           </div>
-          <div className="pf-tl__railTicks">
+          <div className="pf-tl__railTicks" ref={railTicksRef}>
             {ordered.map((w, i) => (
               <button
                 key={w.id}
@@ -1502,7 +1600,7 @@ function WorkTimeline({ items }) {
           </div>
         </div>
         <div className="pf-tl__hint" ref={hintRef} aria-hidden="true">
-          scroll to walk the timeline <span className="pf-tl__hintArrow">→</span>
+          scroll or click a card <span className="pf-tl__hintArrow">→</span>
         </div>
       </div>
     </div>
