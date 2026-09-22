@@ -400,16 +400,9 @@ function FeaturedStage({ items, onOpenProject }) {
     preload(id);
   };
 
-  // Tilt toward the pointer, only where a real pointer exists.
-  //
-  // The rotation runs on a spring rather than a CSS transition. A transition
-  // restarts its easing curve from wherever the value currently is on every
-  // rAF write, so while the pointer keeps moving the deck re-enters the ease
-  // sixty times a second and never settles — acceleration is discontinuous
-  // and the whole machine reads as rubber on a string. A spring carries one
-  // continuous velocity instead: it tracks closely, overshoots a hair at the
-  // end of a sweep, and the same integration walks it back to rest on leave,
-  // so there is no second easing model to keep in sync.
+  // Tilt toward the pointer, capped at 8deg from the resting pose on each
+  // axis, and only where a real pointer exists. Writes go through rAF so a
+  // burst of pointermove events costs one style write per frame.
   useEffect(() => {
     const deck = deckRef.current;
     const scene = deck && deck.parentElement;
@@ -417,69 +410,33 @@ function FeaturedStage({ items, onOpenProject }) {
     if (!window.matchMedia("(pointer: fine)").matches) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    // Resting pose. These have to match the CSS fallbacks exactly or the
-    // first frame of the spring jumps.
-    const REST = { rx: 8, ry: -10, rz: 0, sx: 50, sy: 50, lift: 0 };
-    const KEYS = Object.keys(REST);
-    const now = { ...REST };
-    const to = { ...REST };
-    const vel = { rx: 0, ry: 0, rz: 0, sx: 0, sy: 0, lift: 0 };
-
-    // Damping just under critical: enough follow-through to feel like mass,
-    // not enough to read as a wobble.
-    const K = 0.135;
-    const D = 0.76;
-    // Steeper through the middle, flatter toward the edges. A linear map
-    // spends most of its travel where the pointer rarely is and makes small
-    // movements near the centre do nothing.
-    const shape = (t) => t * (1.5 - 0.5 * t * t);
-    const clamp = (t) => (t < -1 ? -1 : t > 1 ? 1 : t);
-
-    const step = () => {
-      let awake = false;
-      for (const k of KEYS) {
-        const d = to[k] - now[k];
-        vel[k] = (vel[k] + d * K) * D;
-        now[k] += vel[k];
-        if (Math.abs(d) > 0.002 || Math.abs(vel[k]) > 0.002) awake = true;
-      }
-      const s = deck.style;
-      s.setProperty("--pf-rx", now.rx.toFixed(3) + "deg");
-      s.setProperty("--pf-ry", now.ry.toFixed(3) + "deg");
-      s.setProperty("--pf-rz", now.rz.toFixed(3) + "deg");
-      s.setProperty("--pf-lift", now.lift.toFixed(4));
+    let pending = null;
+    const apply = () => {
+      frameRef.current = 0;
+      if (!pending) return;
+      deck.style.setProperty("--pf-rx", pending.rx.toFixed(2) + "deg");
+      deck.style.setProperty("--pf-ry", pending.ry.toFixed(2) + "deg");
       // Specular position, 0..100%. The glass and the aluminium read this so
       // the highlight slides across the body as the body turns.
-      s.setProperty("--pf-sx", now.sx.toFixed(1) + "%");
-      s.setProperty("--pf-sy", now.sy.toFixed(1) + "%");
-      // Parking the loop when it settles keeps an idle page off the GPU;
-      // these writes repaint gradients, not just transforms.
-      frameRef.current = awake ? requestAnimationFrame(step) : 0;
+      deck.style.setProperty("--pf-sx", (pending.sx * 100).toFixed(1) + "%");
+      deck.style.setProperty("--pf-sy", (pending.sy * 100).toFixed(1) + "%");
     };
-    const wake = () => {
-      if (!frameRef.current) frameRef.current = requestAnimationFrame(step);
-    };
-
     const onMove = (e) => {
       const r = scene.getBoundingClientRect();
-      const x = shape(clamp(((e.clientX - r.left) / r.width - 0.5) * 2));
-      const y = shape(clamp(((e.clientY - r.top) / r.height - 0.5) * 2));
-      to.rx = 8 - y * 9;
-      to.ry = -10 + x * 10;
-      // Roll only on the diagonals. A straight x-coupled roll reads as the
-      // machine tipping over; x*y confines it to the corners, where it just
-      // sells the turn.
-      to.rz = -x * y * 1.5;
-      to.lift = 1;
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
       // Highlight runs opposite the tilt: turning the lid away from the
       // pointer sweeps the reflection toward it.
-      to.sx = 50 - x * 45;
-      to.sy = 50 - y * 45;
-      wake();
+      pending = { rx: 8 - y * 16, ry: -10 + x * 16, sx: 0.5 - x * 0.9, sy: 0.5 - y * 0.9 };
+      if (!frameRef.current) frameRef.current = requestAnimationFrame(apply);
     };
     const onLeave = () => {
-      Object.assign(to, REST);
-      wake();
+      pending = null;
+      if (frameRef.current) { cancelAnimationFrame(frameRef.current); frameRef.current = 0; }
+      deck.style.removeProperty("--pf-rx");
+      deck.style.removeProperty("--pf-ry");
+      deck.style.removeProperty("--pf-sx");
+      deck.style.removeProperty("--pf-sy");
     };
 
     scene.addEventListener("pointermove", onMove);
