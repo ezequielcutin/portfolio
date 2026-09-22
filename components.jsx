@@ -400,9 +400,9 @@ function FeaturedStage({ items, onOpenProject }) {
     preload(id);
   };
 
-  // Tilt toward the pointer, capped at 8deg from the resting pose on each
-  // axis, and only where a real pointer exists. Writes go through rAF so a
-  // burst of pointermove events costs one style write per frame.
+  // Slight tilt toward the pointer, capped at 3deg from the resting pose
+  // on each axis. Motion only: no specular writes. Fine pointers only;
+  // rAF so a burst of pointermove costs one style write per frame.
   useEffect(() => {
     const deck = deckRef.current;
     const scene = deck && deck.parentElement;
@@ -416,18 +416,12 @@ function FeaturedStage({ items, onOpenProject }) {
       if (!pending) return;
       deck.style.setProperty("--pf-rx", pending.rx.toFixed(2) + "deg");
       deck.style.setProperty("--pf-ry", pending.ry.toFixed(2) + "deg");
-      // Specular position, 0..100%. The glass and the aluminium read this so
-      // the highlight slides across the body as the body turns.
-      deck.style.setProperty("--pf-sx", (pending.sx * 100).toFixed(1) + "%");
-      deck.style.setProperty("--pf-sy", (pending.sy * 100).toFixed(1) + "%");
     };
     const onMove = (e) => {
       const r = scene.getBoundingClientRect();
       const x = (e.clientX - r.left) / r.width - 0.5;
       const y = (e.clientY - r.top) / r.height - 0.5;
-      // Highlight runs opposite the tilt: turning the lid away from the
-      // pointer sweeps the reflection toward it.
-      pending = { rx: 8 - y * 16, ry: -10 + x * 16, sx: 0.5 - x * 0.9, sy: 0.5 - y * 0.9 };
+      pending = { rx: 8 - y * 6, ry: -10 + x * 6 };
       if (!frameRef.current) frameRef.current = requestAnimationFrame(apply);
     };
     const onLeave = () => {
@@ -435,8 +429,6 @@ function FeaturedStage({ items, onOpenProject }) {
       if (frameRef.current) { cancelAnimationFrame(frameRef.current); frameRef.current = 0; }
       deck.style.removeProperty("--pf-rx");
       deck.style.removeProperty("--pf-ry");
-      deck.style.removeProperty("--pf-sx");
-      deck.style.removeProperty("--pf-sy");
     };
 
     scene.addEventListener("pointermove", onMove);

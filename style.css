@@ -4056,13 +4056,7 @@ html.pf-theme-switching *::after {
      (the lid's height is a fixed 0.5833 of its width). */
   border-radius: 2.22% 2.22% 1.48% 1.48% / 3.81% 3.81% 2.54% 2.54%;
   transform: translateZ(36px);
-  background:
-    radial-gradient(
-      58% 38% at var(--pf-sx, 54%) var(--pf-sy, 2%),
-      rgba(255, 255, 255, 0.30),
-      rgba(255, 255, 255, 0) 68%
-    ),
-    linear-gradient(163deg, #8d8881 0%, #5f5a54 30%, #45403b 62%, #2c2825 100%);
+  background: linear-gradient(163deg, #8d8881 0%, #5f5a54 30%, #45403b 62%, #2c2825 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.62),
     inset 1px 0 0 rgba(255, 255, 255, 0.38),
@@ -4153,25 +4147,32 @@ html.pf-theme-switching *::after {
   object-position: top left;
 }
 
-/* Specular sweep + corner falloff. The highlight is parked at the pointer
-   (--pf-sx/--pf-sy, written by the same rAF as the tilt), so turning the
-   body slides the reflection across the glass. */
+/* Live WebGL in the shader-tool preview pane. Percentages are of the
+   shot frame after object-fit: cover / top-left on the 1600×1000 file
+   (visible height is the top 91.14%). Source box in image space:
+   left 58.69% top 37.5% 26.69×23.7. */
+.pf-stage__live {
+  position: absolute;
+  left: 58.69%;
+  top: 41.15%;
+  width: 26.69%;
+  height: 26%;
+  display: block;
+  pointer-events: none;
+  border: 0;
+  z-index: 1;
+}
+
+/* Recess only. Hover is a small tilt, not a moving reflection. */
 .pf-stage__glass {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(
-      70% 120% at var(--pf-sx, 62%) var(--pf-sy, 4%),
-      rgba(255, 255, 255, 0.13),
-      rgba(255, 255, 255, 0.035) 38%,
-      rgba(255, 255, 255, 0) 66%
-    ),
-    radial-gradient(
-      130% 90% at 50% 122%,
-      rgba(0, 0, 0, 0.30),
-      rgba(0, 0, 0, 0) 58%
-    );
+  background: radial-gradient(
+    130% 90% at 50% 122%,
+    rgba(0, 0, 0, 0.30),
+    rgba(0, 0, 0, 0) 58%
+  );
   box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.38);
 }
 
@@ -4276,14 +4277,31 @@ html.pf-theme-switching *::after {
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.34));
 }
 
+.pf-stage__chip {
+  position: absolute;
+  right: 4%;
+  bottom: 6%;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--fg-soft);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 8px 11px;
+  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.6);
+  transform: translateZ(100px);
+}
+
 /* Phone body. The hearth capture (700×1522) is a bare viewport grab with no
    device chrome, so the rail, island and home indicator are all drawn here.
    Parked on the plate's right so it overlaps the laptop less and stops
    eating the idea web.
 
    The rail is a banded linear-gradient: alternating light and dark stops
-   are how brushed titanium catches light along an edge, and the pointer
-   specular rides on top of it. */
+   are how brushed titanium catches light along an edge. Hover does not
+   add a moving glint. */
 .pf-stage__inset {
   position: absolute;
   right: 0;
@@ -4305,23 +4323,14 @@ html.pf-theme-switching *::after {
      `padding: 1.5%` was 9.5px — a 8% rail, five times the intent, and the
      reason the body read as a case rather than a phone. */
   padding: 0;
-  background:
-    /* Tight glint near the top edge. The previous version sized this as a
-       percentage of the body, so on a 120px element it covered the whole
-       rail and turned it silver. */
-    radial-gradient(
-      34% 16% at var(--pf-sx, 66%) var(--pf-sy, 6%),
-      rgba(255, 255, 255, 0.5),
-      rgba(255, 255, 255, 0) 72%
-    ),
-    linear-gradient(
-      152deg,
-      #7e7871 0%,
-      #3a342e 26%,
-      #6a635b 50%,
-      #2e2926 74%,
-      #635c54 100%
-    );
+  background: linear-gradient(
+    152deg,
+    #7e7871 0%,
+    #3a342e 26%,
+    #6a635b 50%,
+    #2e2926 74%,
+    #635c54 100%
+  );
   box-shadow:
     /* Machined chamfer over the rail. Banded, because that is how a
        titanium edge alternates light and dark along its length. */
@@ -4421,14 +4430,10 @@ html.pf-theme-switching *::after {
    they were crushing the contrast out of the one shot that can least
    afford it, since the phone renders its 700px source at 16.75% scale
    against the laptop's 46.9%. The vignette is a gradient rather than a
-   box-shadow so it scales with the box like everything else here. */
+   box-shadow so it scales with the box like everything else here. No
+   hover specular: the phone inherits the laptop glass's motion-only rule. */
 .pf-stage__glass--phone {
   background:
-    radial-gradient(
-      42% 20% at var(--pf-sx, 62%) var(--pf-sy, 3%),
-      rgba(255, 255, 255, 0.11),
-      rgba(255, 255, 255, 0) 70%
-    ),
     radial-gradient(
       120% 55% at 50% 118%,
       rgba(0, 0, 0, 0.13),
