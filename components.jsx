@@ -416,12 +416,18 @@ function FeaturedStage({ items, onOpenProject }) {
       if (!pending) return;
       deck.style.setProperty("--pf-rx", pending.rx.toFixed(2) + "deg");
       deck.style.setProperty("--pf-ry", pending.ry.toFixed(2) + "deg");
+      // Specular position, 0..100%. The glass and the aluminium read this so
+      // the highlight slides across the body as the body turns.
+      deck.style.setProperty("--pf-sx", (pending.sx * 100).toFixed(1) + "%");
+      deck.style.setProperty("--pf-sy", (pending.sy * 100).toFixed(1) + "%");
     };
     const onMove = (e) => {
       const r = scene.getBoundingClientRect();
       const x = (e.clientX - r.left) / r.width - 0.5;
       const y = (e.clientY - r.top) / r.height - 0.5;
-      pending = { rx: 8 - y * 16, ry: -10 + x * 16 };
+      // Highlight runs opposite the tilt: turning the lid away from the
+      // pointer sweeps the reflection toward it.
+      pending = { rx: 8 - y * 16, ry: -10 + x * 16, sx: 0.5 - x * 0.9, sy: 0.5 - y * 0.9 };
       if (!frameRef.current) frameRef.current = requestAnimationFrame(apply);
     };
     const onLeave = () => {
@@ -429,6 +435,8 @@ function FeaturedStage({ items, onOpenProject }) {
       if (frameRef.current) { cancelAnimationFrame(frameRef.current); frameRef.current = 0; }
       deck.style.removeProperty("--pf-rx");
       deck.style.removeProperty("--pf-ry");
+      deck.style.removeProperty("--pf-sx");
+      deck.style.removeProperty("--pf-sy");
     };
 
     scene.addEventListener("pointermove", onMove);
@@ -524,18 +532,51 @@ function FeaturedStage({ items, onOpenProject }) {
               const state = p.id === activeId ? "is-active" : p.id === prevId ? "is-prev" : "";
               const show = loaded.indexOf(p.id) >= 0;
               return (
-                <div key={p.id} className={`pf-stage__card ${state}`}>
+                <div
+                  key={p.id}
+                  className={`pf-stage__card ${state}`}
+                  style={p.featured.glow ? { "--pf-bounce": p.featured.glow } : undefined}
+                >
                   <div className="pf-stage__plate" />
+                  {/* Laptop: cast shadow, screen spill, aluminium lid, screen,
+                      deck slab. Each is its own layer so the extrusion
+                      survives tilt. */}
+                  <div className="pf-stage__cast" />
+                  <div className="pf-stage__bounce" />
+                  {/* Aluminium shell, with the black bezel panel inset inside
+                      it. Two layers, because a lid that is one colour edge to
+                      edge is the thing that reads as a drawing. */}
+                  <div className="pf-stage__lid">
+                    <div className="pf-stage__bezel" />
+                  </div>
                   <div className="pf-stage__shot">
                     {show && <img src={p.featured.shot.src} alt="" decoding="async" />}
                     {p.featured.live && (
                       <canvas className="pf-stage__live" ref={liveRef} aria-hidden="true" />
                     )}
+                    <span className="pf-stage__glass" />
+                  </div>
+                  <div className="pf-stage__mbnotch">
+                    <span className="pf-stage__cam" />
+                  </div>
+                  {/* Receding deck: keyboard well, trackpad, then the front
+                      lip with its thumb cutout. */}
+                  <div className="pf-stage__base">
+                    <span className="pf-stage__keys" />
+                    <span className="pf-stage__pad" />
+                    <span className="pf-stage__lip" />
+                    <span className="pf-stage__notch" />
                   </div>
                   {p.featured.chip && <p className="pf-stage__chip">{p.featured.chip}</p>}
                   {p.featured.inset && (
                     <div className="pf-stage__inset">
-                      {show && <img src={p.featured.inset.src} alt="" decoding="async" />}
+                      <span className="pf-stage__btn pf-stage__btn--vol" />
+                      <span className="pf-stage__btn pf-stage__btn--pwr" />
+                      <div className="pf-stage__inset__screen">
+                        {show && <img src={p.featured.inset.src} alt="" decoding="async" />}
+                        <span className="pf-stage__island" />
+                        <span className="pf-stage__glass pf-stage__glass--phone" />
+                      </div>
                     </div>
                   )}
                 </div>
