@@ -4147,6 +4147,22 @@ html.pf-theme-switching *::after {
   object-position: top left;
 }
 
+/* Live WebGL in the shader-tool preview pane. Percentages are of the
+   shot frame after object-fit: cover / top-left on the 1600×1000 file
+   (visible height is the top 91.14%). Source box in image space:
+   left 58.69% top 37.5% 26.69×23.7. */
+.pf-stage__live {
+  position: absolute;
+  left: 58.69%;
+  top: 41.15%;
+  width: 26.69%;
+  height: 26%;
+  display: block;
+  pointer-events: none;
+  border: 0;
+  z-index: 1;
+}
+
 /* Recess only. Hover is a small tilt, not a moving reflection. */
 .pf-stage__glass {
   position: absolute;
@@ -4259,6 +4275,23 @@ html.pf-theme-switching *::after {
   transform: translateX(-50%);
   border-radius: 0 0 4px 4px;
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.34));
+}
+
+.pf-stage__chip {
+  position: absolute;
+  right: 4%;
+  bottom: 6%;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--fg-soft);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 8px 11px;
+  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.6);
+  transform: translateZ(100px);
 }
 
 /* Phone body. The hearth capture (700×1522) is a bare viewport grab with no
