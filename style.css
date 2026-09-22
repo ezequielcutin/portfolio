@@ -4049,7 +4049,12 @@ html.pf-theme-switching *::after {
   top: 9.55%;
   width: 84.04%;
   height: 78.35%;
-  border-radius: 12px 12px 8px 8px;
+  /* Proportional, not px. The lid is 540px at 1440 and 275px at 390, so a
+     fixed 12px was 2.22% of the width on desktop and 4.36% on mobile —
+     twice as round on the small screen, and no longer concentric with a
+     rim that does scale. 2.22%/3.81% is the same corner at both sizes
+     (the lid's height is a fixed 0.5833 of its width). */
+  border-radius: 2.22% 2.22% 1.48% 1.48% / 3.81% 3.81% 2.54% 2.54%;
   transform: translateZ(36px);
   background:
     radial-gradient(
@@ -4079,7 +4084,11 @@ html.pf-theme-switching *::after {
 .pf-stage__bezel {
   position: absolute;
   inset: 1.22% 0.70%;
-  border-radius: 9px 9px 6px 6px;
+  /* Concentric: the lid's radius minus the 0.70% rim, re-expressed against
+     this box. The old 9px/6px was eyeballed — the top was 0.8px too round
+     and the bottom 1.8px, a 42% error, which is what made the lower
+     corners look like they were drawn separately from the upper ones. */
+  border-radius: 1.54% 1.54% 0.79% 0.79% / 2.67% 2.67% 1.37% 1.37%;
   background: linear-gradient(176deg, #131211 0%, #0b0a0a 46%, #090808 100%);
   box-shadow:
     inset 0 1px 0 rgba(0, 0, 0, 0.9),
@@ -4097,7 +4106,9 @@ html.pf-theme-switching *::after {
   width: 8.3%;
   height: 2.5%;
   transform: translate(-50%, 0) translateZ(38px);
-  border-radius: 0 0 4px 4px;
+  /* 4px was 40% of the notch's height on desktop and 78% on mobile, where
+     it closed up into a pill. */
+  border-radius: 0 0 7.5% 7.5% / 0 0 39.8% 39.8%;
   background: #080807;
   box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.045);
 }
@@ -4122,7 +4133,10 @@ html.pf-theme-switching *::after {
   top: 13%;
   width: 79%;
   height: 72%;
-  border-radius: 3px;
+  /* Near-square on purpose: the shot sits 12.4px inside the bezel, so a
+     corner concentric with the lid's would resolve to zero here. This is
+     the old 3px held at the same weight across sizes. */
+  border-radius: 0.59% / 1.04%;
   overflow: hidden;
   border: 0;
   background: #0b0a09;
@@ -4173,14 +4187,24 @@ html.pf-theme-switching *::after {
   width: 87.8%;
   height: 7.6%;
   transform: translateZ(44px);
+  /* The front corners are an elliptical arc sampled every 15deg rather than
+     the three points they were before. A polygon can't take a radius, so
+     the curve has to be spelled out; at three points the corner read as a
+     chamfer, which is the one hard edge left on the machine. */
   clip-path: polygon(
     2.14% 0,
     97.86% 0,
     100% 62%,
-    99.1% 88%,
+    99.54% 81%,
+    99% 88.9%,
+    98.3% 94.9%,
+    97.48% 98.7%,
     96.6% 100%,
     3.4% 100%,
-    0.9% 88%,
+    2.52% 98.7%,
+    1.7% 94.9%,
+    1% 88.9%,
+    0.46% 81%,
     0 62%
   );
   /* Hinge shadow, deck falling away, then the lip catching light. */
