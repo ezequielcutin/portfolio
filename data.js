@@ -163,6 +163,8 @@ window.PORTFOLIO_DATA = {
         shot: { src: "featured/shader-tool.webp", alt: "Universal Shader Tool editor: a node graph beside a live shader stage" },
         chip: "30 node types · 525 tests",
         live: true,
+        // Colour the screen throws onto the plate. Sampled from the shot.
+        glow: "rgba(224, 74, 34, 0.30)",
       },
       links: [
         { label: "Open editor",  href: "https://visuals-generator.vercel.app/" },
@@ -193,6 +195,7 @@ window.PORTFOLIO_DATA = {
           src: "featured/quietly-build-hearth.webp?v=phone",
           alt: "Quietly Build's hearth: one-day streak, day complete, both rituals done",
         },
+        glow: "rgba(116, 106, 240, 0.26)",
       },
       links: [{ label: "Visit site", href: "https://quietly.build" }],
     },
