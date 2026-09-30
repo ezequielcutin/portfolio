@@ -145,6 +145,21 @@ window.PORTFOLIO_DATA = {
 
   projects: [
     {
+      id: "color-canvas",
+      title: "Color Canvas",
+      tagline: "Words become generative scenes",
+      date: "Sep 2026",
+      blurb: "Type a word and watch it become a scene: a WebGL shader translates its palette, motion, texture, form, composition, and light into an atmosphere that eases into the next word.",
+      bullets: [
+        "One /api/palette request turns a word into distributions for color, energy, texture, form, layout, and light.",
+        "Keeps ambiguity visible by painting split votes side by side, then lets a tap settle which interpretation wins.",
+        "Swatch pickers provide a direct override for the background, foreground, and light when the model's answer needs a nudge.",
+        "The browser binds model state to a fixed visual language instead of asking the model to emit markup.",
+      ],
+      stack: ["JavaScript", "WebGL 2", "GLSL", "Jev", "Vercel"],
+      links: [{ label: "Visit site", href: "https://jev-color-canvas.vercel.app/" }],
+    },
+    {
       id: "shader-tool",
       title: "Universal Shader Tool",
       tagline: "Node-based GLSL shader editor",
