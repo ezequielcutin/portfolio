@@ -391,6 +391,26 @@ function FeaturedStage({ items, onOpenProject }) {
   const liveRef = useRef(null);
   const frameRef = useRef(0);
   const touchRef = useRef(null);
+  const [sceneVisible, setSceneVisible] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    const scene = deckRef.current && deckRef.current.parentElement;
+    if (!scene) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      setSceneVisible(entry.isIntersecting);
+    }, { threshold: 0.15 });
+    observer.observe(scene);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReduceMotion(preference.matches);
+    update();
+    preference.addEventListener("change", update);
+    return () => preference.removeEventListener("change", update);
+  }, []);
 
   const preload = (id) => setLoaded((l) => (l.indexOf(id) < 0 ? l.concat(id) : l));
   const select = (id) => {
@@ -543,6 +563,20 @@ function FeaturedStage({ items, onOpenProject }) {
                   </div>
                   <div className="pf-stage__shot">
                     {show && <img src={p.featured.shot.src} alt="" decoding="async" />}
+                    {show && p.featured.video && p.id === activeId && sceneVisible && !reduceMotion && (
+                      <video
+                        className="pf-stage__video"
+                        src={p.featured.video}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        preload="none"
+                        onPlaying={(e) => e.currentTarget.classList.add("is-playing")}
+                        onPause={(e) => e.currentTarget.classList.remove("is-playing")}
+                        onError={(e) => e.currentTarget.classList.remove("is-playing")}
+                      />
+                    )}
                     {p.featured.live && (
                       <canvas className="pf-stage__live" ref={liveRef} aria-hidden="true" />
                     )}

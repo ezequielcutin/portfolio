@@ -157,6 +157,15 @@ window.PORTFOLIO_DATA = {
         "The browser binds model state to a fixed visual language instead of asking the model to emit markup.",
       ],
       stack: ["JavaScript", "WebGL 2", "GLSL", "Jev", "Vercel"],
+      featured: {
+        line: "Type a phrase. Watch its palette become a moving scene.",
+        shot: {
+          src: "featured/color-canvas.webp?v=hq1",
+          alt: "Color Canvas turns the last day of summer into a warm moving landscape, then thunder before rain into a stormy scene",
+        },
+        video: "featured/color-canvas-demo.mp4?v=hq1",
+        glow: "rgba(238, 155, 57, 0.26)",
+      },
       links: [{ label: "Visit site", href: "https://jev-color-canvas.vercel.app/" }],
     },
     {

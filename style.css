@@ -4161,6 +4161,17 @@ html.pf-theme-switching *::after {
   object-fit: cover;
   object-position: top left;
 }
+.pf-stage__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+.pf-stage__video.is-playing { opacity: 1; }
 
 /* Live WebGL in the shader-tool preview pane. Percentages are of the
    shot frame after object-fit: cover / top-left on the 1600×1000 file
