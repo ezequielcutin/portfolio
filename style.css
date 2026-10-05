@@ -1741,6 +1741,13 @@ img { display: block; max-width: 100%; height: auto; }
   .pf-snav {
     padding: 8px 16px;
     grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 0;
+    transition: border-color 350ms, background 350ms, box-shadow 350ms,
+                grid-template-columns 280ms cubic-bezier(0.2, 0.7, 0.2, 1),
+                column-gap 280ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .pf-snav.is-stuck {
+    grid-template-columns: minmax(0, 1fr) 40px;
     column-gap: 8px;
   }
   .pf-snav__track {
@@ -1752,6 +1759,12 @@ img { display: block; max-width: 100%; height: auto; }
   }
   .pf-snav__theme {
     grid-column: 2;
+    width: 0;
+    overflow: hidden;
+    transition: opacity 280ms ease, width 280ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .pf-snav.is-stuck .pf-snav__theme {
+    width: 40px;
   }
   .pf-snav__link {
     flex: 1;
@@ -3982,6 +3995,12 @@ html.pf-theme-switching *::after {
     transform 420ms cubic-bezier(0.2, 0.7, 0.2, 1),
     opacity 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
   will-change: transform, opacity;
+  /* Same fix as .pf-term__pane: iOS Safari can fail to repaint this layer
+     as the transform/opacity transition runs, leaving the switch frozen
+     until something else forces a repaint, then jumping to the current
+     state. Forcing its own compositing layer keeps the paint live. */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 .pf-stage__card.is-active { transform: translate3d(0, 0, 0); opacity: 1; }
 
