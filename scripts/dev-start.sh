@@ -33,7 +33,7 @@ nohup node "$ROOT/scripts/build.mjs" --watch >/dev/null 2>&1 &
 watch_pid=$!
 echo "$watch_pid" > "$WATCH_PID_FILE"
 
-nohup python3 -m http.server "$PORT" >/dev/null 2>&1 &
+nohup python3 "$ROOT/scripts/dev_server.py" "$PORT" >/dev/null 2>&1 &
 server_pid=$!
 echo "$server_pid" > "$PID_FILE"
 

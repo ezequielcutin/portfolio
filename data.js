@@ -280,12 +280,10 @@ window.PORTFOLIO_DATA = {
       title: "Fractal Mountain Generator",
       tagline: "WebGL + linear algebra",
       date: "Aug 2024",
-      blurb: "Recursive fractal mountain landscapes built with WebGL. A small study in vector ops, geometric transformations, and recursive geometry.",
+      blurb: "An interactive WebGL study in recursive geometry. Change the fractal depth, tune the animated shimmer, and explore different color palettes.",
       stack: ["JavaScript", "WebGL"],
-      images: [
-        { src: "fractal-mountain.png",        alt: "Fractal mountain render" },
-        { src: "fractal-mountain-inputs.png", alt: "Generator inputs panel" },
-      ],
+      video: "featured/fractal-mountain-demo.mp4",
+      videoPoster: "featured/fractal-mountain-poster.webp",
       links: [
         { label: "GitHub", href: "https://github.com/ezequielcutin/fractal-mountain" },
         { label: "Live",   href: "https://ezequielcutin.github.io/fractal-mountain/" },

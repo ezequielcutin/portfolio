@@ -86,15 +86,18 @@ function initFooterScreen() {
     let rect = null;
     let pageBg = [0.063, 0.059, 0.051];
     let accent = [0.878, 0.502, 0.333];
+    const musicCard = document.querySelector('.pf-mh');
 
-    function refreshRect() { rect = canvas.getBoundingClientRect(); }
+    function refreshRect() {
+        rect = canvas.getBoundingClientRect();
+        refreshCardUv();
+    }
 
     function refreshCardUv() {
         cardUv = [0, 0, -1, -1];
         if (!rect || rect.width < 1 || rect.height < 1) return;
-        const card = document.querySelector('.pf-mh');
-        if (!card) return;
-        const box = card.getBoundingClientRect();
+        if (!musicCard) return;
+        const box = musicCard.getBoundingClientRect();
         if (box.width < 8 || box.height < 8) return;
         const u0 = (box.left - rect.left) / rect.width;
         const u1 = (box.right - rect.left) / rect.width;
@@ -296,7 +299,6 @@ function initFooterScreen() {
         gl.uniform1f(uJagged, jagged ? 1.0 : 0.0);
         noisePhase = (noisePhase + delta * JAG_CHURN_RATE) % TAU;
         gl.uniform1f(uPhase, noisePhase);
-        refreshCardUv();
         gl.uniform4f(uCard, cardUv[0], cardUv[1], cardUv[2], cardUv[3]);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
@@ -525,13 +527,18 @@ function initFooterScreen() {
     document.addEventListener('pointerup', onPointerUp, { passive: true });
     document.addEventListener('pointercancel', onPointerUp, { passive: true });
 
-    window.addEventListener('scroll', () => { if (booted) refreshRect(); }, { passive: true });
+    window.addEventListener('scroll', () => {
+        if (!booted) return;
+        refreshRect();
+        if (!ANIMATE && inView) staticRender();
+    }, { passive: true });
     window.addEventListener('resize', () => { if (booted) refreshRect(); });
 
     if ('MutationObserver' in window) {
         const themeObserver = new MutationObserver(() => {
             refreshThemeColors();
             if (booted && inView) {
+                refreshRect();
                 if (ANIMATE) render(performance.now());
                 else staticRender();
             }
@@ -565,11 +572,15 @@ function initFooterScreen() {
         const ro = new ResizeObserver(() => {
             if (!booted) return;
             refreshRect();
-            if (resize()) {
+            const resized = resize();
+            if (resized || !ANIMATE) {
                 if (ANIMATE) render(performance.now());
                 else staticRender();
             }
         });
         ro.observe(canvas);
+        // Track artwork, player content and responsive card size changes.
+        // UVs stay cached during steady animation frames.
+        if (musicCard) ro.observe(musicCard);
     }
 }

@@ -118,28 +118,32 @@ function initAudioVisualizer() {
         drawVisualizer();
     }
 
-    // Ground colour for the motion-trail fade. Read live rather than
-    // hardcoded black: on the paper theme a black fade smears dark streaks
-    // across a cream background.
-    function getGroundRgb() {
-        const bg = getComputedStyle(document.documentElement)
-            .getPropertyValue('--bg').trim();
-        return /^#[0-9a-f]{6}$/i.test(bg) ? hexToRgb(bg) : { r: 0, g: 0, b: 0 };
-    }
+    let themeColors;
+    let themePrimaryRgb;
+    let themeGroundRgb;
 
-    // Theme colors — pulled from the live --accent CSS variable (rust on dark).
-    function getThemeColors() {
-        const accent = (
-            getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() ||
-            '#e08055'
-        );
-        return {
+    // Read and convert once per theme change, not on each animation frame.
+    // Keep the paper ground in the motion trail instead of fading to black.
+    function refreshThemeColors() {
+        const styles = getComputedStyle(document.documentElement);
+        const accent = styles.getPropertyValue('--accent').trim() || '#e08055';
+        const bg = styles.getPropertyValue('--bg').trim();
+        themeColors = {
             primary: accent,
             secondary: accent,
             glow: accent,
             shadow: 'rgba(224, 128, 85, 0.8)',
         };
+        themePrimaryRgb = hexToRgb(accent);
+        themeGroundRgb = /^#[0-9a-f]{6}$/i.test(bg) ? hexToRgb(bg) : { r: 0, g: 0, b: 0 };
     }
+
+    refreshThemeColors();
+    const themeObserver = new MutationObserver(refreshThemeColors);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme'],
+    });
 
     // Set canvas size
     function resizeCanvas() {
@@ -272,12 +276,11 @@ function initAudioVisualizer() {
             if (canvas.width === 0 || canvas.height === 0) return;
         }
         analyser.getFloatFrequencyData(freqData);
-        const colors = getThemeColors();
-        const primaryRgb = hexToRgb(colors.primary);
+        const primaryRgb = themePrimaryRgb;
         const minDb = analyser.minDecibels;
         const maxDb = analyser.maxDecibels;
 
-        const groundA = getGroundRgb();
+        const groundA = themeGroundRgb;
         ctx.fillStyle = `rgba(${groundA.r}, ${groundA.g}, ${groundA.b}, 0.25)`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -394,10 +397,10 @@ function initAudioVisualizer() {
             if (canvas.width === 0 || canvas.height === 0) return;
         }
         analyser.getByteTimeDomainData(timeData);
-        const colors = getThemeColors();
-        const primaryRgb = hexToRgb(colors.primary);
+        const colors = themeColors;
+        const primaryRgb = themePrimaryRgb;
 
-        const groundB = getGroundRgb();
+        const groundB = themeGroundRgb;
         ctx.fillStyle = `rgba(${groundB.r}, ${groundB.g}, ${groundB.b}, 0.2)`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -479,12 +482,11 @@ function initAudioVisualizer() {
             if (canvas.width === 0 || canvas.height === 0) return;
         }
         analyser.getFloatFrequencyData(freqData);
-        const colors = getThemeColors();
-        const primaryRgb = hexToRgb(colors.primary);
+        const primaryRgb = themePrimaryRgb;
         const minDb = analyser.minDecibels;
         const maxDb = analyser.maxDecibels;
 
-        const groundC = getGroundRgb();
+        const groundC = themeGroundRgb;
         ctx.fillStyle = `rgba(${groundC.r}, ${groundC.g}, ${groundC.b}, 0.2)`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -582,10 +584,9 @@ function initAudioVisualizer() {
             if (canvas.width === 0 || canvas.height === 0) return;
         }
         ambientTime += 0.02;
-        const colors = getThemeColors();
-        const primaryRgb = hexToRgb(colors.primary);
+        const primaryRgb = themePrimaryRgb;
 
-        const groundD = getGroundRgb();
+        const groundD = themeGroundRgb;
         ctx.fillStyle = `rgba(${groundD.r}, ${groundD.g}, ${groundD.b}, 0.15)`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 

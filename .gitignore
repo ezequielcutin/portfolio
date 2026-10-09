@@ -15,6 +15,7 @@ node_modules/
 dist/
 .dev-server.pid
 .dev-watch.pid
+__pycache__/
 
 # Design specs
 .interface-design/

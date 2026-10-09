@@ -71,7 +71,7 @@ function Carousel({ images }) {
 }
 
 // ───────── Custom video player ─────────
-function VideoPlayer({ src }) {
+function VideoPlayer({ src, poster }) {
   const ref = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -132,7 +132,7 @@ function VideoPlayer({ src }) {
   return (
     <div className="pf-video">
       <div className="pf-video__viewport" onClick={toggle}>
-        <video ref={ref} preload="metadata">
+        <video ref={ref} poster={poster} preload="metadata">
           <source src={src} type="video/mp4" />
         </video>
         {!playing && (
@@ -214,7 +214,7 @@ function ProjectBody({ item }) {
       <Stack items={item.stack} />
       {item.video && (
         <div className="pf-entry__media">
-          <VideoPlayer src={item.video} />
+          <VideoPlayer src={item.video} poster={item.videoPoster} />
         </div>
       )}
       {item.images && (
@@ -916,7 +916,7 @@ function ProjectsTerminal({ items, openId: openIdProp, onOpenChange, focusSeq })
           {(open.video || open.images) && (
             <>
               <p className="pf-term__sec"><span className="pf-term__hash" aria-hidden="true">##</span> preview</p>
-              {open.video && <div className="pf-term__media"><VideoPlayer src={open.video} /></div>}
+              {open.video && <div className="pf-term__media"><VideoPlayer src={open.video} poster={open.videoPoster} /></div>}
               {open.images && <div className="pf-term__media"><Carousel images={open.images} /></div>}
             </>
           )}
