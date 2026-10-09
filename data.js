@@ -13,7 +13,7 @@ window.PORTFOLIO_DATA = {
     resume: {
       href: "Ezequiel-Cutin-Resume.pdf",
       url: "https://ezequielcutin.com/Ezequiel-Cutin-Resume.pdf",
-      note: "PDF, 43 KB",
+      note: "PDF, 90 KB",
     },
     links: [
       { label: "GitHub",     href: "https://github.com/ezequielcutin",                  handle: "@ezequielcutin" },
