@@ -1273,6 +1273,13 @@ function WorkTimeline({ items }) {
   const deckRef = useRef(null);
   const dossierOpenerRef = useRef(null);
   const glideUntilRef = useRef(0);
+  // Pinned cards whose content is taller than the space between nav and rail.
+  // Those get a fade and a "View details" button instead of a silent crop.
+  const [clipped, setClipped] = useState(() => new Set());
+  // The dossier's scroll lock pins <body> and zeroes scrollY; without this
+  // the pinned track would rewind to the first card behind the modal.
+  const frozenRef = useRef(false);
+  frozenRef.current = dossierId !== null;
 
   // Per-checkpoint hop variance so the cube doesn't bounce identically between
   // every pair of entries — some hops are higher/snappier, others low and lazy.
@@ -1311,8 +1318,38 @@ function WorkTimeline({ items }) {
   }, []);
 
   useEffect(() => {
-    if (mode !== "deck") setDossierId(null);
+    if (mode === "stacked") setDossierId(null);
   }, [mode]);
+
+  // Pinned panels share a height set by the viewport, so whether a card fits
+  // depends on screen size, zoom and font load. Measure instead of guessing.
+  useEffect(() => {
+    if (!pinned) return;
+    const track = trackRef.current;
+    if (!track) return;
+    const panels = Array.from(track.querySelectorAll(".pf-tl__panel"));
+    let raf = 0;
+    const measure = () => {
+      raf = 0;
+      if (frozenRef.current) return;
+      const next = new Set();
+      panels.forEach((panel, i) => {
+        if (panel.scrollHeight > panel.clientHeight + 1) next.add(ordered[i].id);
+      });
+      setClipped((prev) =>
+        prev.size === next.size && [...next].every((id) => prev.has(id)) ? prev : next
+      );
+    };
+    const schedule = () => { if (!raf) raf = requestAnimationFrame(measure); };
+    const ro = new ResizeObserver(schedule);
+    panels.forEach((panel) => ro.observe(panel));
+    document.fonts?.ready.then(schedule);
+    schedule();
+    return () => {
+      ro.disconnect();
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [pinned, ordered]);
 
   // Pinned scroll-jack: native scroll is the target, the track eases toward
   // it. We still never capture the wheel — keyboard, trackpad, scrollbar and
@@ -1410,6 +1447,7 @@ function WorkTimeline({ items }) {
     };
 
     const tick = (now) => {
+      if (frozenRef.current) { raf = 0; return; }
       const t = targetP();
       if (!seeded) {
         visualP = t;
@@ -1456,6 +1494,7 @@ function WorkTimeline({ items }) {
     window.addEventListener("scroll", kick, { passive: true });
     window.addEventListener("wheel", onWheel, { passive: true });
     const ro = new ResizeObserver(() => {
+      if (frozenRef.current) return;
       measure();
       visualP = targetP();
       seeded = true;
@@ -1522,11 +1561,17 @@ function WorkTimeline({ items }) {
     jumpTo(i);
   };
 
+  const openDossier = (work, opener) => {
+    dossierOpenerRef.current = opener;
+    setDossierDirection(1);
+    setDossierId(work.id);
+  };
+
   const Panels = ordered.map((w, i) => (
       <article
         key={w.id}
         id={`tl-panel-${w.id}`}
-        className={`pf-tl__panel ${w.current ? "is-current" : ""} ${pinned && i === active ? "is-active" : ""} ${pinned ? "is-jumpable" : ""}`}
+        className={`pf-tl__panel ${w.current ? "is-current" : ""} ${pinned && i === active ? "is-active" : ""} ${pinned ? "is-jumpable" : ""} ${pinned && clipped.has(w.id) ? "is-clipped" : ""}`}
         aria-current={w.current ? "true" : undefined}
         onClick={pinned ? () => onPanelActivate(i) : undefined}
       >
@@ -1560,12 +1605,50 @@ function WorkTimeline({ items }) {
         {w.bullets.map((b, bi) => <li key={bi}>{b}</li>)}
       </ul>
       <Stack items={w.stack} />
+      {pinned && clipped.has(w.id) ? (
+        <div className="pf-tl__fitMore">
+          {i === active ? (
+            <button
+              type="button"
+              className="pf-tl__cardMore"
+              aria-haspopup="dialog"
+              aria-controls={`tl-dossier-${w.id}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                openDossier(w, event.currentTarget);
+              }}
+            >
+              <span>View details</span>
+              <span className="pf-tl__cardMoreArrow" aria-hidden="true">↗</span>
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       </article>
   ));
 
+  const dossierIndex = ordered.findIndex((work) => work.id === dossierId);
+  const dossier = dossierIndex >= 0 ? ordered[dossierIndex] : null;
+  const Dossier = dossier ? (
+    <WorkDossier
+      w={dossier}
+      i={dossierIndex}
+      n={n}
+      direction={dossierDirection}
+      opener={dossierOpenerRef.current}
+      onClose={() => setDossierId(null)}
+      onNavigate={(step) => {
+        const nextIndex = Math.min(n - 1, Math.max(0, dossierIndex + step));
+        if (nextIndex === dossierIndex) return;
+        const dialog = document.querySelector(".pf-tl__dossier");
+        if (dialog) dialog.scrollTop = 0;
+        setDossierDirection(step);
+        setDossierId(ordered[nextIndex].id);
+      }}
+    />
+  ) : null;
+
   if (mode === "deck") {
-    const dossierIndex = ordered.findIndex((work) => work.id === dossierId);
-    const dossier = dossierIndex >= 0 ? ordered[dossierIndex] : null;
     return (
       <div className="pf-tl pf-tl--deck">
         <div
@@ -1581,11 +1664,7 @@ function WorkTimeline({ items }) {
               i={i}
               n={n}
               active={i === active}
-              onOpen={(work, opener) => {
-                dossierOpenerRef.current = opener;
-                setDossierDirection(1);
-                setDossierId(work.id);
-              }}
+              onOpen={openDossier}
             />
           ))}
         </div>
@@ -1604,24 +1683,7 @@ function WorkTimeline({ items }) {
             <span aria-hidden="true">{_railLabel(ordered[n - 1].date)}</span>
           </div>
         </div>
-        {dossier ? (
-          <WorkDossier
-            w={dossier}
-            i={dossierIndex}
-            n={n}
-            direction={dossierDirection}
-            opener={dossierOpenerRef.current}
-            onClose={() => setDossierId(null)}
-            onNavigate={(step) => {
-              const nextIndex = Math.min(n - 1, Math.max(0, dossierIndex + step));
-              if (nextIndex === dossierIndex) return;
-              const dialog = document.querySelector(".pf-tl__dossier");
-              if (dialog) dialog.scrollTop = 0;
-              setDossierDirection(step);
-              setDossierId(ordered[nextIndex].id);
-            }}
-          />
-        ) : null}
+        {Dossier}
       </div>
     );
   }
@@ -1686,6 +1748,7 @@ function WorkTimeline({ items }) {
           scroll or click a card <span className="pf-tl__hintArrow">→</span>
         </div>
       </div>
+      {Dossier}
     </div>
   );
 }

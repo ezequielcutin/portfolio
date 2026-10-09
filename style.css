@@ -2778,7 +2778,7 @@ img { display: block; max-width: 100%; height: auto; }
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding-top: 60px; /* clear the sticky nav */
+  padding-top: 82px; /* clear the sticky nav (~66px) with breathing room */
 }
 .pf-tl__viewport {
   flex: 1;
@@ -2819,6 +2819,9 @@ img { display: block; max-width: 100%; height: auto; }
 }
 .pf-tl__panel .pf-stack { margin: 12px 0 0; }
 .pf-tl--pinned .pf-tl__panel {
+  position: relative;
+  /* Wider cards wrap long bullets onto fewer lines, which buys back height. */
+  width: min(600px, 74vw);
   transform-origin: center center;
   transform-style: preserve-3d;
   transition: border-color 320ms ease, opacity 220ms ease;
@@ -2834,6 +2837,41 @@ img { display: block; max-width: 100%; height: auto; }
     opacity: 0.78;
     border-color: color-mix(in srgb, var(--fg) 24%, var(--rule));
   }
+}
+.pf-tl--pinned .pf-tl__year {
+  /* Scale the numeral with height too, so short laptop windows keep room for copy. */
+  font-size: clamp(40px, min(5vw, 8vh), 68px);
+}
+/* Short viewports: tighten the vertical rhythm before anything is clipped. */
+@media (max-height: 860px) {
+  .pf-tl--pinned .pf-tl__panel { padding: 22px 28px; }
+  .pf-tl--pinned .pf-tl__panelTop { margin-bottom: 12px; }
+  .pf-tl--pinned .pf-tl__year { margin-bottom: 10px; }
+  .pf-tl--pinned .pf-tl__meta { margin-bottom: 14px; }
+  .pf-tl--pinned .pf-tl__bullets li { padding: 2px 0 2px 18px; line-height: 1.45; }
+}
+/* Whatever still doesn't fit fades out under a "View details" link that
+   opens the full dossier, instead of being cut mid-sentence. */
+.pf-tl__fitMore {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 72px 30px 10px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in srgb, var(--card) 92%, var(--bg)) 62%
+  );
+  pointer-events: none;
+}
+.pf-tl__fitMore .pf-tl__cardMore {
+  margin-top: 0;
+  pointer-events: auto;
+}
+@media (hover: hover) and (pointer: fine) {
+  .pf-tl__fitMore .pf-tl__cardMore:hover { color: var(--fg); }
+  .pf-tl__fitMore .pf-tl__cardMore:hover .pf-tl__cardMoreArrow { transform: translate(2px, -2px); }
 }
 .pf-tl--pinned .pf-tl__panel.is-active {
   box-shadow:
