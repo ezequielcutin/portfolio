@@ -944,6 +944,23 @@ function _startSort(dateStr) {
 }
 /** Start year of a role, e.g. "Jan 2025 to Present" -> "2025". Position on the
  *  timeline is start-based; "current" is signalled by the accent dot, not the label. */
+// Promotion ladder: every title held at one org, newest first, joined by a
+// rule so the step up reads at a glance. Renders nothing for single-role entries.
+function RoleLadder({ roles }) {
+  if (!roles || roles.length < 2) return null;
+  return (
+    <ol className="pf-ladder" aria-label="Roles held">
+      {roles.map((r, i) => (
+        <li key={r.title} className={`pf-ladder__step ${i === 0 ? "is-latest" : ""}`}>
+          <span className="pf-ladder__dot" aria-hidden="true" />
+          <span className="pf-ladder__title">{r.title}</span>
+          <span className="pf-ladder__date">{r.date}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 function _railLabel(dateStr) {
   const m = /(\d{4})/.exec(dateStr || "");
   return m ? m[1] : "";
@@ -994,6 +1011,7 @@ function WorkDeckCard({ w, i, n, active, onOpen }) {
       <h3 className="pf-tl__role">{w.title}</h3>
       <div className="pf-tl__org">{w.org}</div>
       <div className="pf-tl__meta">{w.date} · {w.location}</div>
+      <RoleLadder roles={w.roles} />
       <p className="pf-tl__cardPreview">{w.bullets[0]}</p>
       <button
         type="button"
@@ -1164,6 +1182,7 @@ function WorkDossier({ w, i, n, direction, opener, onClose, onNavigate }) {
 
           <h3 className="pf-tl__dossierTitle" id={titleId}>{w.title}</h3>
           <p className="pf-tl__dossierOrg">{w.org}</p>
+          <RoleLadder roles={w.roles} />
 
           <dl className="pf-tl__dossierMeta">
             <div><dt>Period</dt><dd>{w.date}</dd></div>
@@ -1507,6 +1526,7 @@ function WorkTimeline({ items }) {
       <h3 className="pf-tl__role">{w.title}</h3>
       <div className="pf-tl__org">{w.org}</div>
       <div className="pf-tl__meta">{w.date} · {w.location}</div>
+      <RoleLadder roles={w.roles} />
       <ul className="pf-tl__bullets">
         {w.bullets.map((b, bi) => <li key={bi}>{b}</li>)}
       </ul>
@@ -2179,6 +2199,11 @@ function PrintWork({ items }) {
             {w.location ? ` · ${w.location}` : ""}
             {w.current ? " · Current" : ""}
           </p>
+          {w.roles?.length > 1 ? (
+            <p className="pf-printEntry__meta">
+              {w.roles.map((r) => `${r.title} (${r.date})`).join(" · ")}
+            </p>
+          ) : null}
           {w.bullets?.length ? (
             <ul className="pf-printEntry__bullets">
               {w.bullets.map((b, i) => <li key={i}>{b}</li>)}

@@ -26,7 +26,7 @@ window.PORTFOLIO_DATA = {
 
   now: [
     { role: "Software Developer I", at: "United Wholesale Mortgage", entry: "uwm" },
-    { role: "Quant Algorithm Developer", at: "Glenbrook Trading",   entry: "glenbrook" },
+    { role: "Founding Engineer",         at: "Glenbrook Trading",   entry: "glenbrook" },
   ],
 
   work: [
@@ -49,10 +49,15 @@ window.PORTFOLIO_DATA = {
     },
     {
       id: "glenbrook",
-      title: "Quant Algorithm Developer",
+      title: "Founding Engineer",
       org: "Glenbrook Trading",
       logo: "logos/glenbrook.svg",
       date: "Jun 2024 to Present",
+      // Newest first. Rendered as a promotion ladder under the title.
+      roles: [
+        { title: "Founding Engineer",         date: "Jun 2025 to Present" },
+        { title: "Quant Algorithm Developer", date: "Jun 2024 to Jun 2025" },
+      ],
       location: "Remote",
       current: true,
       bullets: [

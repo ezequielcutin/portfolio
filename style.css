@@ -2690,6 +2690,63 @@ img { display: block; max-width: 100%; height: auto; }
   color: var(--muted);
   margin-bottom: 18px;
 }
+/* Promotion ladder: titles held at one org, newest first. The rule between
+   dots draws the step up; the latest dot fills with accent. */
+.pf-ladder {
+  list-style: none;
+  padding: 0;
+  margin: -8px 0 18px;
+}
+.pf-ladder__step {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 10px;
+  padding: 3px 0 3px 18px;
+}
+.pf-ladder__dot {
+  position: absolute;
+  left: 1px;
+  top: 9px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid var(--muted);
+  background: var(--bg);
+  box-sizing: border-box;
+}
+.pf-ladder__step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 18px;
+  bottom: -7px;
+  width: 1px;
+  background: color-mix(in srgb, var(--muted) 55%, transparent);
+}
+.pf-ladder__step.is-latest .pf-ladder__dot {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+.pf-ladder__title {
+  font-size: 14px;
+  color: var(--fg-soft);
+}
+.pf-ladder__step.is-latest .pf-ladder__title {
+  color: var(--fg);
+  font-weight: 600;
+}
+.pf-ladder__date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.pf-tl__dossierBody .pf-ladder { margin: -12px 0 22px; }
+@media (max-width: 900px) {
+  .pf-ladder__step { flex-direction: column; }
+}
 .pf-tl__bullets {
   list-style: none;
   padding: 0;
