@@ -384,8 +384,9 @@ function FeaturedStage({ items, onOpenProject }) {
   const featured = items.filter((p) => p.featured);
   const [activeId, setActiveId] = useState(featured[0] ? featured[0].id : null);
   const [prevId, setPrevId] = useState(null);
-  // Two small WebPs; decode them up front so the first switch is not a hitch.
-  const [loaded, setLoaded] = useState(featured.map((p) => p.id));
+  // Keep the reserved deck empty until Projects approaches the viewport.
+  const [stageReady, setStageReady] = useState(false);
+  const [loaded, setLoaded] = useState([]);
   const tabsRef = useRef(null);
   const deckRef = useRef(null);
   const liveRef = useRef(null);
@@ -395,8 +396,33 @@ function FeaturedStage({ items, onOpenProject }) {
   const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
+    if (stageReady) return;
     const scene = deckRef.current && deckRef.current.parentElement;
     if (!scene) return;
+    const prepare = () => {
+      setLoaded((ids) => ids.indexOf(activeId) < 0 ? ids.concat(activeId) : ids);
+      setStageReady(true);
+    };
+    if (typeof IntersectionObserver === "undefined") {
+      prepare();
+      return;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      prepare();
+      observer.disconnect();
+    }, { rootMargin: "350px 0px" });
+    observer.observe(scene);
+    return () => observer.disconnect();
+  }, [stageReady, activeId]);
+
+  useEffect(() => {
+    const scene = deckRef.current && deckRef.current.parentElement;
+    if (!scene) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setSceneVisible(true);
+      return;
+    }
     const observer = new IntersectionObserver(([entry]) => {
       setSceneVisible(entry.isIntersecting);
     }, { threshold: 0.15 });
@@ -412,7 +438,10 @@ function FeaturedStage({ items, onOpenProject }) {
     return () => preference.removeEventListener("change", update);
   }, []);
 
-  const preload = (id) => setLoaded((l) => (l.indexOf(id) < 0 ? l.concat(id) : l));
+  const preload = (id) => {
+    setStageReady(true);
+    setLoaded((l) => (l.indexOf(id) < 0 ? l.concat(id) : l));
+  };
   const select = (id) => {
     if (id === activeId) return;
     setPrevId(activeId);
@@ -424,6 +453,7 @@ function FeaturedStage({ items, onOpenProject }) {
   // on each axis. Motion only: no specular writes. Fine pointers only;
   // rAF so a burst of pointermove costs one style write per frame.
   useEffect(() => {
+    if (!stageReady) return;
     const deck = deckRef.current;
     const scene = deck && deck.parentElement;
     if (!scene) return;
@@ -458,15 +488,14 @@ function FeaturedStage({ items, onOpenProject }) {
       scene.removeEventListener("pointerleave", onLeave);
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
     };
-  }, []);
+  }, [stageReady]);
 
   const liveId = featured.find((p) => p.featured.live);
   useEffect(() => {
     const canvas = liveRef.current;
-    if (!canvas || !liveId || activeId !== liveId.id) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    return runStageWiggle(canvas, { static: reduce });
-  }, [activeId]);
+    if (!stageReady || !sceneVisible || !canvas || !liveId || activeId !== liveId.id) return;
+    return runStageWiggle(canvas, { static: reduceMotion });
+  }, [activeId, stageReady, sceneVisible, reduceMotion]);
 
   const activeIdx = Math.max(0, featured.findIndex((p) => p.id === activeId));
 
@@ -540,7 +569,7 @@ function FeaturedStage({ items, onOpenProject }) {
           onTouchEnd={onTouchEnd}
         >
           <div className="pf-stage__deck" ref={deckRef}>
-            {featured.map((p) => {
+            {stageReady && featured.map((p) => {
               const state = p.id === activeId ? "is-active" : p.id === prevId ? "is-prev" : "";
               const show = loaded.indexOf(p.id) >= 0;
               return (
@@ -1747,6 +1776,7 @@ function PlayingBars() {
 
 function NowPlayingHero({ data }) {
   const [tracks, setTracks] = useState(data.tracks);
+  const [musicNearby, setMusicNearby] = useState(false);
   const [active, setActive] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState({ played: 0, cur: 0, dur: 0 });
@@ -1754,10 +1784,28 @@ function NowPlayingHero({ data }) {
   const [widgetError, setWidgetError] = useState(false);
   const iframeRef = useRef(null);
   const heroRef = useRef(null);
+  const pendingPlayRef = useRef(false);
   const [heroInView, setHeroInView] = useState(true);
   const widgetRef = useRef(null);
   const tracksRef = useRef(tracks);
   tracksRef.current = tracks;
+
+  // Music is well below the first viewport. Start its third-party work only
+  // when the listener approaches it, with room for the player to load.
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setMusicNearby(true);
+      return;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      setMusicNearby(true);
+      observer.disconnect();
+    }, { rootMargin: "600px" });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Pull title + artwork from the loaded widget (oEmbed often omits thumbnail_url for some tracks).
   function syncTrackFromWidget(indexWhenLoaded, urlWhenLoaded) {
@@ -1803,6 +1851,7 @@ function NowPlayingHero({ data }) {
 
   // Hydrate titles + artwork from oEmbed; never drop artwork/title we already got from the widget.
   useEffect(() => {
+    if (!musicNearby) return;
     let cancelled = false;
     Promise.all(
       data.tracks.map((t) =>
@@ -1825,7 +1874,7 @@ function NowPlayingHero({ data }) {
       );
     });
     return () => { cancelled = true; };
-  }, [data]);
+  }, [data, musicNearby]);
 
   // Warm the browser image cache so track switches paint artwork instantly.
   useEffect(() => {
@@ -1838,7 +1887,7 @@ function NowPlayingHero({ data }) {
 
   // Initialize the widget once the iframe mounts.
   useEffect(() => {
-    if (!iframeRef.current) return;
+    if (!musicNearby || !iframeRef.current) return;
     const unbindsRef = { current: [] };
     let cancelled = false;
     ensureSCWidget().then((Widget) => {
@@ -1886,7 +1935,7 @@ function NowPlayingHero({ data }) {
       unbindsRef.current = [];
       setWidgetReady(false);
     };
-  }, []);
+  }, [musicNearby]);
 
   // Mini-player: know when the music hero has scrolled off screen.
   useEffect(() => {
@@ -1911,8 +1960,10 @@ function NowPlayingHero({ data }) {
     const url = row?.url;
     if (!url) return;
     const idx = active;
+    const autoPlay = playing || pendingPlayRef.current;
+    pendingPlayRef.current = false;
     w.load(url, {
-      auto_play: playing,
+      auto_play: autoPlay,
       hide_related: true,
       show_comments: false,
       show_reposts: false,
@@ -1927,7 +1978,12 @@ function NowPlayingHero({ data }) {
     const w = widgetRef.current;
     const row = tracksRef.current[active];
     if (!w) {
-      if (row?.url) window.open(row.url, "_blank", "noopener,noreferrer");
+      if (widgetError) {
+        if (row?.url) window.open(row.url, "_blank", "noopener,noreferrer");
+      } else {
+        pendingPlayRef.current = !pendingPlayRef.current;
+        setMusicNearby(true);
+      }
       return;
     }
     if (playing) w.pause();
@@ -2024,13 +2080,15 @@ function NowPlayingHero({ data }) {
         </a>
       </div>
 
-      <iframe
-        ref={iframeRef}
-        className="pf-mh__iframe"
-        title="SoundCloud player"
-        allow="autoplay"
-        src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(tracks[0].url)}&visual=false&hide_related=true&show_comments=false&show_reposts=false&show_teaser=false`}
-      />
+      {musicNearby && (
+        <iframe
+          ref={iframeRef}
+          className="pf-mh__iframe"
+          title="SoundCloud player"
+          allow="autoplay"
+          src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(tracks[0].url)}&visual=false&hide_related=true&show_comments=false&show_reposts=false&show_teaser=false`}
+        />
+      )}
 
       {playing && !heroInView ? (
         <div className="pf-mini" role="group" aria-label="Now playing">

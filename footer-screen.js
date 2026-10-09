@@ -238,7 +238,9 @@ function initFooterScreen() {
     }
 
     function resize() {
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        // The wash benefits from softness; avoid a full retina-sized pair
+        // of feedback buffers for this large decorative panel.
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
         const w = Math.max(1, Math.round(canvas.clientWidth * dpr));
         const h = Math.max(1, Math.round(canvas.clientHeight * dpr));
         if (canvas.width === w && canvas.height === h) return false;

@@ -1,0 +1,53 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "organic-clip-path",
+        "value": "*",
+        "files": [
+          "style.css"
+        ],
+        "createdAt": "2026-10-09T02:52:17.543Z",
+        "reason": "Existing clip-path draws the geometric laptop deck in the featured project stage; it is not an organic contour."
+      },
+      {
+        "rule": "clipped-overflow-container",
+        "value": "*",
+        "files": [
+          "index.html"
+        ],
+        "createdAt": "2026-10-09T03:06:26.480Z",
+        "reason": "Codex review: body only clips horizontal page overflow; fixed player and visualizer controls stay within the viewport. The detector reports this through index.html and offers no extractable value."
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "index.html"
+        ],
+        "createdAt": "2026-10-09T03:06:26.500Z",
+        "reason": "Codex review: existing timeline cube lighting and active-state rings are intentional ornament/status treatments. This cache-version edit preserves that design; the detector offers no extractable value."
+      },
+      {
+        "rule": "overused-font",
+        "value": "space grotesk",
+        "files": [
+          "index.html"
+        ],
+        "createdAt": "2026-10-09T03:07:30.280Z",
+        "reason": "Codex review: DESIGN.md specifies Space Grotesk as the existing portfolio display and body font. The performance task preserves established typography."
+      },
+      {
+        "rule": "organic-clip-path",
+        "value": "*",
+        "files": [
+          "index.html"
+        ],
+        "createdAt": "2026-10-09T03:07:30.298Z",
+        "reason": "Codex review: the existing polygon draws the geometric laptop deck in the featured-project stage, not an organic contour. This repeats the existing style.css exception through the index.html stylesheet audit."
+      }
+    ]
+  }
+}

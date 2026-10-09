@@ -63,7 +63,10 @@ function initHeaderAmbience() {
     let W, H;
     let mouseX = -9999, mouseY = -9999;
     let particles = [];
-    let animId;
+    let animId = null;
+    let inView = false;
+    let lastFrameAt = 0;
+    const FRAME_INTERVAL = 1000 / 30;
 
     // Drag state
     let draggedParticle = null;
@@ -354,13 +357,42 @@ function initHeaderAmbience() {
         }
     }
 
-    function animate() {
+    function animate(now) {
+        animId = requestAnimationFrame(animate);
+        if (lastFrameAt && now - lastFrameAt < FRAME_INTERVAL - 1) return;
+        lastFrameAt = now;
         ctx.clearRect(0, 0, W, H);
         drawAmbientGlow();
         particles.forEach(p => { p.update(); p.draw(); });
         drawConnections();
         drawHoverIndicator();
+    }
+
+    function start() {
+        if (!inView || document.hidden || animId !== null) return;
+        lastFrameAt = 0;
         animId = requestAnimationFrame(animate);
+    }
+
+    function stop() {
+        if (animId !== null) cancelAnimationFrame(animId);
+        animId = null;
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stop();
+        else start();
+    });
+
+    if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(([entry]) => {
+            inView = entry.isIntersecting;
+            if (inView) start();
+            else stop();
+        });
+        observer.observe(canvas);
+    } else {
+        inView = true;
     }
 
     // Mouse tracking
@@ -476,7 +508,7 @@ function initHeaderAmbience() {
 
     resize();
     initParticles();
-    animate();
+    start();
 
     // Fade in after a beat
     setTimeout(() => canvas.classList.add('active'), 300);
