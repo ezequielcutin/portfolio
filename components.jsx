@@ -1188,6 +1188,7 @@ function WorkDossier({ w, i, n, direction, opener, onClose, onNavigate }) {
           className={`pf-tl__dossierContent is-${direction < 0 ? "previous" : "next"}`}
         >
         <div className="pf-tl__dossierBody">
+          <div className="pf-tl__dossierIdentity">
           <div className="pf-tl__dossierTop">
             <span className={`pf-tl__logo ${w.logoBleed ? "is-bleed" : ""}`}>
               <span className="pf-tl__logoFallback" aria-hidden="true">{_initials(w.org)}</span>
@@ -1217,7 +1218,9 @@ function WorkDossier({ w, i, n, direction, opener, onClose, onNavigate }) {
             <div><dt>Period</dt><dd>{w.date}</dd></div>
             <div><dt>Location</dt><dd>{w.location}</dd></div>
           </dl>
+          </div>
 
+          <div className="pf-tl__dossierDetails">
           <section className="pf-tl__dossierSection" aria-labelledby={`${titleId}-impact`}>
             <h4 id={`${titleId}-impact`}><span>01</span> Highlights</h4>
             <ol className="pf-tl__dossierBullets">
@@ -1234,6 +1237,7 @@ function WorkDossier({ w, i, n, direction, opener, onClose, onNavigate }) {
             <h4 id={`${titleId}-tools`}><span>02</span> Systems used</h4>
             <Stack items={w.stack} />
           </section>
+          </div>
         </div>
 
         <footer className="pf-tl__dossierFooter">

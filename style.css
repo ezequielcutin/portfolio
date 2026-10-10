@@ -3542,6 +3542,59 @@ img { display: block; max-width: 100%; height: auto; }
 @media (max-width: 360px) {
   .pf-tl__dossierBar { padding-right: 0; }
 }
+/* Desktop: the phone-width column left most of the screen empty. Spread it
+   into a wide sheet — identity pinned on the left, highlights on the right. */
+@media (min-width: 901px) {
+  /* Height follows the entry, so short roles don't float in an empty sheet.
+     The top edge is anchored rather than centered, so the bar and its
+     prev/next arrows stay put while the height changes between entries. */
+  .pf-tl__dossierBackdrop {
+    align-items: start;
+    padding: clamp(24px, 9vh, 96px) 32px 32px;
+  }
+  .pf-tl__dossier {
+    width: min(100%, 1040px);
+    height: auto;
+    max-height: 100%;
+    interpolate-size: allow-keywords;
+    transition: height 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .pf-tl__dossier::before { left: 28px; }
+  .pf-tl__dossierBar { padding: 0 0 0 28px; }
+  .pf-tl__dossierBody {
+    display: grid;
+    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+    gap: 56px;
+    padding: 36px 40px 28px 28px;
+  }
+  .pf-tl__dossierIdentity {
+    position: sticky;
+    top: 88px;
+    align-self: start;
+  }
+  .pf-tl__dossierYear { font-size: 56px; }
+  .pf-tl__dossierTitle {
+    max-width: none;
+    font-size: clamp(30px, 2.6vw, 38px);
+  }
+  .pf-tl__dossierDetails {
+    padding-left: 40px;
+    border-left: 1px solid var(--rule);
+  }
+  .pf-tl__dossierDetails .pf-tl__dossierSection:first-child { margin-top: 2px; }
+  .pf-tl__dossierSection { margin-top: 36px; }
+  .pf-tl__dossierBullets li { padding-bottom: 22px; }
+  .pf-tl__dossierBullets p { font-size: 15px; line-height: 1.6; }
+  .pf-tl__dossierFooter { padding: 14px 28px; }
+}
+@media (min-width: 901px) and (hover: hover) and (pointer: fine) {
+  .pf-tl__dossierClose:hover span { transform: translateX(-3px); }
+  .pf-tl__dossierNav button:hover:not([aria-disabled="true"]) {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+  .pf-tl__dossierFooter button:hover { color: var(--fg); }
+}
 @media (prefers-reduced-motion: reduce) {
   .pf-tl--deck .pf-tl__panel,
   .pf-tl__deckMeta .pf-tl__railFill,
@@ -3549,6 +3602,7 @@ img { display: block; max-width: 100%; height: auto; }
   .pf-tl__dossierBackdrop,
   .pf-tl__dossier,
   .pf-tl__dossierContent { animation: none; }
+  .pf-tl__dossier,
   .pf-tl__dossierNav button { transition: none; }
 }
 
