@@ -1138,6 +1138,43 @@ function WorkDossier({ w, i, n, direction, opener, onClose, onNavigate }) {
 
   useModalShell(dialogRef, opener, "#block-work");
 
+  // Chrome counts any key press — ←/→, Escape — as keyboard use and rings the
+  // focused button. These are shortcuts, not focus navigation, so rings stay
+  // off (data-kbd unset) until Tab is actually pressed. Focus still returns
+  // to the opener on close; it only skips the ring unless Tab was used.
+  const usedTabRef = useRef(false);
+  useEffect(() => () => {
+    if (usedTabRef.current || !opener?.isConnected) return;
+    opener.setAttribute("data-quiet-focus", "");
+    opener.addEventListener("blur", () => opener.removeAttribute("data-quiet-focus"), { once: true });
+  }, [opener]);
+
+  // ←/→ step between entries, mirroring the bar's arrow buttons. Listened
+  // for on the document, so keys keep working after a click on the sheet's
+  // plain text drops focus to <body>, outside the dialog's own onKeyDown —
+  // Escape is caught here for the same reason (the dialog handler marks it
+  // defaultPrevented first when focus is inside, so it never closes twice).
+  // onNavigate ignores steps past either end, like the disabled buttons.
+  useEffect(() => {
+    const onKey = (event) => {
+      // Tab first: the dialog's focus trap may already have prevented it.
+      if (event.key === "Tab" && !usedTabRef.current) {
+        usedTabRef.current = true;
+        dialogRef.current?.setAttribute("data-kbd", "");
+      }
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+      } else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        event.preventDefault();
+        onNavigate(event.key === "ArrowLeft" ? -1 : 1);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onNavigate, onClose]);
+
   const handleKeyDown = makeModalKeyHandler(dialogRef, onClose);
 
   return ReactDOM.createPortal(

@@ -3554,6 +3554,13 @@ img { display: block; max-width: 100%; height: auto; }
 @media (max-width: 360px) {
   .pf-tl__dossierBar { padding-right: 0; }
 }
+/* Focus rings in the dossier appear once Tab is used (data-kbd, set in
+   WorkDossier). Arrow/Escape shortcuts alone don't ring the buttons, and the
+   opener focus is handed back to on close stays quiet the same way. */
+.pf-tl__dossier:not([data-kbd]) :focus-visible,
+[data-quiet-focus]:focus-visible {
+  outline: none;
+}
 /* Desktop: the phone-width column left most of the screen empty. Spread it
    into a wide sheet — identity pinned on the left, highlights on the right. */
 @media (min-width: 901px) {
