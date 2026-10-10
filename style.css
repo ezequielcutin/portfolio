@@ -893,6 +893,18 @@ img { display: block; max-width: 100%; height: auto; }
   padding-bottom: 48px;
 }
 .pf-block--music .pf-block__inner { position: relative; z-index: 1; }
+/* The footer shader behind this section carves on click-and-drag. Text
+   selection and native image/link drags would hijack that gesture — a
+   selection highlight smeared over the copy, or a drag ghost that fires
+   pointercancel mid-stroke — so the whole section opts out of both. */
+.pf-block--music {
+  -webkit-user-select: none;
+  user-select: none;
+}
+.pf-block--music img,
+.pf-block--music a {
+  -webkit-user-drag: none;
+}
 
 .pf-tail {
   position: relative;
