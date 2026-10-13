@@ -149,6 +149,21 @@ window.PORTFOLIO_DATA = {
 
   projects: [
     {
+      id: "smpl",
+      title: "smpl",
+      tagline: "Search your samples by sound, not filename",
+      date: "Oct 2026",
+      blurb: "A command-line and desktop tool for music producers. Describe the sound you want, like 'punchy dark kick, short tail,' and it finds the closest matches in your sample library instantly.",
+      bullets: [
+        "Searches by what a sample sounds like, not what it's named, so messy sample packs become easy to search.",
+        "Plays each sample as you scroll past it, so you can browse with your ears instead of reading filenames.",
+        "Builds a 16-pad drum kit from a single text prompt.",
+        "Runs fully on your own machine, with no cloud or API calls.",
+      ],
+      stack: ["Rust", "Tauri", "CLAP", "ONNX", "Python"],
+      links: [{ label: "GitHub", href: "https://github.com/ezequielcutin/smpl-sample-search" }],
+    },
+    {
       id: "color-canvas",
       title: "Color Canvas",
       tagline: "Words become generative scenes",
