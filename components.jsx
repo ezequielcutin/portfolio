@@ -926,6 +926,13 @@ function ProjectsTerminal({ items, openId: openIdProp, onOpenChange, focusSeq })
           {open.links && (
             <div className="pf-term__links">
               {open.links.map((l, i) => {
+                if (!l.href) {
+                  return (
+                    <span key={i} className="pf-term__link pf-term__link--disabled">
+                      <span>{l.label}</span>
+                    </span>
+                  );
+                }
                 const isGH = /github\.com/i.test(l.href) || /github/i.test(l.label);
                 const GH = window.PFIcons && window.PFIcons.GitHub;
                 return (

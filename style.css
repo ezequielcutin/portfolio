@@ -3927,6 +3927,11 @@ img { display: block; max-width: 100%; height: auto; }
 }
 .pf-term__link__arrow { display: inline-block; transition: transform 160ms ease; }
 .pf-term__link:hover .pf-term__link__arrow { transform: translate(2px, -2px); }
+.pf-term__link--disabled {
+  color: var(--fg-soft);
+  border-style: dashed;
+  cursor: default;
+}
 
 /* Bottom prompt — typed command line */
 .pf-term__prompt {

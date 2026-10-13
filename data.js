@@ -161,7 +161,7 @@ window.PORTFOLIO_DATA = {
         "Runs fully on your own machine, with no cloud or API calls.",
       ],
       stack: ["Rust", "Tauri", "CLAP", "ONNX", "Python"],
-      links: [{ label: "GitHub", href: "https://github.com/ezequielcutin/smpl-sample-search" }],
+      links: [{ label: "Source — private for now" }],
     },
     {
       id: "color-canvas",
